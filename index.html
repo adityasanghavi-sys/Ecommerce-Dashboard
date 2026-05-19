@@ -132,14 +132,22 @@
           <div class="overflow-x-auto">
             <table class="w-full text-left text-sm text-gray-400">
               <thead class="text-xs uppercase bg-[#0a0a0a]/50 text-gray-500 border-b border-white/5">
-                <tr>
-                  <th scope="col" class="px-6 py-3 font-medium">Product Name</th>
-                  <th scope="col" class="px-6 py-3 font-medium text-right">GMV (₹)</th>
-                  <th scope="col" class="px-6 py-3 font-medium text-right">Units</th>
-                  <th scope="col" class="px-6 py-3 font-medium text-right">ASP (₹)</th>
-                  <th scope="col" class="px-6 py-3 font-medium text-center">Top Platform</th>
-                </tr>
-              </thead>
+  <tr>
+    <th scope="col" class="px-6 py-3 font-medium cursor-pointer hover:text-white transition-colors" onclick="sortProductTable('name')">
+      Product Name <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50"></i>
+    </th>
+    <th scope="col" class="px-6 py-3 font-medium text-right cursor-pointer hover:text-white transition-colors" onclick="sortProductTable('gmv')">
+      GMV (₹) <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50"></i>
+    </th>
+    <th scope="col" class="px-6 py-3 font-medium text-right cursor-pointer hover:text-white transition-colors" onclick="sortProductTable('units')">
+      Units <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50"></i>
+    </th>
+    <th scope="col" class="px-6 py-3 font-medium text-right cursor-pointer hover:text-white transition-colors" onclick="sortProductTable('asp')">
+      ASP (₹) <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50"></i>
+    </th>
+    <th scope="col" class="px-6 py-3 font-medium text-center">Top Platform</th>
+  </tr>
+</thead>
               <tbody id="product-table-body" class="divide-y divide-white/5">
                 </tbody>
             </table>
@@ -600,11 +608,34 @@
       renderProductTable();
     }
 
-    // --- SEARCH LOGIC ---
+// --- SEARCH & SORT LOGIC ---
+    let currentSort = { column: 'gmv', direction: 'desc' };
+
+    function sortProductTable(column) {
+      if (currentSort.column === column) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort.column = column;
+        currentSort.direction = 'desc'; 
+      }
+      renderProductTable();
+    }
+
     function renderProductTable() {
+      // 1. Sort the global array first
+      (window.currentProductData || []).sort((a, b) => {
+        let valA = a[currentSort.column];
+        let valB = b[currentSort.column];
+        
+        if (typeof valA === 'string') {
+          return currentSort.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        } else {
+          return currentSort.direction === 'asc' ? valA - valB : valB - valA;
+        }
+      });
+
+      // 2. Then apply the search filter
       let searchTerm = (document.getElementById('productSearch')?.value || '').toLowerCase();
-      
-      // Filter list based on whatever is typed in the search bar
       let filteredProducts = (window.currentProductData || []).filter(p => 
         p.name.toLowerCase().includes(searchTerm)
       );
@@ -618,7 +649,6 @@
 
       let html = '';
       filteredProducts.forEach(p => {
-        // Platform Badge Styling (Color codes the tags!)
         let pColor = 'bg-gray-800 text-gray-300';
         let platLower = p.topPlatform.toLowerCase();
         if (platLower.includes('zepto')) pColor = 'bg-blue-900/50 text-blue-400 border border-blue-700/50';
