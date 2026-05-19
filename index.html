@@ -440,11 +440,13 @@
       const prodMap = {};
       data.forEach(row => {
         let rawName = String(row['Product Name'] || 'Unknown').trim();
-        
-        // Force Title Case to merge mismatched names (e.g. "snackible" vs "Snackible")
         let pName = rawName.toLowerCase().split(' ').map(word => 
           word.charAt(0).toUpperCase() + word.slice(1)
         ).join(' ');
+
+        // EXCLUDE CATEGORY & SUBTOTAL ROWS
+        const excludedCategories = ['total', 'ragi chips', 'dipsters', 'puffs', 'others'];
+        if (excludedCategories.includes(pName.toLowerCase())) return;
 
         if(!prodMap[pName]) prodMap[pName] = 0;
         prodMap[pName] += Number(row.GMV) || 0;
@@ -523,14 +525,16 @@
     function renderProductView(data) {
       // 1. Aggregate data by Product
       const productMap = {};
-      
       data.forEach(row => {
         let rawName = String(row['Product Name'] || 'Unknown').trim();
         // Force Title Case to fix lowercase/uppercase mismatches
         let pName = rawName.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
         
+        // EXCLUDE CATEGORY & SUBTOTAL ROWS
+        const excludedCategories = ['total', 'ragi chips', 'dipsters', 'puffs', 'others'];
+        if (excludedCategories.includes(pName.toLowerCase())) return;
+
         let gmv = Number(row.GMV) || 0;
-        let units = Number(row.Units) || 0;
         let platform = String(row.Platform).trim();
         
         if (!productMap[pName]) {
