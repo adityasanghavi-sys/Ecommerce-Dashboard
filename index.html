@@ -455,7 +455,10 @@
           axisBorder: { show: false } 
         },
         yaxis: { 
-          labels: { style: { colors: '#E5E7EB' } } 
+          labels: { 
+            style: { colors: '#E5E7EB' },
+            maxWidth: 400, // Forces the chart to give enough width for long FMCG names
+          } 
         },
         grid: { show: false },
         tooltip: { y: { formatter: (val) => formatNumber(val) } }
