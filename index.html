@@ -519,7 +519,126 @@
       chartInstances.products = new ApexCharts(document.querySelector("#chart-top-products"), optProducts);
       chartInstances.products.render();
     }
+// --- PRODUCT VIEW ENGINE ---
+    function renderProductView(data) {
+      // 1. Aggregate data by Product
+      const productMap = {};
+      
+      data.forEach(row => {
+        let rawName = String(row['Product Name'] || 'Unknown').trim();
+        // Force Title Case to fix lowercase/uppercase mismatches
+        let pName = rawName.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        
+        let gmv = Number(row.GMV) || 0;
+        let units = Number(row.Units) || 0;
+        let platform = String(row.Platform).trim();
+        
+        if (!productMap[pName]) {
+          productMap[pName] = { gmv: 0, units: 0, platforms: {} };
+        }
+        productMap[pName].gmv += gmv;
+        productMap[pName].units += units;
+        
+        if (!productMap[pName].platforms[platform]) {
+          productMap[pName].platforms[platform] = 0;
+        }
+        productMap[pName].platforms[platform] += gmv;
+      });
 
+      // 2. Convert to array and sort by GMV (highest first)
+      let productArray = Object.keys(productMap).map(name => {
+        let stats = productMap[name];
+        // Find top platform for this specific SKU
+        let topPlatform = Object.keys(stats.platforms).reduce((a, b) => stats.platforms[a] > stats.platforms[b] ? a : b, "");
+        
+        return {
+          name: name,
+          gmv: stats.gmv,
+          units: stats.units,
+          asp: stats.units > 0 ? (stats.gmv / stats.units) : 0,
+          topPlatform: topPlatform
+        };
+      }).sort((a, b) => b.gmv - a.gmv);
+
+      // Save globally for the search bar function
+      window.currentProductData = productArray;
+      
+      // 3. Calculate Product-Specific KPIs
+      let activeSkus = productArray.length;
+      let topRevSku = activeSkus > 0 ? productArray[0].name : '--';
+      let topVolSku = activeSkus > 0 ? [...productArray].sort((a,b) => b.units - a.units)[0].name : '--';
+      
+      let totalGmv = productArray.reduce((sum, p) => sum + p.gmv, 0);
+      let totalUnits = productArray.reduce((sum, p) => sum + p.units, 0);
+      let blendedAsp = totalUnits > 0 ? (totalGmv / totalUnits) : 0;
+
+      // 4. Render KPI Cards
+      document.getElementById('product-kpi-grid').innerHTML = `
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-4 shadow-lg border-t-2 border-t-blue-500">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Active SKUs</h3>
+          <p class="text-2xl font-bold text-white">${activeSkus}</p>
+        </div>
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-4 shadow-lg border-t-2 border-t-purple-500 overflow-hidden">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 whitespace-nowrap text-ellipsis">Top Revenue SKU</h3>
+          <p class="text-sm font-bold text-white truncate" title="${topRevSku}">${topRevSku}</p>
+        </div>
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-4 shadow-lg border-t-2 border-t-orange-500 overflow-hidden">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 whitespace-nowrap text-ellipsis">Top Volume SKU</h3>
+          <p class="text-sm font-bold text-white truncate" title="${topVolSku}">${topVolSku}</p>
+        </div>
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-4 shadow-lg border-t-2 border-t-green-500">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Blended ASP</h3>
+          <p class="text-2xl font-bold text-white">₹${blendedAsp.toFixed(1)}</p>
+        </div>
+      `;
+
+      // 5. Render the data table
+      renderProductTable();
+    }
+
+    // --- SEARCH LOGIC ---
+    function renderProductTable() {
+      let searchTerm = (document.getElementById('productSearch')?.value || '').toLowerCase();
+      
+      // Filter list based on whatever is typed in the search bar
+      let filteredProducts = (window.currentProductData || []).filter(p => 
+        p.name.toLowerCase().includes(searchTerm)
+      );
+
+      let tbody = document.getElementById('product-table-body');
+      
+      if (filteredProducts.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No products found.</td></tr>`;
+        return;
+      }
+
+      let html = '';
+      filteredProducts.forEach(p => {
+        // Platform Badge Styling (Color codes the tags!)
+        let pColor = 'bg-gray-800 text-gray-300';
+        let platLower = p.topPlatform.toLowerCase();
+        if (platLower.includes('zepto')) pColor = 'bg-blue-900/50 text-blue-400 border border-blue-700/50';
+        else if (platLower.includes('blinkit')) pColor = 'bg-yellow-900/50 text-yellow-400 border border-yellow-700/50';
+        else if (platLower.includes('instamart') || platLower.includes('swiggy')) pColor = 'bg-green-900/50 text-green-400 border border-green-700/50';
+        else if (platLower.includes('big basket') || platLower.includes('bigbasket')) pColor = 'bg-red-900/50 text-red-400 border border-red-700/50';
+
+        html += `
+          <tr class="hover:bg-white/[0.05] transition-colors border-b border-white/5 last:border-0">
+            <td class="px-6 py-4 font-medium text-gray-200">${p.name}</td>
+            <td class="px-6 py-4 text-right text-white font-semibold">${formatNumber(p.gmv)}</td>
+            <td class="px-6 py-4 text-right text-gray-300">${formatNumber(p.units, false)}</td>
+            <td class="px-6 py-4 text-right text-gray-400">₹${p.asp.toFixed(1)}</td>
+            <td class="px-6 py-4 text-center">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${pColor}">
+                ${p.topPlatform}
+              </span>
+            </td>
+          </tr>
+        `;
+      });
+      
+      tbody.innerHTML = html;
+    }
     renderTabs();
     fetchAndRenderData();
   </script>
