@@ -423,9 +423,21 @@
         chart: { type: 'donut', height: 280, ...darkConfig },
         colors: brandColors,
         stroke: { show: true, colors: '#111', width: 2 },
-        dataLabels: { enabled: false },
+        dataLabels: { 
+          enabled: true,
+          style: { fontSize: '12px', fontWeight: 'bold' },
+          dropShadow: { enabled: true, top: 1, left: 1, blur: 2, opacity: 0.8 }
+        },
         legend: { position: 'bottom', labels: { colors: '#9CA3AF' } },
-        tooltip: { y: { formatter: (val) => formatNumber(val) } }
+        tooltip: { 
+          y: { 
+            formatter: function(val, opts) {
+               // Grabs the exact percentage calculated by the chart
+               let percent = opts.w.globals.seriesPercent[opts.seriesIndex];
+               return formatNumber(val) + " (" + percent.toFixed(1) + "%)";
+            } 
+          } 
+        }
       };
       chartInstances.platform = new ApexCharts(document.querySelector("#chart-platform-share"), optPlatform);
       chartInstances.platform.render();
