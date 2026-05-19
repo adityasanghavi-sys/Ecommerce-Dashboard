@@ -74,24 +74,34 @@
     <main class="mt-6 flex flex-col gap-6">
       <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4" id="kpi-grid"></div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="dashboard-content">
-        <div class="lg:col-span-2 flex flex-col gap-6">
-          <div class="h-[400px] rounded-xl bg-[#111111] border border-white/5 p-5 shadow-lg">
-            <h3 class="text-sm font-semibold text-gray-300 mb-2">Daily GMV Trend (₹)</h3>
-            <div id="chart-daily-trend" class="w-full h-full pb-6"></div>
+      <div id="dashboard-content" class="flex flex-col gap-6">
+        <div id="platform-summary-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 flex flex-col gap-6">
+            <div class="h-[400px] rounded-xl bg-[#111111] border border-white/5 p-5 shadow-lg">
+              <h3 class="text-sm font-semibold text-gray-300 mb-2">Daily GMV Trend (₹)</h3>
+              <div id="chart-daily-trend" class="w-full h-full pb-6"></div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="h-[350px] rounded-xl bg-[#111111] border border-white/5 p-5 shadow-lg">
+                <h3 class="text-sm font-semibold text-gray-300 mb-2">Platform Contribution</h3>
+                <div id="chart-platform-share" class="w-full h-full pb-4 flex justify-center"></div>
+              </div>
+              <div class="h-[350px] rounded-xl bg-[#111111] border border-white/5 p-5 shadow-lg">
+                <h3 class="text-sm font-semibold text-gray-300 mb-2">Top 5 Products by GMV</h3>
+                <div id="chart-top-products" class="w-full h-full pb-4"></div>
+              </div>
+            </div>
           </div>
           
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="h-[350px] rounded-xl bg-[#111111] border border-white/5 p-5 shadow-lg">
-              <h3 class="text-sm font-semibold text-gray-300 mb-2">Platform Contribution</h3>
-              <div id="chart-platform-share" class="w-full h-full pb-4 flex justify-center"></div>
-            </div>
-            <div class="h-[350px] rounded-xl bg-[#111111] border border-white/5 p-5 shadow-lg">
-              <h3 class="text-sm font-semibold text-gray-300 mb-2">Top 5 Products by GMV</h3>
-              <div id="chart-top-products" class="w-full h-full pb-4"></div>
-            </div>
+          <div class="lg:col-span-1 flex flex-col gap-6">
+            <div class="h-80 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">AI Insights Panel (Step 7)</div>
           </div>
-          
+        </div>
+      </div>
+    </main>          
           <div class="h-96 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">Data Table Area (Step 6)</div>
         </div>
         <div class="lg:col-span-1 flex flex-col gap-6">
@@ -162,6 +172,7 @@
 
       calculateAndRenderKPIs(filteredData);
       renderCharts(filteredData);
+      renderPlatformSummaries(filteredData);
     }
 
     function formatNumber(num, isCurrency = true) {
@@ -211,7 +222,76 @@
         </div>
       `;
     }
+function renderPlatformSummaries(data) {
+      let pStats = {
+        'Zepto': { gmv: 0, units: 0, days: new Set(), color: 'text-blue-500' },
+        'Blinkit': { gmv: 0, units: 0, days: new Set(), color: 'text-yellow-500' },
+        'Instamart': { gmv: 0, units: 0, days: new Set(), color: 'text-green-500' },
+        'Big Basket': { gmv: 0, units: 0, days: new Set(), color: 'text-red-500' }
+      };
 
+      let allUniqueDays = new Set();
+
+      data.forEach(row => {
+        let gmv = Number(row.GMV) || 0;
+        let units = Number(row.Units) || 0;
+        let pName = String(row.Platform).toLowerCase();
+        let dateStr = new Date(row.Date).toDateString();
+
+        allUniqueDays.add(dateStr);
+
+        let matchedKey = null;
+        if (pName.includes('zepto')) matchedKey = 'Zepto';
+        else if (pName.includes('blinkit')) matchedKey = 'Blinkit';
+        else if (pName.includes('swiggy') || pName.includes('instamart')) matchedKey = 'Instamart';
+        else if (pName.includes('big basket') || pName.includes('bigbasket')) matchedKey = 'Big Basket';
+
+        if (matchedKey) {
+          pStats[matchedKey].gmv += gmv;
+          pStats[matchedKey].units += units;
+          if (gmv > 0 || units > 0) pStats[matchedKey].days.add(dateStr);
+        }
+      });
+
+      let totalDays = allUniqueDays.size;
+      let html = '';
+
+      Object.keys(pStats).forEach(platform => {
+        let stats = pStats[platform];
+        html += `
+          <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg flex flex-col gap-3">
+            <h3 class="text-sm font-semibold ${stats.color}">${platform}</h3>
+            
+            <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+              <span class="text-gray-400">Sales</span>
+              <span class="text-gray-100 font-medium">${formatNumber(stats.gmv)}</span>
+            </div>
+            
+            <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+              <span class="text-gray-400">Spends</span>
+              <span class="text-gray-600 font-medium">--</span>
+            </div>
+            
+            <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+              <span class="text-gray-400">Avg ROAS</span>
+              <span class="text-gray-600 font-medium">--</span>
+            </div>
+            
+            <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+              <span class="text-gray-400">Units</span>
+              <span class="text-gray-100 font-medium">${formatNumber(stats.units, false)}</span>
+            </div>
+            
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-gray-400">Active days</span>
+              <span class="text-gray-100 font-medium">${stats.days.size}/${totalDays}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      document.getElementById('platform-summary-grid').innerHTML = html;
+    }
     // --- APEX CHARTS ENGINE ---
     function renderCharts(data) {
       // Common config
