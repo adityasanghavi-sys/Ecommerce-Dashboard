@@ -1,135 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CEO E-Commerce Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      body { background-color: #030712; color: #f9fafb; font-family: 'Inter', sans-serif; }
-      ::-webkit-scrollbar { width: 8px; height: 8px; }
-      ::-webkit-scrollbar-track { background: #111827; }
-      ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
-    </style>
-  </head>
-  <body class="p-4 md:p-8">
-    
-    <header class="mb-8 border-b border-gray-800 pb-4 flex justify-between items-end">
-      <div>
-        <h1 class="text-3xl font-bold tracking-tight text-white">Executive Performance</h1>
-        <p class="text-gray-400 mt-1">Aggregated Daily Sales Overview (T-1)</p>
-      </div>
-      <div id="status-badge" class="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm font-medium border border-yellow-500/30">
-        Fetching Live Data...
-      </div>
-    </header>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snackible Executive Dashboard</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body { background-color: #0a0a0a; color: #f3f4f6; font-family: 'Inter', sans-serif; }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+    /* Hide scrollbar for tabs */
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body class="selection:bg-blue-500/30">
 
-    <div id="kpi-grid" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 hidden">
-      <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-lg">
-        <h3 class="text-gray-400 text-sm font-medium mb-1">Total GMV (₹)</h3>
-        <p id="kpi-gmv" class="text-3xl font-bold text-green-400">0</p>
+  <nav class="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-md">
+    <div class="max-w-[1600px] mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+          S
+        </div>
+        <span class="text-xl font-semibold tracking-tight">SNACKIBLE <span class="text-gray-500 font-normal">Analytics</span></span>
       </div>
-      <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-lg">
-        <h3 class="text-gray-400 text-sm font-medium mb-1">Total Units Sold</h3>
-        <p id="kpi-units" class="text-3xl font-bold text-white">0</p>
-      </div>
-      <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-lg">
-        <h3 class="text-gray-400 text-sm font-medium mb-1">Average Selling Price</h3>
-        <p id="kpi-asp" class="text-3xl font-bold text-white">0</p>
-      </div>
-      <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-lg">
-        <h3 class="text-gray-400 text-sm font-medium mb-1">Top Platform</h3>
-        <p id="kpi-platform" class="text-3xl font-bold text-blue-400">-</p>
+      
+      <div class="flex items-center gap-4">
+        <div class="relative hidden md:block">
+          <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+          <input type="text" placeholder="Search products, SKUs..." class="bg-white/5 border border-white/10 rounded-full py-1.5 pl-9 pr-4 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 w-64 transition-all">
+        </div>
+        <button class="p-2 hover:bg-white/5 rounded-full relative transition">
+          <i data-lucide="bell" class="w-5 h-5 text-gray-400"></i>
+          <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-[#0a0a0a]"></span>
+        </button>
+        <button class="p-2 hover:bg-white/5 rounded-full transition">
+          <i data-lucide="settings" class="w-5 h-5 text-gray-400"></i>
+        </button>
       </div>
     </div>
+  </nav>
 
-    <div id="dashboard-content" class="hidden">
-      <h2 class="text-xl font-semibold mb-4 text-gray-200">Raw Data Feed</h2>
-      <div class="overflow-hidden rounded-xl border border-gray-800 bg-gray-900 shadow-xl">
-        <div class="overflow-x-auto max-h-[500px]">
-          <table class="w-full text-left text-sm">
-            <thead class="sticky top-0 bg-gray-950 text-gray-400 border-b border-gray-800 shadow-sm z-10">
-              <tr>
-                <th class="px-6 py-4 font-medium">Date</th>
-                <th class="px-6 py-4 font-medium">Platform</th>
-                <th class="px-6 py-4 font-medium">Product Name</th>
-                <th class="px-6 py-4 font-medium text-right">Units</th>
-                <th class="px-6 py-4 font-medium text-right">GMV (₹)</th>
-              </tr>
-            </thead>
-            <tbody id="table-body" class="divide-y divide-gray-800/50"></tbody>
-          </table>
+  <div class="max-w-[1600px] mx-auto px-4 lg:px-8 pb-12">
+    
+    <div class="pt-8 pb-2">
+      <h1 class="text-3xl font-bold tracking-tight mb-6">Executive Overview</h1>
+      <div class="flex space-x-1 border-b border-white/10 overflow-x-auto scrollbar-hide" id="tab-container">
+        </div>
+    </div>
+
+    <div class="sticky top-16 z-40 py-4 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <button class="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-sm font-medium transition">
+          <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i> Last 7 Days <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500"></i>
+        </button>
+        <div class="h-6 w-px bg-white/10 mx-1"></div>
+        <div class="flex bg-white/5 rounded-lg p-0.5 border border-white/10">
+          <button class="px-3 py-1 text-xs font-medium rounded-md bg-white/10 text-white shadow-sm">Daily</button>
+          <button class="px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-gray-200">Weekly</button>
+          <button class="px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-gray-200">Monthly</button>
         </div>
       </div>
+      <div class="flex items-center gap-3">
+        <button class="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-sm font-medium transition">
+          <i data-lucide="filter" class="w-4 h-4 text-gray-400"></i> All Platforms <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500"></i>
+        </button>
+        <button class="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 rounded-lg px-4 py-1.5 text-sm font-medium transition">
+          Compare: Prev Period
+        </button>
+      </div>
     </div>
 
-    <script>
-      // *** PASTE YOUR GOOGLE SCRIPT WEB APP URL HERE ***
-      const API_URL = "https://script.google.com/macros/s/AKfycbwjmrasY2jMol0y3FHJ_vs2nVAGQgZ50yQIASQUWRQKXBRvhufqf9zlm5PNRetGM_fF/exec"; 
+    <main class="mt-6 flex flex-col gap-6">
+      
+      <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4" id="kpi-grid">
+        </div>
 
-      window.onload = async function() {
-        try {
-          const response = await fetch(API_URL);
-          const data = await response.json();
-          processData(data);
-        } catch (error) {
-          console.error("Error:", error);
-          const badge = document.getElementById('status-badge');
-          badge.innerText = "Connection Error";
-          badge.className = "px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm font-medium border border-red-500/30";
-        }
-      };
-
-      function processData(data) {
-        if (!data || data.length === 0) return;
-
-        let totalGMV = 0, totalUnits = 0, platformTotals = {};
-
-        data.forEach(row => {
-          let gmv = Number(row.GMV) || 0;
-          let units = Number(row.Units) || 0;
-          let platform = row.Platform || "Unknown";
-
-          totalGMV += gmv;
-          totalUnits += units;
-          if(!platformTotals[platform]) platformTotals[platform] = 0;
-          platformTotals[platform] += gmv;
-        });
-
-        let asp = totalUnits > 0 ? (totalGMV / totalUnits) : 0;
-        let topPlatform = Object.keys(platformTotals).reduce((a, b) => platformTotals[a] > platformTotals[b] ? a : b);
-
-        document.getElementById('kpi-gmv').innerText = '₹' + totalGMV.toLocaleString('en-IN', {maximumFractionDigits: 0});
-        document.getElementById('kpi-units').innerText = totalUnits.toLocaleString('en-IN');
-        document.getElementById('kpi-asp').innerText = '₹' + asp.toLocaleString('en-IN', {maximumFractionDigits: 1});
-        document.getElementById('kpi-platform').innerText = topPlatform;
-
-        const tbody = document.getElementById('table-body');
-        let rowsHtml = '';
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 flex flex-col gap-6">
+          <div class="h-96 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">Main Chart Area (Step 4)</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="h-72 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">Platform Split (Step 4)</div>
+            <div class="h-72 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">Category Trend (Step 4)</div>
+          </div>
+          <div class="h-96 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">Data Table Area (Step 6)</div>
+        </div>
         
-        data.forEach(row => {
-          const dateObj = new Date(row.Date);
-          const formattedDate = !isNaN(dateObj) ? dateObj.toLocaleDateString('en-IN', {day: 'numeric', month: 'short', year: 'numeric'}) : row.Date;
-          const u = Number(row.Units).toLocaleString('en-IN');
-          const g = Number(row.GMV).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        <div class="lg:col-span-1 flex flex-col gap-6">
+          <div class="h-80 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">AI Insights Panel (Step 7)</div>
+          <div class="h-64 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">Alerts Engine (Step 7)</div>
+        </div>
+      </div>
+    </main>
+  </div>
 
-          rowsHtml += `
-            <tr class="hover:bg-gray-800 transition-colors">
-              <td class="px-6 py-4 whitespace-nowrap text-gray-300">${formattedDate}</td>
-              <td class="px-6 py-4 whitespace-nowrap"><span class="inline-flex items-center rounded bg-gray-800 px-2 py-1 text-xs font-semibold text-gray-300 border border-gray-700">${row.Platform}</span></td>
-              <td class="px-6 py-4 text-gray-200">${row['Product Name']}</td>
-              <td class="px-6 py-4 text-right text-gray-300">${u}</td>
-              <td class="px-6 py-4 text-right text-green-400 font-medium">₹${g}</td>
-            </tr>
-          `;
-        });
-        tbody.innerHTML = rowsHtml;
+  <script>
+    // Initialize standard icons
+    lucide.createIcons();
 
-        document.getElementById('status-badge').innerText = "✓ Live & Synced";
-        document.getElementById('status-badge').className = "px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm font-medium border border-green-500/30";
-        document.getElementById('kpi-grid').classList.remove('hidden');
-        document.getElementById('dashboard-content').classList.remove('hidden');
-      }
-    </script>
-  </body>
+    // Setup Tabs Logic
+    const tabs = [
+      { name: 'Overview', icon: 'layout-dashboard' },
+      { name: 'Platform View', icon: 'shopping-cart' },
+      { name: 'Product View', icon: 'package' },
+      { name: 'Marketing', icon: 'trending-up' },
+      { name: 'Finance', icon: 'dollar-sign' }
+    ];
+
+    let activeTab = 'Overview';
+    const tabContainer = document.getElementById('tab-container');
+
+    function renderTabs() {
+      tabContainer.innerHTML = tabs.map(tab => {
+        const isActive = activeTab === tab.name;
+        const colorClass = isActive ? 'border-blue-500 text-blue-400' : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-white/20';
+        return `
+          <button onclick="setActiveTab('${tab.name}')" class="flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${colorClass}">
+            <i data-lucide="${tab.icon}" class="w-4 h-4"></i> ${tab.name}
+          </button>
+        `;
+      }).join('');
+      lucide.createIcons(); // Re-render icons after DOM update
+    }
+
+    function setActiveTab(tabName) {
+      activeTab = tabName;
+      renderTabs();
+      // Logic to switch views will go here later
+    }
+
+    // Generate KPI Placeholders
+    document.getElementById('kpi-grid').innerHTML = Array(8).fill(`
+      <div class="h-28 rounded-xl bg-white/[0.02] border border-white/5 animate-pulse"></div>
+    `).join('');
+
+    renderTabs();
+  </script>
+</body>
 </html>
