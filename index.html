@@ -239,7 +239,7 @@
       // Save filtered data globally so the search bar can access it instantly
       window.currentFilteredData = [];
       
-      if (!isOverview || !rawData.length) return;
+      if (!rawData.length) return;
 
       // 1. Find the Absolute Latest Date in the Dataset
       const dates = rawData.map(r => new Date(r.Date).getTime()).filter(t => !isNaN(t));
