@@ -114,6 +114,39 @@
           </div>
         </div>
       </div>
+      <div id="product-view-content" class="hidden flex-col gap-6">
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="product-kpi-grid">
+           </div>
+
+        <div class="bg-[#111111] border border-white/5 rounded-xl shadow-lg flex flex-col overflow-hidden">
+          
+          <div class="p-5 border-b border-white/5 flex flex-wrap justify-between items-center gap-4">
+            <h3 class="text-lg font-semibold text-gray-100">SKU Performance</h3>
+            <div class="relative">
+              <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+              <input type="text" id="productSearch" onkeyup="renderProductTable(window.currentFilteredData)" placeholder="Search products..." class="bg-[#0a0a0a] border border-white/10 rounded-md py-1.5 pl-9 pr-4 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 w-64 transition-all">
+            </div>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-gray-400">
+              <thead class="text-xs uppercase bg-[#0a0a0a]/50 text-gray-500 border-b border-white/5">
+                <tr>
+                  <th scope="col" class="px-6 py-3 font-medium">Product Name</th>
+                  <th scope="col" class="px-6 py-3 font-medium text-right">GMV (₹)</th>
+                  <th scope="col" class="px-6 py-3 font-medium text-right">Units</th>
+                  <th scope="col" class="px-6 py-3 font-medium text-right">ASP (₹)</th>
+                  <th scope="col" class="px-6 py-3 font-medium text-center">Top Platform</th>
+                </tr>
+              </thead>
+              <tbody id="product-table-body" class="divide-y divide-white/5">
+                </tbody>
+            </table>
+          </div>
+          
+        </div>
+      </div>
     </main>
   </div>
 
@@ -183,8 +216,20 @@
 
     function applyFilters() {
       const isOverview = filters.tab === 'Overview';
+      const isProductView = filters.tab === 'Product View';
+      
+      // Route Overview Elements
       document.getElementById('kpi-grid').style.display = isOverview ? 'grid' : 'none';
       document.getElementById('dashboard-content').style.display = isOverview ? 'flex' : 'none';
+      
+      // Route Product View Elements
+      const productViewEl = document.getElementById('product-view-content');
+      if (productViewEl) {
+        productViewEl.style.display = isProductView ? 'flex' : 'none';
+      }
+      
+      // Save filtered data globally so the search bar can access it instantly
+      window.currentFilteredData = [];
       
       if (!isOverview || !rawData.length) return;
 
@@ -229,6 +274,8 @@
       calculateAndRenderKPIs(filteredData);
       renderPlatformSummaries(filteredData);
       renderCharts(filteredData);
+      window.currentFilteredData = filteredData;
+      if (isProductView) renderProductView(filteredData);
     }
 
     function formatNumber(num, isCurrency = true) {
