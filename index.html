@@ -15,7 +15,6 @@
     ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #555; }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
-    /* ApexCharts custom dark theme overrides */
     .apexcharts-tooltip { background: #111 !important; border: 1px border-white/10 !important; color: #fff; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); }
     .apexcharts-tooltip-title { background: #000 !important; border-bottom: 1px solid #333 !important; }
   </style>
@@ -101,23 +100,14 @@
           </div>
         </div>
       </div>
-    </main>          
-          <div class="h-96 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">Data Table Area (Step 6)</div>
-        </div>
-        <div class="lg:col-span-1 flex flex-col gap-6">
-          <div class="h-80 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">AI Insights Panel (Step 7)</div>
-        </div>
-      </div>
     </main>
   </div>
 
   <script>
     lucide.createIcons();
-
-    // --- GLOBAL STATE ---
     const filters = { dateRange: 'all', platform: 'All', tab: 'Overview' };
     let rawData = [];
-    let chartInstances = {}; // Store charts to destroy/update them on filter change
+    let chartInstances = {}; 
 
     const tabs = [{ name: 'Overview', icon: 'layout-dashboard' }, { name: 'Platform View', icon: 'shopping-cart' }, { name: 'Product View', icon: 'package' }];
 
@@ -134,12 +124,11 @@
 
     async function fetchAndRenderData() {
       try {
-        document.getElementById('kpi-grid').innerHTML = `<div class="col-span-full text-blue-400 p-4">Loading Data...</div>`;
         const response = await fetch(API_URL);
         rawData = await response.json();
         applyFilters(); 
       } catch (error) {
-        document.getElementById('kpi-grid').innerHTML = `<div class="col-span-full text-red-400 p-4">Connection Error.</div>`;
+        console.error("Connection Error");
       }
     }
 
@@ -150,7 +139,7 @@
     function applyFilters() {
       const isOverview = filters.tab === 'Overview';
       document.getElementById('kpi-grid').style.display = isOverview ? 'grid' : 'none';
-      document.getElementById('dashboard-content').style.display = isOverview ? 'grid' : 'none';
+      document.getElementById('dashboard-content').style.display = isOverview ? 'flex' : 'none';
       
       if (!isOverview || !rawData.length) return;
 
@@ -171,8 +160,8 @@
       });
 
       calculateAndRenderKPIs(filteredData);
-      renderCharts(filteredData);
       renderPlatformSummaries(filteredData);
+      renderCharts(filteredData);
     }
 
     function formatNumber(num, isCurrency = true) {
@@ -182,52 +171,70 @@
     }
 
     function calculateAndRenderKPIs(data) {
-      let totalGmv = 0, totalUnits = 0;
+      let totalGmv = 0, totalUnits = 0, totalSpends = 0;
       let platforms = { 'Zepto': 0, 'Blinkit': 0, 'Instamart': 0, 'Big Basket': 0 };
 
       data.forEach(row => {
-        let gmv = Number(row.GMV) || 0, units = Number(row.Units) || 0;
+        let gmv = Number(row.GMV) || 0;
+        let units = Number(row.Units) || 0;
+        // LOOKING FOR THE NEW SPENDS COLUMN
+        let spends = Number(row.Spends || row.Spend || row['Ad Spend']) || 0;
         let pName = String(row.Platform).toLowerCase();
-        totalGmv += gmv; totalUnits += units;
+        
+        totalGmv += gmv; 
+        totalUnits += units; 
+        totalSpends += spends;
+
         if (pName.includes('zepto')) platforms['Zepto'] += gmv;
         else if (pName.includes('blinkit')) platforms['Blinkit'] += gmv;
         else if (pName.includes('swiggy') || pName.includes('instamart')) platforms['Instamart'] += gmv;
         else if (pName.includes('big basket') || pName.includes('bigbasket')) platforms['Big Basket'] += gmv;
       });
 
+      let blendedRoas = totalSpends > 0 ? (totalGmv / totalSpends).toFixed(2) + 'x' : '--';
+
       document.getElementById('kpi-grid').innerHTML = `
         <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-orange-500 col-span-2">
           <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Sales</h3>
           <p class="text-3xl font-bold text-white">${formatNumber(totalGmv)}</p>
         </div>
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-purple-500 col-span-2">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Ad Spends</h3>
+          <p class="text-3xl font-bold text-white">${totalSpends > 0 ? formatNumber(totalSpends) : '--'}</p>
+        </div>
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-green-400 col-span-2">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Blended ROAS</h3>
+          <p class="text-3xl font-bold text-white">${blendedRoas}</p>
+        </div>
         <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-gray-500 col-span-2">
           <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Units</h3>
           <p class="text-3xl font-bold text-white">${formatNumber(totalUnits, false)}</p>
         </div>
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-blue-500 col-span-2 md:col-span-1">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Zepto</h3>
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-blue-500 col-span-2">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Zepto GMV</h3>
           <p class="text-2xl font-bold text-white">${formatNumber(platforms['Zepto'])}</p>
         </div>
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-yellow-500 col-span-2 md:col-span-1">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Blinkit</h3>
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-yellow-500 col-span-2">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Blinkit GMV</h3>
           <p class="text-2xl font-bold text-white">${formatNumber(platforms['Blinkit'])}</p>
         </div>
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-green-500 col-span-2 md:col-span-1">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Instamart</h3>
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-green-500 col-span-2">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Instamart GMV</h3>
           <p class="text-2xl font-bold text-white">${formatNumber(platforms['Instamart'])}</p>
         </div>
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-red-600 col-span-2 md:col-span-1">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">BigBasket</h3>
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-red-600 col-span-2">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">BigBasket GMV</h3>
           <p class="text-2xl font-bold text-white">${formatNumber(platforms['Big Basket'])}</p>
         </div>
       `;
     }
-function renderPlatformSummaries(data) {
+
+    function renderPlatformSummaries(data) {
       let pStats = {
-        'Zepto': { gmv: 0, units: 0, days: new Set(), color: 'text-blue-500' },
-        'Blinkit': { gmv: 0, units: 0, days: new Set(), color: 'text-yellow-500' },
-        'Instamart': { gmv: 0, units: 0, days: new Set(), color: 'text-green-500' },
-        'Big Basket': { gmv: 0, units: 0, days: new Set(), color: 'text-red-500' }
+        'Zepto': { gmv: 0, units: 0, spends: 0, days: new Set(), color: 'text-blue-500' },
+        'Blinkit': { gmv: 0, units: 0, spends: 0, days: new Set(), color: 'text-yellow-500' },
+        'Instamart': { gmv: 0, units: 0, spends: 0, days: new Set(), color: 'text-green-500' },
+        'Big Basket': { gmv: 0, units: 0, spends: 0, days: new Set(), color: 'text-red-500' }
       };
 
       let allUniqueDays = new Set();
@@ -235,6 +242,7 @@ function renderPlatformSummaries(data) {
       data.forEach(row => {
         let gmv = Number(row.GMV) || 0;
         let units = Number(row.Units) || 0;
+        let spends = Number(row.Spends || row.Spend || row['Ad Spend']) || 0;
         let pName = String(row.Platform).toLowerCase();
         let dateStr = new Date(row.Date).toDateString();
 
@@ -249,7 +257,8 @@ function renderPlatformSummaries(data) {
         if (matchedKey) {
           pStats[matchedKey].gmv += gmv;
           pStats[matchedKey].units += units;
-          if (gmv > 0 || units > 0) pStats[matchedKey].days.add(dateStr);
+          pStats[matchedKey].spends += spends;
+          if (gmv > 0 || units > 0 || spends > 0) pStats[matchedKey].days.add(dateStr);
         }
       });
 
@@ -258,6 +267,9 @@ function renderPlatformSummaries(data) {
 
       Object.keys(pStats).forEach(platform => {
         let stats = pStats[platform];
+        let roas = stats.spends > 0 ? (stats.gmv / stats.spends).toFixed(2) + 'x' : '--';
+        let formattedSpends = stats.spends > 0 ? formatNumber(stats.spends) : '--';
+
         html += `
           <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg flex flex-col gap-3">
             <h3 class="text-sm font-semibold ${stats.color}">${platform}</h3>
@@ -269,12 +281,12 @@ function renderPlatformSummaries(data) {
             
             <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
               <span class="text-gray-400">Spends</span>
-              <span class="text-gray-600 font-medium">--</span>
+              <span class="text-gray-600 font-medium">${formattedSpends}</span>
             </div>
             
             <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
               <span class="text-gray-400">Avg ROAS</span>
-              <span class="text-gray-600 font-medium">--</span>
+              <span class="text-gray-600 font-medium">${roas}</span>
             </div>
             
             <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
@@ -289,27 +301,22 @@ function renderPlatformSummaries(data) {
           </div>
         `;
       });
-
       document.getElementById('platform-summary-grid').innerHTML = html;
     }
-    // --- APEX CHARTS ENGINE ---
-    function renderCharts(data) {
-      // Common config
-      const darkConfig = { mode: 'dark', background: 'transparent' };
-      const brandColors = ['#EAB308', '#3B82F6', '#22C55E', '#DC2626', '#8B5CF6']; // Yellow, Blue, Green, Red, Purple
 
-      // 1. Prepare Daily Trend Data
+    function renderCharts(data) {
+      const darkConfig = { mode: 'dark', background: 'transparent' };
+      const brandColors = ['#EAB308', '#3B82F6', '#22C55E', '#DC2626', '#8B5CF6']; 
+
       const dailyMap = {};
       data.forEach(row => {
         const d = new Date(row.Date).toLocaleDateString('en-GB', {day: 'numeric', month: 'short'});
         if(!dailyMap[d]) dailyMap[d] = 0;
         dailyMap[d] += Number(row.GMV) || 0;
       });
-      // Sort dates chronologically
       const sortedDates = Object.keys(dailyMap).sort((a, b) => new Date(a + ' 2026') - new Date(b + ' 2026'));
       const dailyValues = sortedDates.map(d => dailyMap[d]);
 
-      // 2. Prepare Platform Share Data
       const pMap = { 'Blinkit': 0, 'Zepto': 0, 'Instamart': 0, 'BigBasket': 0 };
       data.forEach(row => {
         let pName = String(row.Platform).toLowerCase();
@@ -320,7 +327,6 @@ function renderPlatformSummaries(data) {
         else if (pName.includes('big basket') || pName.includes('bigbasket')) pMap['BigBasket'] += gmv;
       });
 
-      // 3. Prepare Top Products Data
       const prodMap = {};
       data.forEach(row => {
         let pName = row['Product Name'] || 'Unknown';
@@ -331,16 +337,14 @@ function renderPlatformSummaries(data) {
       const topProdLabels = topProducts.map(p => p[0].substring(0, 20) + '...');
       const topProdValues = topProducts.map(p => p[1]);
 
-      // DESTROY OLD CHARTS IF THEY EXIST (Prevents overlapping when filtering)
       if(chartInstances.daily) chartInstances.daily.destroy();
       if(chartInstances.platform) chartInstances.platform.destroy();
       if(chartInstances.products) chartInstances.products.destroy();
 
-      // RENDER DAILY TREND
       const optDaily = {
         series: [{ name: 'GMV', data: dailyValues }],
         chart: { type: 'bar', height: 320, toolbar: { show: false }, ...darkConfig },
-        colors: ['#F97316'], // Orange
+        colors: ['#F97316'],
         plotOptions: { bar: { borderRadius: 4, columnWidth: '50%' } },
         dataLabels: { enabled: false },
         xaxis: { categories: sortedDates, labels: { style: { colors: '#9CA3AF' } }, axisBorder: { show: false } },
@@ -350,7 +354,6 @@ function renderPlatformSummaries(data) {
       chartInstances.daily = new ApexCharts(document.querySelector("#chart-daily-trend"), optDaily);
       chartInstances.daily.render();
 
-      // RENDER PLATFORM DONUT
       const optPlatform = {
         series: Object.values(pMap),
         labels: Object.keys(pMap),
@@ -364,11 +367,10 @@ function renderPlatformSummaries(data) {
       chartInstances.platform = new ApexCharts(document.querySelector("#chart-platform-share"), optPlatform);
       chartInstances.platform.render();
 
-      // RENDER TOP PRODUCTS
       const optProducts = {
         series: [{ name: 'GMV', data: topProdValues }],
         chart: { type: 'bar', height: 280, toolbar: { show: false }, ...darkConfig },
-        colors: ['#8B5CF6'], // Purple
+        colors: ['#8B5CF6'],
         plotOptions: { bar: { horizontal: true, borderRadius: 3 } },
         dataLabels: { enabled: false },
         xaxis: { labels: { formatter: (val) => formatNumber(val), style: { colors: '#9CA3AF' } }, axisBorder: { show: false } },
