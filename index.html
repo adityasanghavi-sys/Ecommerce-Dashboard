@@ -448,9 +448,17 @@
         colors: ['#8B5CF6'],
         plotOptions: { bar: { horizontal: true, borderRadius: 3 } },
         dataLabels: { enabled: false },
-        xaxis: { labels: { formatter: (val) => formatNumber(val), style: { colors: '#9CA3AF' } }, axisBorder: { show: false } },
-        yaxis: { categories: topProdLabels, labels: { style: { colors: '#E5E7EB' } } },
-        grid: { show: false }
+        // THE FIX: Moved categories to xaxis and added a tooltip formatter
+        xaxis: { 
+          categories: topProdLabels,
+          labels: { formatter: (val) => formatNumber(val), style: { colors: '#9CA3AF' } }, 
+          axisBorder: { show: false } 
+        },
+        yaxis: { 
+          labels: { style: { colors: '#E5E7EB' } } 
+        },
+        grid: { show: false },
+        tooltip: { y: { formatter: (val) => formatNumber(val) } }
       };
       chartInstances.products = new ApexCharts(document.querySelector("#chart-top-products"), optProducts);
       chartInstances.products.render();
