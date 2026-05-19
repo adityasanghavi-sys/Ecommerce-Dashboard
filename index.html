@@ -102,8 +102,8 @@
     </main>
   </div>
 
-  <script>
-    // Initialize standard icons
+<script>
+    // Initialize icons
     lucide.createIcons();
 
     // Setup Tabs Logic
@@ -121,28 +121,122 @@
     function renderTabs() {
       tabContainer.innerHTML = tabs.map(tab => {
         const isActive = activeTab === tab.name;
-        const colorClass = isActive ? 'border-blue-500 text-blue-400' : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-white/20';
+        const colorClass = isActive ? 'border-orange-500 text-orange-400' : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-white/20';
         return `
           <button onclick="setActiveTab('${tab.name}')" class="flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${colorClass}">
             <i data-lucide="${tab.icon}" class="w-4 h-4"></i> ${tab.name}
           </button>
         `;
       }).join('');
-      lucide.createIcons(); // Re-render icons after DOM update
+      lucide.createIcons(); 
     }
 
     function setActiveTab(tabName) {
       activeTab = tabName;
       renderTabs();
-      // Logic to switch views will go here later
+    }
+    renderTabs();
+
+    // --- DATA ENGINE ---
+    // PASTE YOUR ACTUAL GOOGLE APP SCRIPT URL HERE
+    const API_URL = "https://script.google.com/macros/s/AKfycbwjmrasY2jMol0y3FHJ_vs2nVAGQgZ50yQIASQUWRQKXBRvhufqf9zlm5PNRetGM_fF/exec"; 
+    
+    let rawData = [];
+
+    // Format numbers to Lakhs or Thousands (e.g., 76.2L or 105.4K)
+    function formatExecutiveNumber(num, isCurrency = true) {
+      if (!num) return isCurrency ? '₹0' : '0';
+      let formatted = '';
+      if (num >= 100000) {
+        formatted = (num / 100000).toFixed(1) + 'L';
+      } else if (num >= 1000) {
+        formatted = (num / 1000).toFixed(1) + 'K';
+      } else {
+        formatted = num.toFixed(0);
+      }
+      return isCurrency ? '₹' + formatted : formatted;
     }
 
-    // Generate KPI Placeholders
-    document.getElementById('kpi-grid').innerHTML = Array(8).fill(`
-      <div class="h-28 rounded-xl bg-white/[0.02] border border-white/5 animate-pulse"></div>
-    `).join('');
+    async function fetchAndRenderData() {
+      try {
+        const response = await fetch(API_URL);
+        rawData = await response.json();
+        
+        if (!rawData || rawData.length === 0) return;
 
-    renderTabs();
+        // Calculate KPIs
+        let totalGmv = 0;
+        let totalUnits = 0;
+        let platforms = {
+          'Zepto': 0,
+          'Blinkit': 0,
+          'Instamart': 0, // Catching Swiggy here too
+          'Big Basket': 0
+        };
+
+        rawData.forEach(row => {
+          let gmv = Number(row.GMV) || 0;
+          let units = Number(row.Units) || 0;
+          let pName = String(row.Platform).toLowerCase();
+
+          totalGmv += gmv;
+          totalUnits += units;
+
+          if (pName.includes('zepto')) platforms['Zepto'] += gmv;
+          else if (pName.includes('blinkit')) platforms['Blinkit'] += gmv;
+          else if (pName.includes('swiggy') || pName.includes('instamart')) platforms['Instamart'] += gmv;
+          else if (pName.includes('big basket') || pName.includes('bigbasket')) platforms['Big Basket'] += gmv;
+        });
+
+        // Build the HTML for the KPI Grid
+        const kpiGridHtml = `
+          <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-orange-500 col-span-2 md:col-span-2 xl:col-span-2">
+            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Sales</h3>
+            <div class="flex items-end gap-2">
+              <p class="text-3xl font-bold text-white">${formatExecutiveNumber(totalGmv)}</p>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">All platforms</p>
+          </div>
+
+          <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-gray-500 col-span-2 md:col-span-2 xl:col-span-2">
+            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Units</h3>
+            <div class="flex items-end gap-2">
+              <p class="text-3xl font-bold text-white">${formatExecutiveNumber(totalUnits, false)}</p>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">Units sold</p>
+          </div>
+
+          <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-blue-500 col-span-2 md:col-span-1 xl:col-span-1">
+            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Zepto</h3>
+            <p class="text-2xl font-bold text-white">${formatExecutiveNumber(platforms['Zepto'])}</p>
+          </div>
+
+          <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-yellow-500 col-span-2 md:col-span-1 xl:col-span-1">
+            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Blinkit</h3>
+            <p class="text-2xl font-bold text-white">${formatExecutiveNumber(platforms['Blinkit'])}</p>
+          </div>
+
+          <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-green-500 col-span-2 md:col-span-1 xl:col-span-1">
+            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Instamart</h3>
+            <p class="text-2xl font-bold text-white">${formatExecutiveNumber(platforms['Instamart'])}</p>
+          </div>
+
+          <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-red-600 col-span-2 md:col-span-1 xl:col-span-1">
+            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">BigBasket</h3>
+            <p class="text-2xl font-bold text-white">${formatExecutiveNumber(platforms['Big Basket'])}</p>
+          </div>
+        `;
+
+        document.getElementById('kpi-grid').innerHTML = kpiGridHtml;
+
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        document.getElementById('kpi-grid').innerHTML = `<div class="col-span-full text-red-400 p-4 bg-red-900/20 rounded border border-red-500/30">Failed to load data. Please check connection.</div>`;
+      }
+    }
+
+    // Trigger the fetch when page loads
+    fetchAndRenderData();
   </script>
 </body>
 </html>
