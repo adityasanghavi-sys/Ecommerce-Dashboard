@@ -17,6 +17,9 @@
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .apexcharts-tooltip { background: #111 !important; border: 1px border-white/10 !important; color: #fff; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); }
     .apexcharts-tooltip-title { background: #000 !important; border-bottom: 1px solid #333 !important; }
+    
+    /* Dark Theme styling for the native calendar pickers */
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
   </style>
 </head>
 <body class="selection:bg-blue-500/30">
@@ -44,17 +47,28 @@
     </div>
 
     <div class="sticky top-16 z-40 py-4 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5 flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 flex-wrap">
+        
         <div class="relative flex items-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 transition-colors">
           <i data-lucide="calendar" class="w-4 h-4 text-gray-400 mr-2"></i>
           <select id="dateFilter" onchange="setDateRange(this.value)" class="bg-transparent text-sm font-medium text-gray-200 outline-none appearance-none cursor-pointer pr-4">
-            <option value="all" class="bg-gray-900 text-white">All Time</option>
-            <option value="30d" class="bg-gray-900 text-white">Last 30 Days</option>
+            <option value="latest" class="bg-gray-900 text-white">Latest Day</option>
             <option value="7d" class="bg-gray-900 text-white">Last 7 Days</option>
+            <option value="30d" class="bg-gray-900 text-white">Last 30 Days</option>
+            <option value="all" class="bg-gray-900 text-white" selected>All Time</option>
+            <option value="custom" class="bg-gray-900 text-blue-400">Custom Range...</option>
           </select>
           <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 absolute right-2 pointer-events-none"></i>
         </div>
+
+        <div id="custom-date-picker" class="hidden items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-2 py-1 transition-colors">
+          <input type="date" id="startDate" onchange="applyFilters()" class="bg-transparent text-sm text-gray-300 outline-none cursor-pointer">
+          <span class="text-gray-500 text-sm">to</span>
+          <input type="date" id="endDate" onchange="applyFilters()" class="bg-transparent text-sm text-gray-300 outline-none cursor-pointer">
+        </div>
+
       </div>
+      
       <div class="flex items-center gap-3">
         <div class="relative flex items-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 transition-colors">
           <i data-lucide="filter" class="w-4 h-4 text-gray-400 mr-2"></i>
@@ -71,7 +85,7 @@
     </div>
 
     <main class="mt-6 flex flex-col gap-6">
-      <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4" id="kpi-grid"></div>
+      <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4" id="kpi-grid"></div>
 
       <div id="dashboard-content" class="flex flex-col gap-6">
         <div id="platform-summary-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
@@ -120,19 +134,43 @@
     }
 
     // *** PASTE YOUR GOOGLE API URL HERE ***
-    const API_URL = "https://script.google.com/macros/s/AKfycbwjmrasY2jMol0y3FHJ_vs2nVAGQgZ50yQIASQUWRQKXBRvhufqf9zlm5PNRetGM_fF/exec"; 
+    const API_URL = "YOUR_GOOGLE_SCRIPT_WEB_APP_URL"; 
 
     async function fetchAndRenderData() {
       try {
         const response = await fetch(API_URL);
         rawData = await response.json();
+        
+        // Auto-set the date pickers to the latest date available so they aren't blank
+        if (rawData.length > 0) {
+          const maxTime = Math.max(...rawData.map(r => new Date(r.Date).getTime()).filter(t => !isNaN(t)));
+          const maxDateStr = new Date(maxTime).toISOString().split('T')[0];
+          document.getElementById('startDate').value = maxDateStr;
+          document.getElementById('endDate').value = maxDateStr;
+        }
+
         applyFilters(); 
       } catch (error) {
-        console.error("Connection Error");
+        console.error("Connection Error:", error);
       }
     }
 
-    function setDateRange(val) { filters.dateRange = val; applyFilters(); }
+    function setDateRange(val) { 
+      filters.dateRange = val; 
+      
+      // Show/Hide the custom date picker inputs
+      const customPicker = document.getElementById('custom-date-picker');
+      if (val === 'custom') {
+        customPicker.classList.remove('hidden');
+        customPicker.classList.add('flex');
+      } else {
+        customPicker.classList.add('hidden');
+        customPicker.classList.remove('flex');
+      }
+      
+      applyFilters(); 
+    }
+    
     function setPlatform(val) { filters.platform = val; applyFilters(); }
     function setActiveTab(tabName) { filters.tab = tabName; renderTabs(); applyFilters(); }
 
@@ -143,19 +181,41 @@
       
       if (!isOverview || !rawData.length) return;
 
+      // 1. Find the Absolute Latest Date in the Dataset
       const dates = rawData.map(r => new Date(r.Date).getTime()).filter(t => !isNaN(t));
       const maxDate = new Date(Math.max(...dates));
+      maxDate.setHours(0,0,0,0);
       
-      let cutoffDate = new Date(maxDate);
-      if (filters.dateRange === '7d') cutoffDate.setDate(cutoffDate.getDate() - 7);
-      else if (filters.dateRange === '30d') cutoffDate.setDate(cutoffDate.getDate() - 30);
-      else cutoffDate = new Date(0); 
-
       const filteredData = rawData.filter(row => {
         const rowDate = new Date(row.Date);
+        rowDate.setHours(0,0,0,0);
+        
         const pName = String(row.Platform).toLowerCase();
-        const dateMatch = rowDate > cutoffDate && rowDate <= maxDate;
+        
+        // --- Date Logic Engine ---
+        let dateMatch = false;
+        if (filters.dateRange === 'all') {
+          dateMatch = true;
+        } else if (filters.dateRange === 'latest') {
+          dateMatch = rowDate.getTime() === maxDate.getTime();
+        } else if (filters.dateRange === '7d') {
+          let cutoff = new Date(maxDate); cutoff.setDate(cutoff.getDate() - 7);
+          dateMatch = rowDate > cutoff && rowDate <= maxDate;
+        } else if (filters.dateRange === '30d') {
+          let cutoff = new Date(maxDate); cutoff.setDate(cutoff.getDate() - 30);
+          dateMatch = rowDate > cutoff && rowDate <= maxDate;
+        } else if (filters.dateRange === 'custom') {
+          let sVal = document.getElementById('startDate').value;
+          let eVal = document.getElementById('endDate').value;
+          let sDate = sVal ? new Date(sVal) : new Date(0);
+          let eDate = eVal ? new Date(eVal) : new Date('2999-01-01');
+          sDate.setHours(0,0,0,0); eDate.setHours(0,0,0,0);
+          dateMatch = rowDate >= sDate && rowDate <= eDate;
+        }
+
+        // --- Platform Logic Engine ---
         const platMatch = filters.platform === 'All' || pName.includes(filters.platform.toLowerCase());
+        
         return dateMatch && platMatch;
       });
 
@@ -171,19 +231,16 @@
     }
 
     function calculateAndRenderKPIs(data) {
-      let totalGmv = 0, totalUnits = 0, totalSpends = 0;
+      let totalGmv = 0, totalUnits = 0;
       let platforms = { 'Zepto': 0, 'Blinkit': 0, 'Instamart': 0, 'Big Basket': 0 };
 
       data.forEach(row => {
         let gmv = Number(row.GMV) || 0;
         let units = Number(row.Units) || 0;
-        // LOOKING FOR THE NEW SPENDS COLUMN
-        let spends = Number(row.Spends || row.Spend || row['Ad Spend']) || 0;
         let pName = String(row.Platform).toLowerCase();
         
         totalGmv += gmv; 
         totalUnits += units; 
-        totalSpends += spends;
 
         if (pName.includes('zepto')) platforms['Zepto'] += gmv;
         else if (pName.includes('blinkit')) platforms['Blinkit'] += gmv;
@@ -191,50 +248,36 @@
         else if (pName.includes('big basket') || pName.includes('bigbasket')) platforms['Big Basket'] += gmv;
       });
 
-      let blendedRoas = totalSpends > 0 ? (totalGmv / totalSpends).toFixed(2) + 'x' : '--';
-
       document.getElementById('kpi-grid').innerHTML = `
         <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-orange-500 col-span-2">
           <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Sales</h3>
           <p class="text-3xl font-bold text-white">${formatNumber(totalGmv)}</p>
         </div>
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-purple-500 col-span-2">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Ad Spends</h3>
-          <p class="text-3xl font-bold text-white">${totalSpends > 0 ? formatNumber(totalSpends) : '--'}</p>
-        </div>
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-green-400 col-span-2">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Blended ROAS</h3>
-          <p class="text-3xl font-bold text-white">${blendedRoas}</p>
-        </div>
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-gray-500 col-span-2">
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-gray-500 col-span-2 md:col-span-1">
           <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Units</h3>
-          <p class="text-3xl font-bold text-white">${formatNumber(totalUnits, false)}</p>
+          <p class="text-2xl font-bold text-white">${formatNumber(totalUnits, false)}</p>
         </div>
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-blue-500 col-span-2">
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-blue-500 col-span-2 md:col-span-1">
           <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Zepto GMV</h3>
           <p class="text-2xl font-bold text-white">${formatNumber(platforms['Zepto'])}</p>
         </div>
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-yellow-500 col-span-2">
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-yellow-500 col-span-2 md:col-span-1">
           <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Blinkit GMV</h3>
           <p class="text-2xl font-bold text-white">${formatNumber(platforms['Blinkit'])}</p>
         </div>
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-green-500 col-span-2">
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-green-500 col-span-2 md:col-span-1">
           <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Instamart GMV</h3>
           <p class="text-2xl font-bold text-white">${formatNumber(platforms['Instamart'])}</p>
-        </div>
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-red-600 col-span-2">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">BigBasket GMV</h3>
-          <p class="text-2xl font-bold text-white">${formatNumber(platforms['Big Basket'])}</p>
         </div>
       `;
     }
 
     function renderPlatformSummaries(data) {
       let pStats = {
-        'Zepto': { gmv: 0, units: 0, spends: 0, days: new Set(), color: 'text-blue-500' },
-        'Blinkit': { gmv: 0, units: 0, spends: 0, days: new Set(), color: 'text-yellow-500' },
-        'Instamart': { gmv: 0, units: 0, spends: 0, days: new Set(), color: 'text-green-500' },
-        'Big Basket': { gmv: 0, units: 0, spends: 0, days: new Set(), color: 'text-red-500' }
+        'Zepto': { gmv: 0, units: 0, days: new Set(), color: 'text-blue-500' },
+        'Blinkit': { gmv: 0, units: 0, days: new Set(), color: 'text-yellow-500' },
+        'Instamart': { gmv: 0, units: 0, days: new Set(), color: 'text-green-500' },
+        'Big Basket': { gmv: 0, units: 0, days: new Set(), color: 'text-red-500' }
       };
 
       let allUniqueDays = new Set();
@@ -242,7 +285,6 @@
       data.forEach(row => {
         let gmv = Number(row.GMV) || 0;
         let units = Number(row.Units) || 0;
-        let spends = Number(row.Spends || row.Spend || row['Ad Spend']) || 0;
         let pName = String(row.Platform).toLowerCase();
         let dateStr = new Date(row.Date).toDateString();
 
@@ -257,8 +299,7 @@
         if (matchedKey) {
           pStats[matchedKey].gmv += gmv;
           pStats[matchedKey].units += units;
-          pStats[matchedKey].spends += spends;
-          if (gmv > 0 || units > 0 || spends > 0) pStats[matchedKey].days.add(dateStr);
+          if (gmv > 0 || units > 0) pStats[matchedKey].days.add(dateStr);
         }
       });
 
@@ -267,9 +308,6 @@
 
       Object.keys(pStats).forEach(platform => {
         let stats = pStats[platform];
-        let roas = stats.spends > 0 ? (stats.gmv / stats.spends).toFixed(2) + 'x' : '--';
-        let formattedSpends = stats.spends > 0 ? formatNumber(stats.spends) : '--';
-
         html += `
           <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg flex flex-col gap-3">
             <h3 class="text-sm font-semibold ${stats.color}">${platform}</h3>
@@ -280,23 +318,13 @@
             </div>
             
             <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-              <span class="text-gray-400">Spends</span>
-              <span class="text-gray-600 font-medium">${formattedSpends}</span>
-            </div>
-            
-            <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-              <span class="text-gray-400">Avg ROAS</span>
-              <span class="text-gray-600 font-medium">${roas}</span>
-            </div>
-            
-            <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
               <span class="text-gray-400">Units</span>
               <span class="text-gray-100 font-medium">${formatNumber(stats.units, false)}</span>
             </div>
             
             <div class="flex justify-between items-center text-sm">
               <span class="text-gray-400">Active days</span>
-              <span class="text-gray-100 font-medium">${stats.days.size}/${totalDays}</span>
+              <span class="text-gray-100 font-medium">${stats.days.size}/${totalDays || 1}</span>
             </div>
           </div>
         `;
