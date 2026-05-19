@@ -6,6 +6,7 @@
   <title>Snackible Executive Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     body { background-color: #0a0a0a; color: #f3f4f6; font-family: 'Inter', sans-serif; }
@@ -14,6 +15,9 @@
     ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #555; }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
+    /* ApexCharts custom dark theme overrides */
+    .apexcharts-tooltip { background: #111 !important; border: 1px border-white/10 !important; color: #fff; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); }
+    .apexcharts-tooltip-title { background: #000 !important; border-bottom: 1px solid #333 !important; }
   </style>
 </head>
 <body class="selection:bg-blue-500/30">
@@ -72,11 +76,22 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="dashboard-content">
         <div class="lg:col-span-2 flex flex-col gap-6">
-          <div class="h-96 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">Main Chart Area (Step 4)</div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="h-72 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">Platform Split (Step 4)</div>
-            <div class="h-72 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">Category Trend (Step 4)</div>
+          <div class="h-[400px] rounded-xl bg-[#111111] border border-white/5 p-5 shadow-lg">
+            <h3 class="text-sm font-semibold text-gray-300 mb-2">Daily GMV Trend (₹)</h3>
+            <div id="chart-daily-trend" class="w-full h-full pb-6"></div>
           </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="h-[350px] rounded-xl bg-[#111111] border border-white/5 p-5 shadow-lg">
+              <h3 class="text-sm font-semibold text-gray-300 mb-2">Platform Contribution</h3>
+              <div id="chart-platform-share" class="w-full h-full pb-4 flex justify-center"></div>
+            </div>
+            <div class="h-[350px] rounded-xl bg-[#111111] border border-white/5 p-5 shadow-lg">
+              <h3 class="text-sm font-semibold text-gray-300 mb-2">Top 5 Products by GMV</h3>
+              <div id="chart-top-products" class="w-full h-full pb-4"></div>
+            </div>
+          </div>
+          
           <div class="h-96 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">Data Table Area (Step 6)</div>
         </div>
         <div class="lg:col-span-1 flex flex-col gap-6">
@@ -89,27 +104,23 @@
   <script>
     lucide.createIcons();
 
-    // --- GLOBAL STATE & TABS ---
+    // --- GLOBAL STATE ---
     const filters = { dateRange: 'all', platform: 'All', tab: 'Overview' };
     let rawData = [];
+    let chartInstances = {}; // Store charts to destroy/update them on filter change
 
-    const tabs = [
-      { name: 'Overview', icon: 'layout-dashboard' },
-      { name: 'Platform View', icon: 'shopping-cart' },
-      { name: 'Product View', icon: 'package' }
-    ];
+    const tabs = [{ name: 'Overview', icon: 'layout-dashboard' }, { name: 'Platform View', icon: 'shopping-cart' }, { name: 'Product View', icon: 'package' }];
 
     function renderTabs() {
       document.getElementById('tab-container').innerHTML = tabs.map(tab => {
-        const isActive = filters.tab === tab.name;
-        const colorClass = isActive ? 'border-orange-500 text-orange-400' : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-white/20';
-        return `<button onclick="setActiveTab('${tab.name}')" class="flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${colorClass}"><i data-lucide="${tab.icon}" class="w-4 h-4"></i> ${tab.name}</button>`;
+        const c = filters.tab === tab.name ? 'border-orange-500 text-orange-400' : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-white/20';
+        return `<button onclick="setActiveTab('${tab.name}')" class="flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${c}"><i data-lucide="${tab.icon}" class="w-4 h-4"></i> ${tab.name}</button>`;
       }).join('');
       lucide.createIcons(); 
     }
 
-    // --- DATA FETCHING ---
-    const API_URL = "https://script.google.com/macros/s/AKfycbwjmrasY2jMol0y3FHJ_vs2nVAGQgZ50yQIASQUWRQKXBRvhufqf9zlm5PNRetGM_fF/exec"; 
+    // *** PASTE YOUR GOOGLE API URL HERE ***
+    const API_URL = "YOUR_GOOGLE_SCRIPT_WEB_APP_URL"; 
 
     async function fetchAndRenderData() {
       try {
@@ -118,11 +129,10 @@
         rawData = await response.json();
         applyFilters(); 
       } catch (error) {
-        document.getElementById('kpi-grid').innerHTML = `<div class="col-span-full text-red-400 p-4">Connection Error. Check API URL.</div>`;
+        document.getElementById('kpi-grid').innerHTML = `<div class="col-span-full text-red-400 p-4">Connection Error.</div>`;
       }
     }
 
-    // --- FILTER ENGINE ---
     function setDateRange(val) { filters.dateRange = val; applyFilters(); }
     function setPlatform(val) { filters.platform = val; applyFilters(); }
     function setActiveTab(tabName) { filters.tab = tabName; renderTabs(); applyFilters(); }
@@ -151,9 +161,9 @@
       });
 
       calculateAndRenderKPIs(filteredData);
+      renderCharts(filteredData);
     }
 
-    // --- MATH & RENDER ENGINE ---
     function formatNumber(num, isCurrency = true) {
       if (!num) return isCurrency ? '₹0' : '0';
       let formatted = num >= 100000 ? (num / 100000).toFixed(1) + 'L' : num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toFixed(0);
@@ -200,6 +210,93 @@
           <p class="text-2xl font-bold text-white">${formatNumber(platforms['Big Basket'])}</p>
         </div>
       `;
+    }
+
+    // --- APEX CHARTS ENGINE ---
+    function renderCharts(data) {
+      // Common config
+      const darkConfig = { mode: 'dark', background: 'transparent' };
+      const brandColors = ['#EAB308', '#3B82F6', '#22C55E', '#DC2626', '#8B5CF6']; // Yellow, Blue, Green, Red, Purple
+
+      // 1. Prepare Daily Trend Data
+      const dailyMap = {};
+      data.forEach(row => {
+        const d = new Date(row.Date).toLocaleDateString('en-GB', {day: 'numeric', month: 'short'});
+        if(!dailyMap[d]) dailyMap[d] = 0;
+        dailyMap[d] += Number(row.GMV) || 0;
+      });
+      // Sort dates chronologically
+      const sortedDates = Object.keys(dailyMap).sort((a, b) => new Date(a + ' 2026') - new Date(b + ' 2026'));
+      const dailyValues = sortedDates.map(d => dailyMap[d]);
+
+      // 2. Prepare Platform Share Data
+      const pMap = { 'Blinkit': 0, 'Zepto': 0, 'Instamart': 0, 'BigBasket': 0 };
+      data.forEach(row => {
+        let pName = String(row.Platform).toLowerCase();
+        let gmv = Number(row.GMV) || 0;
+        if (pName.includes('zepto')) pMap['Zepto'] += gmv;
+        else if (pName.includes('blinkit')) pMap['Blinkit'] += gmv;
+        else if (pName.includes('swiggy') || pName.includes('instamart')) pMap['Instamart'] += gmv;
+        else if (pName.includes('big basket') || pName.includes('bigbasket')) pMap['BigBasket'] += gmv;
+      });
+
+      // 3. Prepare Top Products Data
+      const prodMap = {};
+      data.forEach(row => {
+        let pName = row['Product Name'] || 'Unknown';
+        if(!prodMap[pName]) prodMap[pName] = 0;
+        prodMap[pName] += Number(row.GMV) || 0;
+      });
+      const topProducts = Object.entries(prodMap).sort((a,b) => b[1]-a[1]).slice(0,5);
+      const topProdLabels = topProducts.map(p => p[0].substring(0, 20) + '...');
+      const topProdValues = topProducts.map(p => p[1]);
+
+      // DESTROY OLD CHARTS IF THEY EXIST (Prevents overlapping when filtering)
+      if(chartInstances.daily) chartInstances.daily.destroy();
+      if(chartInstances.platform) chartInstances.platform.destroy();
+      if(chartInstances.products) chartInstances.products.destroy();
+
+      // RENDER DAILY TREND
+      const optDaily = {
+        series: [{ name: 'GMV', data: dailyValues }],
+        chart: { type: 'bar', height: 320, toolbar: { show: false }, ...darkConfig },
+        colors: ['#F97316'], // Orange
+        plotOptions: { bar: { borderRadius: 4, columnWidth: '50%' } },
+        dataLabels: { enabled: false },
+        xaxis: { categories: sortedDates, labels: { style: { colors: '#9CA3AF' } }, axisBorder: { show: false } },
+        yaxis: { labels: { formatter: (val) => formatNumber(val), style: { colors: '#9CA3AF' } } },
+        grid: { borderColor: '#333', strokeDashArray: 4, yaxis: { lines: { show: true } } }
+      };
+      chartInstances.daily = new ApexCharts(document.querySelector("#chart-daily-trend"), optDaily);
+      chartInstances.daily.render();
+
+      // RENDER PLATFORM DONUT
+      const optPlatform = {
+        series: Object.values(pMap),
+        labels: Object.keys(pMap),
+        chart: { type: 'donut', height: 280, ...darkConfig },
+        colors: brandColors,
+        stroke: { show: true, colors: '#111', width: 2 },
+        dataLabels: { enabled: false },
+        legend: { position: 'bottom', labels: { colors: '#9CA3AF' } },
+        tooltip: { y: { formatter: (val) => formatNumber(val) } }
+      };
+      chartInstances.platform = new ApexCharts(document.querySelector("#chart-platform-share"), optPlatform);
+      chartInstances.platform.render();
+
+      // RENDER TOP PRODUCTS
+      const optProducts = {
+        series: [{ name: 'GMV', data: topProdValues }],
+        chart: { type: 'bar', height: 280, toolbar: { show: false }, ...darkConfig },
+        colors: ['#8B5CF6'], // Purple
+        plotOptions: { bar: { horizontal: true, borderRadius: 3 } },
+        dataLabels: { enabled: false },
+        xaxis: { labels: { formatter: (val) => formatNumber(val), style: { colors: '#9CA3AF' } }, axisBorder: { show: false } },
+        yaxis: { categories: topProdLabels, labels: { style: { colors: '#E5E7EB' } } },
+        grid: { show: false }
+      };
+      chartInstances.products = new ApexCharts(document.querySelector("#chart-top-products"), optProducts);
+      chartInstances.products.render();
     }
 
     renderTabs();
