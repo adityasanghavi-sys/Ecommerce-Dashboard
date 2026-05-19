@@ -544,7 +544,9 @@
         const excludedCategories = ['total', 'ragi chips', 'dipsters', 'puffs', 'others'];
         if (excludedCategories.includes(pName.toLowerCase())) return;
 
+        // THE MISSING VARIABLES:
         let gmv = Number(row.GMV) || 0;
+        let units = Number(row.Units) || 0;
         let platform = String(row.Platform).trim();
         
         if (!productMap[pName]) {
