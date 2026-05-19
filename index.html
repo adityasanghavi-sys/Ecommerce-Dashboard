@@ -535,16 +535,18 @@
     function renderProductView(data) {
       // 1. Aggregate data by Product
       const productMap = {};
+      
       data.forEach(row => {
         let rawName = String(row['Product Name'] || 'Unknown').trim();
-        // Force Title Case to fix lowercase/uppercase mismatches
+        
+        // Force Title Case
         let pName = rawName.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
         
-        // EXCLUDE CATEGORY & SUBTOTAL ROWS
+        // Exclude Category Rows
         const excludedCategories = ['total', 'ragi chips', 'dipsters', 'puffs', 'others'];
         if (excludedCategories.includes(pName.toLowerCase())) return;
 
-        // THE MISSING VARIABLES:
+        // Safely declare variables
         let gmv = Number(row.GMV) || 0;
         let units = Number(row.Units) || 0;
         let platform = String(row.Platform).trim();
@@ -552,6 +554,8 @@
         if (!productMap[pName]) {
           productMap[pName] = { gmv: 0, units: 0, platforms: {} };
         }
+        
+        // Do the math
         productMap[pName].gmv += gmv;
         productMap[pName].units += units;
         
@@ -561,10 +565,9 @@
         productMap[pName].platforms[platform] += gmv;
       });
 
-      // 2. Convert to array and sort by GMV (highest first)
+      // 2. Convert to array and sort by GMV
       let productArray = Object.keys(productMap).map(name => {
         let stats = productMap[name];
-        // Find top platform for this specific SKU
         let topPlatform = Object.keys(stats.platforms).reduce((a, b) => stats.platforms[a] > stats.platforms[b] ? a : b, "");
         
         return {
@@ -576,10 +579,10 @@
         };
       }).sort((a, b) => b.gmv - a.gmv);
 
-      // Save globally for the search bar function
+      // Save globally for the search bar
       window.currentProductData = productArray;
       
-      // 3. Calculate Product-Specific KPIs
+      // 3. Calculate KPIs
       let activeSkus = productArray.length;
       let topRevSku = activeSkus > 0 ? productArray[0].name : '--';
       let topVolSku = activeSkus > 0 ? [...productArray].sort((a,b) => b.units - a.units)[0].name : '--';
