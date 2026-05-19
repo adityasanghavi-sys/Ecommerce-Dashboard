@@ -282,8 +282,10 @@
       calculateAndRenderKPIs(filteredData);
       renderPlatformSummaries(filteredData);
       renderCharts(filteredData);
-      window.currentFilteredData = filteredData;
-      if (isProductView) renderProductView(filteredData);
+     window.currentFilteredData = filteredData;
+      if (filters.tab === 'Product View') {
+        renderProductView(filteredData);
+      }
     }
 
     function formatNumber(num, isCurrency = true) {
