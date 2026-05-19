@@ -397,7 +397,7 @@
         prodMap[pName] += Number(row.GMV) || 0;
       });
       const topProducts = Object.entries(prodMap).sort((a,b) => b[1]-a[1]).slice(0,5);
-      const topProdLabels = topProducts.map(p => p[0].substring(0, 20) + '...');
+      const topProdLabels = topProducts.map(p => p[0]); // Keeps the full product name
       const topProdValues = topProducts.map(p => p[1]);
 
       if(chartInstances.daily) chartInstances.daily.destroy();
