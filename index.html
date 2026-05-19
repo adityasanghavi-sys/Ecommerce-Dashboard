@@ -4,21 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Snackible Executive Dashboard</title>
-  
   <script src="https://cdn.tailwindcss.com"></script>
-  
   <script src="https://unpkg.com/lucide@latest"></script>
-  
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
   <style>
     body { background-color: #0a0a0a; color: #f3f4f6; font-family: 'Inter', sans-serif; }
-    /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #0a0a0a; }
     ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #555; }
-    /* Hide scrollbar for tabs */
     .scrollbar-hide::-webkit-scrollbar { display: none; }
   </style>
 </head>
@@ -27,23 +21,13 @@
   <nav class="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-md">
     <div class="max-w-[1600px] mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-          S
-        </div>
+        <div class="w-8 h-8 rounded bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]">S</div>
         <span class="text-xl font-semibold tracking-tight">SNACKIBLE <span class="text-gray-500 font-normal">Analytics</span></span>
       </div>
-      
       <div class="flex items-center gap-4">
-        <div class="relative hidden md:block">
-          <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
-          <input type="text" placeholder="Search products, SKUs..." class="bg-white/5 border border-white/10 rounded-full py-1.5 pl-9 pr-4 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 w-64 transition-all">
-        </div>
         <button class="p-2 hover:bg-white/5 rounded-full relative transition">
           <i data-lucide="bell" class="w-5 h-5 text-gray-400"></i>
           <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-[#0a0a0a]"></span>
-        </button>
-        <button class="p-2 hover:bg-white/5 rounded-full transition">
-          <i data-lucide="settings" class="w-5 h-5 text-gray-400"></i>
         </button>
       </div>
     </div>
@@ -53,38 +37,40 @@
     
     <div class="pt-8 pb-2">
       <h1 class="text-3xl font-bold tracking-tight mb-6">Executive Overview</h1>
-      <div class="flex space-x-1 border-b border-white/10 overflow-x-auto scrollbar-hide" id="tab-container">
-        </div>
+      <div class="flex space-x-1 border-b border-white/10 overflow-x-auto scrollbar-hide" id="tab-container"></div>
     </div>
 
     <div class="sticky top-16 z-40 py-4 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5 flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-3">
-        <button class="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-sm font-medium transition">
-          <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i> Last 7 Days <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500"></i>
-        </button>
-        <div class="h-6 w-px bg-white/10 mx-1"></div>
-        <div class="flex bg-white/5 rounded-lg p-0.5 border border-white/10">
-          <button class="px-3 py-1 text-xs font-medium rounded-md bg-white/10 text-white shadow-sm">Daily</button>
-          <button class="px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-gray-200">Weekly</button>
-          <button class="px-3 py-1 text-xs font-medium rounded-md text-gray-400 hover:text-gray-200">Monthly</button>
+        <div class="relative flex items-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 transition-colors">
+          <i data-lucide="calendar" class="w-4 h-4 text-gray-400 mr-2"></i>
+          <select id="dateFilter" onchange="setDateRange(this.value)" class="bg-transparent text-sm font-medium text-gray-200 outline-none appearance-none cursor-pointer pr-4">
+            <option value="all" class="bg-gray-900 text-white">All Time</option>
+            <option value="30d" class="bg-gray-900 text-white">Last 30 Days</option>
+            <option value="7d" class="bg-gray-900 text-white">Last 7 Days</option>
+          </select>
+          <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 absolute right-2 pointer-events-none"></i>
         </div>
       </div>
       <div class="flex items-center gap-3">
-        <button class="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-sm font-medium transition">
-          <i data-lucide="filter" class="w-4 h-4 text-gray-400"></i> All Platforms <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500"></i>
-        </button>
-        <button class="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 rounded-lg px-4 py-1.5 text-sm font-medium transition">
-          Compare: Prev Period
-        </button>
+        <div class="relative flex items-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 transition-colors">
+          <i data-lucide="filter" class="w-4 h-4 text-gray-400 mr-2"></i>
+          <select id="platformFilter" onchange="setPlatform(this.value)" class="bg-transparent text-sm font-medium text-gray-200 outline-none appearance-none cursor-pointer pr-4">
+            <option value="All" class="bg-gray-900 text-white">All Platforms</option>
+            <option value="Blinkit" class="bg-gray-900 text-white">Blinkit</option>
+            <option value="Zepto" class="bg-gray-900 text-white">Zepto</option>
+            <option value="Instamart" class="bg-gray-900 text-white">Instamart</option>
+            <option value="Big Basket" class="bg-gray-900 text-white">Big Basket</option>
+          </select>
+          <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 absolute right-2 pointer-events-none"></i>
+        </div>
       </div>
     </div>
 
     <main class="mt-6 flex flex-col gap-6">
-      
-      <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4" id="kpi-grid">
-        </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4" id="kpi-grid"></div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="dashboard-content">
         <div class="lg:col-span-2 flex flex-col gap-6">
           <div class="h-96 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">Main Chart Area (Step 4)</div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -93,149 +79,130 @@
           </div>
           <div class="h-96 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">Data Table Area (Step 6)</div>
         </div>
-        
         <div class="lg:col-span-1 flex flex-col gap-6">
           <div class="h-80 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">AI Insights Panel (Step 7)</div>
-          <div class="h-64 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">Alerts Engine (Step 7)</div>
         </div>
       </div>
     </main>
   </div>
 
-<script>
-    // Initialize icons
+  <script>
     lucide.createIcons();
 
-    // Setup Tabs Logic
+    // --- GLOBAL STATE & TABS ---
+    const filters = { dateRange: 'all', platform: 'All', tab: 'Overview' };
+    let rawData = [];
+
     const tabs = [
       { name: 'Overview', icon: 'layout-dashboard' },
       { name: 'Platform View', icon: 'shopping-cart' },
-      { name: 'Product View', icon: 'package' },
-      { name: 'Marketing', icon: 'trending-up' },
-      { name: 'Finance', icon: 'dollar-sign' }
+      { name: 'Product View', icon: 'package' }
     ];
 
-    let activeTab = 'Overview';
-    const tabContainer = document.getElementById('tab-container');
-
     function renderTabs() {
-      tabContainer.innerHTML = tabs.map(tab => {
-        const isActive = activeTab === tab.name;
+      document.getElementById('tab-container').innerHTML = tabs.map(tab => {
+        const isActive = filters.tab === tab.name;
         const colorClass = isActive ? 'border-orange-500 text-orange-400' : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-white/20';
-        return `
-          <button onclick="setActiveTab('${tab.name}')" class="flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${colorClass}">
-            <i data-lucide="${tab.icon}" class="w-4 h-4"></i> ${tab.name}
-          </button>
-        `;
+        return `<button onclick="setActiveTab('${tab.name}')" class="flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${colorClass}"><i data-lucide="${tab.icon}" class="w-4 h-4"></i> ${tab.name}</button>`;
       }).join('');
       lucide.createIcons(); 
     }
 
-    function setActiveTab(tabName) {
-      activeTab = tabName;
-      renderTabs();
-    }
-    renderTabs();
-
-    // --- DATA ENGINE ---
-    // PASTE YOUR ACTUAL GOOGLE APP SCRIPT URL HERE
+    // --- DATA FETCHING ---
     const API_URL = "https://script.google.com/macros/s/AKfycbwjmrasY2jMol0y3FHJ_vs2nVAGQgZ50yQIASQUWRQKXBRvhufqf9zlm5PNRetGM_fF/exec"; 
-    
-    let rawData = [];
-
-    // Format numbers to Lakhs or Thousands (e.g., 76.2L or 105.4K)
-    function formatExecutiveNumber(num, isCurrency = true) {
-      if (!num) return isCurrency ? '₹0' : '0';
-      let formatted = '';
-      if (num >= 100000) {
-        formatted = (num / 100000).toFixed(1) + 'L';
-      } else if (num >= 1000) {
-        formatted = (num / 1000).toFixed(1) + 'K';
-      } else {
-        formatted = num.toFixed(0);
-      }
-      return isCurrency ? '₹' + formatted : formatted;
-    }
 
     async function fetchAndRenderData() {
       try {
+        document.getElementById('kpi-grid').innerHTML = `<div class="col-span-full text-blue-400 p-4">Loading Data...</div>`;
         const response = await fetch(API_URL);
         rawData = await response.json();
-        
-        if (!rawData || rawData.length === 0) return;
-
-        // Calculate KPIs
-        let totalGmv = 0;
-        let totalUnits = 0;
-        let platforms = {
-          'Zepto': 0,
-          'Blinkit': 0,
-          'Instamart': 0, // Catching Swiggy here too
-          'Big Basket': 0
-        };
-
-        rawData.forEach(row => {
-          let gmv = Number(row.GMV) || 0;
-          let units = Number(row.Units) || 0;
-          let pName = String(row.Platform).toLowerCase();
-
-          totalGmv += gmv;
-          totalUnits += units;
-
-          if (pName.includes('zepto')) platforms['Zepto'] += gmv;
-          else if (pName.includes('blinkit')) platforms['Blinkit'] += gmv;
-          else if (pName.includes('swiggy') || pName.includes('instamart')) platforms['Instamart'] += gmv;
-          else if (pName.includes('big basket') || pName.includes('bigbasket')) platforms['Big Basket'] += gmv;
-        });
-
-        // Build the HTML for the KPI Grid
-        const kpiGridHtml = `
-          <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-orange-500 col-span-2 md:col-span-2 xl:col-span-2">
-            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Sales</h3>
-            <div class="flex items-end gap-2">
-              <p class="text-3xl font-bold text-white">${formatExecutiveNumber(totalGmv)}</p>
-            </div>
-            <p class="text-xs text-gray-500 mt-2">All platforms</p>
-          </div>
-
-          <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-gray-500 col-span-2 md:col-span-2 xl:col-span-2">
-            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Units</h3>
-            <div class="flex items-end gap-2">
-              <p class="text-3xl font-bold text-white">${formatExecutiveNumber(totalUnits, false)}</p>
-            </div>
-            <p class="text-xs text-gray-500 mt-2">Units sold</p>
-          </div>
-
-          <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-blue-500 col-span-2 md:col-span-1 xl:col-span-1">
-            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Zepto</h3>
-            <p class="text-2xl font-bold text-white">${formatExecutiveNumber(platforms['Zepto'])}</p>
-          </div>
-
-          <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-yellow-500 col-span-2 md:col-span-1 xl:col-span-1">
-            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Blinkit</h3>
-            <p class="text-2xl font-bold text-white">${formatExecutiveNumber(platforms['Blinkit'])}</p>
-          </div>
-
-          <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-green-500 col-span-2 md:col-span-1 xl:col-span-1">
-            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Instamart</h3>
-            <p class="text-2xl font-bold text-white">${formatExecutiveNumber(platforms['Instamart'])}</p>
-          </div>
-
-          <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-red-600 col-span-2 md:col-span-1 xl:col-span-1">
-            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">BigBasket</h3>
-            <p class="text-2xl font-bold text-white">${formatExecutiveNumber(platforms['Big Basket'])}</p>
-          </div>
-        `;
-
-        document.getElementById('kpi-grid').innerHTML = kpiGridHtml;
-
+        applyFilters(); 
       } catch (error) {
-        console.error("Error fetching data:", error);
-        document.getElementById('kpi-grid').innerHTML = `<div class="col-span-full text-red-400 p-4 bg-red-900/20 rounded border border-red-500/30">Failed to load data. Please check connection.</div>`;
+        document.getElementById('kpi-grid').innerHTML = `<div class="col-span-full text-red-400 p-4">Connection Error. Check API URL.</div>`;
       }
     }
 
-    // Trigger the fetch when page loads
+    // --- FILTER ENGINE ---
+    function setDateRange(val) { filters.dateRange = val; applyFilters(); }
+    function setPlatform(val) { filters.platform = val; applyFilters(); }
+    function setActiveTab(tabName) { filters.tab = tabName; renderTabs(); applyFilters(); }
+
+    function applyFilters() {
+      const isOverview = filters.tab === 'Overview';
+      document.getElementById('kpi-grid').style.display = isOverview ? 'grid' : 'none';
+      document.getElementById('dashboard-content').style.display = isOverview ? 'grid' : 'none';
+      
+      if (!isOverview || !rawData.length) return;
+
+      const dates = rawData.map(r => new Date(r.Date).getTime()).filter(t => !isNaN(t));
+      const maxDate = new Date(Math.max(...dates));
+      
+      let cutoffDate = new Date(maxDate);
+      if (filters.dateRange === '7d') cutoffDate.setDate(cutoffDate.getDate() - 7);
+      else if (filters.dateRange === '30d') cutoffDate.setDate(cutoffDate.getDate() - 30);
+      else cutoffDate = new Date(0); 
+
+      const filteredData = rawData.filter(row => {
+        const rowDate = new Date(row.Date);
+        const pName = String(row.Platform).toLowerCase();
+        const dateMatch = rowDate > cutoffDate && rowDate <= maxDate;
+        const platMatch = filters.platform === 'All' || pName.includes(filters.platform.toLowerCase());
+        return dateMatch && platMatch;
+      });
+
+      calculateAndRenderKPIs(filteredData);
+    }
+
+    // --- MATH & RENDER ENGINE ---
+    function formatNumber(num, isCurrency = true) {
+      if (!num) return isCurrency ? '₹0' : '0';
+      let formatted = num >= 100000 ? (num / 100000).toFixed(1) + 'L' : num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toFixed(0);
+      return isCurrency ? '₹' + formatted : formatted;
+    }
+
+    function calculateAndRenderKPIs(data) {
+      let totalGmv = 0, totalUnits = 0;
+      let platforms = { 'Zepto': 0, 'Blinkit': 0, 'Instamart': 0, 'Big Basket': 0 };
+
+      data.forEach(row => {
+        let gmv = Number(row.GMV) || 0, units = Number(row.Units) || 0;
+        let pName = String(row.Platform).toLowerCase();
+        totalGmv += gmv; totalUnits += units;
+        if (pName.includes('zepto')) platforms['Zepto'] += gmv;
+        else if (pName.includes('blinkit')) platforms['Blinkit'] += gmv;
+        else if (pName.includes('swiggy') || pName.includes('instamart')) platforms['Instamart'] += gmv;
+        else if (pName.includes('big basket') || pName.includes('bigbasket')) platforms['Big Basket'] += gmv;
+      });
+
+      document.getElementById('kpi-grid').innerHTML = `
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-orange-500 col-span-2">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Sales</h3>
+          <p class="text-3xl font-bold text-white">${formatNumber(totalGmv)}</p>
+        </div>
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-gray-500 col-span-2">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Units</h3>
+          <p class="text-3xl font-bold text-white">${formatNumber(totalUnits, false)}</p>
+        </div>
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-blue-500 col-span-2 md:col-span-1">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Zepto</h3>
+          <p class="text-2xl font-bold text-white">${formatNumber(platforms['Zepto'])}</p>
+        </div>
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-yellow-500 col-span-2 md:col-span-1">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Blinkit</h3>
+          <p class="text-2xl font-bold text-white">${formatNumber(platforms['Blinkit'])}</p>
+        </div>
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-green-500 col-span-2 md:col-span-1">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Instamart</h3>
+          <p class="text-2xl font-bold text-white">${formatNumber(platforms['Instamart'])}</p>
+        </div>
+        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-red-600 col-span-2 md:col-span-1">
+          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">BigBasket</h3>
+          <p class="text-2xl font-bold text-white">${formatNumber(platforms['Big Basket'])}</p>
+        </div>
+      `;
+    }
+
+    renderTabs();
     fetchAndRenderData();
   </script>
 </body>
