@@ -155,6 +155,10 @@
           
         </div>
       </div>
+      <div id="platform-view-content" class="hidden flex-col gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="platform-cards-container">
+          </div>
+      </div>
     </main>
   </div>
 
@@ -225,6 +229,7 @@
     function applyFilters() {
       const isOverview = filters.tab === 'Overview';
       const isProductView = filters.tab === 'Product View';
+      const isPlatformView = filters.tab === 'Platform View';
       
       // Route Overview Elements
       document.getElementById('kpi-grid').style.display = isOverview ? 'grid' : 'none';
@@ -232,9 +237,11 @@
       
       // Route Product View Elements
       const productViewEl = document.getElementById('product-view-content');
-      if (productViewEl) {
-        productViewEl.style.display = isProductView ? 'flex' : 'none';
-      }
+      if (productViewEl) productViewEl.style.display = isProductView ? 'flex' : 'none';
+
+      // Route Platform View Elements
+      const platformViewEl = document.getElementById('platform-view-content');
+      if (platformViewEl) platformViewEl.style.display = isPlatformView ? 'flex' : 'none';
       
       // Save filtered data globally so the search bar can access it instantly
       window.currentFilteredData = [];
@@ -286,7 +293,12 @@
       if (filters.tab === 'Product View') {
         renderProductView(filteredData);
       }
-    }
+      
+      // ---> YOUR NEW TRIGGER LINE <---
+      if (filters.tab === 'Platform View') {
+        renderPlatformView(filteredData); 
+      }
+    } // <-- This is the bracket that ends the applyFilters() function
 
     function formatNumber(num, isCurrency = true) {
       if (!num) return isCurrency ? '₹0' : '0';
