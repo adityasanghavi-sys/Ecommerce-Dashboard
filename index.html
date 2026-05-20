@@ -1492,9 +1492,8 @@
       // Filter SKU data for this platform + selected month
       const month = activeMonth; // "04", "05", or "All"
       const filtered = skuData.filter(r => {
-        // Month could be string "04"/"05" or integer 4/5 — handle both
-        const skuM = String(r.Month).trim();
-        const mMatch = month === 'All' || skuM === month || skuM === String(parseInt(month,10)) || Number(skuM) === parseInt(month,10);
+        // Month in SKU_Data is integer 4 or 5
+        const mMatch = month === 'All' || Number(r.Month) === parseInt(month, 10);
         return mMatch && String(r.Platform) === platform;
       });
 
