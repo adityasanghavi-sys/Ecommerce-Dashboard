@@ -382,6 +382,102 @@
     }
 
 
+
+    /* Channel detail view */
+    .detail-back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      padding: 0;
+      margin-bottom: 20px;
+      transition: color 0.15s;
+    }
+    .detail-back-btn:hover { color: var(--text-primary); }
+    .detail-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .detail-platform-name {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+    .detail-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 900px) { .detail-kpi-grid { grid-template-columns: repeat(2,1fr); } }
+
+    .detail-charts-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 900px) { .detail-charts-grid { grid-template-columns: 1fr; } }
+
+    .sku-table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .sku-table-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+    .sku-table { width: 100%; border-collapse: collapse; }
+    .sku-table th {
+      padding: 10px 20px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid var(--border);
+    }
+    .sku-table th.right { text-align: right; }
+    .sku-table td {
+      padding: 12px 20px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+    .sku-table td.right { text-align: right; }
+    .sku-table tr:last-child td { border-bottom: none; }
+    .sku-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .sku-name-cell { color: var(--text-primary); font-weight: 500; }
+    .sku-rank { color: var(--text-muted); font-size: 11px; margin-right: 8px; font-family: 'DM Mono', monospace; }
+    .cat-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      font-family: 'DM Mono', monospace;
+    }
+    .pct-bar-wrap { display: flex; align-items: center; gap: 8px; }
+    .pct-bar-bg { flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; }
+    .pct-bar-fill { height: 4px; border-radius: 2px; background: var(--orange); }
     /* Tab nav */
     .tab-nav {
       display: flex;
@@ -702,12 +798,49 @@
 
       </div>
 
+      <!-- ── CHANNEL DETAIL VIEW ── -->
+      <div id="view-channel" style="display:none">
+        <button class="detail-back-btn" onclick="closeChannelView()">← Back to Overview</button>
+        <div class="detail-header">
+          <div class="detail-platform-name" id="detail-platform-name">Platform</div>
+          <div id="detail-roas-badge" class="platform-roas-badge" style="font-size:13px;padding:5px 12px"></div>
+        </div>
+        <div class="detail-kpi-grid" id="detail-kpi-grid"></div>
+        <div class="detail-charts-grid">
+          <div class="chart-section">
+            <div class="chart-title">Daily Sales Trend (₹)</div>
+            <div id="detail-chart-daily" style="height:280px"></div>
+          </div>
+          <div class="chart-section">
+            <div class="chart-title">Category Mix</div>
+            <div id="detail-chart-cat" style="height:280px"></div>
+          </div>
+        </div>
+        <div class="sku-table-wrap">
+          <div class="sku-table-header">Top SKUs by MTD Revenue</div>
+          <table class="sku-table">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Category</th>
+                <th class="right">Est. Revenue</th>
+                <th class="right">MTD Revenue</th>
+                <th class="right">MTD Units</th>
+                <th class="right">% of Total</th>
+              </tr>
+            </thead>
+            <tbody id="detail-sku-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </div>
 
   <script>
     // ─── CONFIG ────────────────────────────────────────────────────────────────
     const API_URL = "https://script.google.com/macros/s/AKfycbwjmrasY2jMol0y3FHJ_vs2nVAGQgZ50yQIASQUWRQKXBRvhufqf9zlm5PNRetGM_fF/exec";
+    const SKU_URL = API_URL + "?type=sku";
 
     const PLATFORM_CONFIG = {
       'Zepto':      { color: '#3B82F6', budget: { '04': 1500000, '05': 2070000 } },
@@ -763,30 +896,24 @@
       render();
     }
 
-function parseLocalDate(str) {
-      // Parse YYYY-MM-DD as local date, not UTC — prevents IST timezone shift
-      const parts = String(str).split('-');
-      if (parts.length === 3) return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-      return new Date(str);
-    }
-
     function getFilteredData() {
       const platform = document.getElementById('platformFilter').value;
       const today = new Date(); today.setHours(0,0,0,0);
 
       // Find latest date in dataset
-      const allDates = rawData.map(r => parseLocalDate(r.Date)).filter(d => !isNaN(d));
+      const allDates = rawData.map(r => new Date(r.Date)).filter(d => !isNaN(d));
       const latestDate = allDates.length ? new Date(Math.max(...allDates)) : today;
       latestDate.setHours(0,0,0,0);
 
-   const t1 = new Date(latestDate); // latest date in sheet = T-1 (yesterday's data)
-      const t2 = new Date(latestDate); t2.setDate(t2.getDate() - 1); // one before that = T-2
+      // T-1 = day before latest, T-2 = two days before latest
+      const t1 = new Date(latestDate); t1.setDate(t1.getDate() - 1);
+      const t2 = new Date(latestDate); t2.setDate(t2.getDate() - 2);
 
       return rawData.filter(row => {
         const monthMatch = activeMonth === 'All' || Number(row.Month) === parseInt(activeMonth, 10);
         const platMatch  = platform === 'All' || String(row.Platform) === platform;
 
-        const rowDate = parseLocalDate(row.Date); rowDate.setHours(0,0,0,0);
+        const rowDate = new Date(row.Date); rowDate.setHours(0,0,0,0);
         let dateMatch = true;
 
         if (activePeriod === 't1') {
@@ -998,7 +1125,7 @@ function parseLocalDate(str) {
         }
 
         html += `
-          <div class="platform-card" style="--p-color:${color}">
+          <div class="platform-card" style="--p-color:${color};cursor:pointer" onclick="openChannelView('${p}')">
             <div class="platform-name">
               ${p}
               <span class="platform-roas-badge ${badgeCls}">ROAS ${fmtRoas(roasVal)}</span>
@@ -1122,7 +1249,7 @@ function parseLocalDate(str) {
 
     function filterByDateRange(start, end) {
       return rawData.filter(r => {
-        const d = parseLocalDate(r.Date); d.setHours(0,0,0,0);
+        const d = new Date(r.Date); d.setHours(0,0,0,0);
         return d >= start && d <= end;
       });
     }
@@ -1317,6 +1444,195 @@ function parseLocalDate(str) {
       } else {
         document.getElementById('cmp-line-wrap').style.display = 'none';
       }
+    }
+
+
+    // ─── CHANNEL DETAIL ENGINE ─────────────────────────────────────────────────
+    let skuData = [];
+    let detailChartDaily = null, detailChartCat = null;
+
+    async function loadSKUData() {
+      if (skuData.length > 0) return; // already loaded
+      try {
+        const res = await fetch(SKU_URL, { redirect: 'follow' });
+        const text = await res.text();
+        skuData = JSON.parse(text);
+      } catch(e) {
+        console.error('SKU fetch failed:', e);
+        skuData = [];
+      }
+    }
+
+    async function openChannelView(platform) {
+      // Show channel view, hide overview
+      document.getElementById('view-overview').style.display = 'none';
+      document.getElementById('view-compare').style.display = 'none';
+      document.getElementById('view-channel').style.display = 'block';
+
+      // Set platform name
+      document.getElementById('detail-platform-name').textContent = platform;
+      const cfg = PLATFORM_CONFIG[platform] || { color: '#888' };
+      document.getElementById('detail-platform-name').style.color = cfg.color;
+
+      // Load SKU data if not yet loaded
+      await loadSKUData();
+
+      // Filter SKU data for this platform + selected month
+      const month = activeMonth; // "04", "05", or "All"
+      const filtered = skuData.filter(r => {
+        const mMatch = month === 'All' || String(r.Month) === month;
+        return mMatch && String(r.Platform) === platform;
+      });
+
+      // Get OMS data for this platform (for ROAS + daily sales)
+      const omsFiltered = rawData.filter(r => {
+        const mMatch = month === 'All' || Number(r.Month) === parseInt(month, 10);
+        return mMatch && String(r.Platform) === platform;
+      });
+
+      renderChannelKPIs(filtered, omsFiltered, platform);
+      renderChannelDailyChart(omsFiltered);
+      renderChannelCatDonut(filtered, cfg.color);
+      renderChannelSKUTable(filtered);
+    }
+
+    function closeChannelView() {
+      document.getElementById('view-channel').style.display = 'none';
+      document.getElementById('view-overview').style.display = 'block';
+    }
+
+    function renderChannelKPIs(skuRows, omsRows, platform) {
+      const totalMTDRev  = skuRows.reduce((s, r) => s + (Number(r.MTDRevenue) || 0), 0);
+      const totalMTDUnit = skuRows.reduce((s, r) => s + (Number(r.MTDUnits)   || 0), 0);
+      const totalEstRev  = skuRows.reduce((s, r) => s + (Number(r.EstRevenue) || 0), 0);
+
+      // ROAS from OMS data
+      const totalSales  = omsRows.reduce((s, r) => s + (Number(r.Sales)  || 0), 0);
+      const totalSpends = omsRows.reduce((s, r) => s + (Number(r.Spends) || 0), 0);
+      const roas = totalSpends > 0 ? (totalSales / totalSpends) : 0;
+
+      const cfg = PLATFORM_CONFIG[platform] || { color: '#888' };
+
+      // ROAS badge
+      const badge = document.getElementById('detail-roas-badge');
+      badge.textContent = roas > 0 ? 'ROAS ' + roas.toFixed(2) + 'x' : 'ROAS --';
+      badge.className = 'platform-roas-badge ' + (roas >= 2 ? 'good' : roas > 0 ? 'ok' : '');
+
+      document.getElementById('detail-kpi-grid').innerHTML = `
+        <div class="kpi-card" style="--accent:${cfg.color}">
+          <div class="kpi-label">MTD Revenue</div>
+          <div class="kpi-value">${fmt(totalMTDRev)}</div>
+          <div class="kpi-sub neutral">${totalMTDUnit.toLocaleString()} units</div>
+        </div>
+        <div class="kpi-card" style="--accent:var(--green)">
+          <div class="kpi-label">ROAS</div>
+          <div class="kpi-value">${roas > 0 ? roas.toFixed(2)+'x' : '--'}</div>
+          <div class="kpi-sub ${roas >= 2 ? 'positive' : 'neutral'}">${roas >= 2 ? '▲ Healthy' : roas > 0 ? '△ Monitor' : 'No spends tracked'}</div>
+        </div>
+        <div class="kpi-card" style="--accent:var(--blue)">
+          <div class="kpi-label">MTD Units</div>
+          <div class="kpi-value">${fmt(totalMTDUnit, false)}</div>
+          <div class="kpi-sub neutral">ASP ₹${totalMTDUnit > 0 ? (totalMTDRev/totalMTDUnit).toFixed(0) : '--'}</div>
+        </div>
+        <div class="kpi-card" style="--accent:var(--purple)">
+          <div class="kpi-label">Est. Revenue</div>
+          <div class="kpi-value">${fmt(totalEstRev)}</div>
+          <div class="kpi-sub neutral">Full month projection</div>
+        </div>
+      `;
+    }
+
+    function renderChannelDailyChart(omsRows) {
+      // Build date → sales map from OMS rows
+      const dateMap = {};
+      omsRows.forEach(r => {
+        const d = String(r.Date);
+        dateMap[d] = (dateMap[d] || 0) + (Number(r.Sales) || 0);
+      });
+      const sortedDates = Object.keys(dateMap).sort();
+      const labels = sortedDates.map(d => {
+        const parts = d.split('-');
+        return parts[2] + '/' + parts[1];
+      });
+      const values = sortedDates.map(d => dateMap[d]);
+
+      if (detailChartDaily) detailChartDaily.destroy();
+      detailChartDaily = new ApexCharts(document.querySelector('#detail-chart-daily'), {
+        series: [{ name: 'Sales', data: values }],
+        chart: { type: 'bar', height: 260, toolbar: { show: false }, background: 'transparent', fontFamily: 'DM Sans, sans-serif' },
+        theme: { mode: 'dark' },
+        colors: ['#F97316'],
+        plotOptions: { bar: { borderRadius: 3, columnWidth: '60%' } },
+        dataLabels: { enabled: false },
+        grid: { borderColor: 'rgba(255,255,255,0.05)', strokeDashArray: 4 },
+        xaxis: { categories: labels, labels: { style: { colors: '#555', fontSize: '11px' }, rotate: -45 }, axisBorder: { show: false }, axisTicks: { show: false } },
+        yaxis: { labels: { formatter: v => fmt(v), style: { colors: '#555', fontSize: '11px' } } },
+        tooltip: { y: { formatter: v => fmt(v) }, theme: 'dark' },
+      });
+      detailChartDaily.render();
+    }
+
+    function renderChannelCatDonut(skuRows, color) {
+      const catMap = {};
+      skuRows.forEach(r => {
+        const cat = String(r.Category || 'Others');
+        catMap[cat] = (catMap[cat] || 0) + (Number(r.MTDRevenue) || 0);
+      });
+      const labels = Object.keys(catMap);
+      const values = labels.map(k => catMap[k]);
+      const CAT_COLORS = { 'Ragi Chips': '#F97316', 'Dipsters': '#A855F7', 'Puffs': '#22C55E', 'Others': '#3B82F6' };
+      const colors = labels.map(l => CAT_COLORS[l] || '#888');
+
+      if (detailChartCat) detailChartCat.destroy();
+      detailChartCat = new ApexCharts(document.querySelector('#detail-chart-cat'), {
+        series: values,
+        labels: labels,
+        chart: { type: 'donut', height: 260, background: 'transparent', fontFamily: 'DM Sans, sans-serif' },
+        theme: { mode: 'dark' },
+        colors: colors,
+        stroke: { show: true, colors: ['#111'], width: 2 },
+        dataLabels: { enabled: true, style: { fontSize: '11px' }, formatter: (val) => val.toFixed(1) + '%' },
+        legend: { position: 'bottom', labels: { colors: '#888' }, fontSize: '12px' },
+        tooltip: { y: { formatter: v => fmt(v) }, theme: 'dark' },
+        plotOptions: { pie: { donut: { size: '60%' } } },
+      });
+      detailChartCat.render();
+    }
+
+    function renderChannelSKUTable(skuRows) {
+      const sorted = [...skuRows].sort((a, b) => (Number(b.MTDRevenue)||0) - (Number(a.MTDRevenue)||0));
+      const totalRev = sorted.reduce((s, r) => s + (Number(r.MTDRevenue)||0), 0);
+      const CAT_COLORS = {
+        'Ragi Chips': 'background:rgba(249,115,22,0.15);color:#F97316',
+        'Dipsters':   'background:rgba(168,85,247,0.15);color:#A855F7',
+        'Puffs':      'background:rgba(34,197,94,0.15);color:#22C55E',
+        'Others':     'background:rgba(59,130,246,0.15);color:#3B82F6'
+      };
+
+      const rows = sorted.map((r, i) => {
+        const rev    = Number(r.MTDRevenue) || 0;
+        const units  = Number(r.MTDUnits)   || 0;
+        const est    = Number(r.EstRevenue) || 0;
+        const pct    = totalRev > 0 ? (rev / totalRev * 100) : 0;
+        const catStyle = CAT_COLORS[r.Category] || 'background:rgba(255,255,255,0.05);color:#888';
+
+        return `<tr>
+          <td><span class="sku-rank">${i+1}</span><span class="sku-name-cell">${r.SKU}</span></td>
+          <td><span class="cat-badge" style="${catStyle}">${r.Category}</span></td>
+          <td class="right">${fmt(est)}</td>
+          <td class="right" style="color:var(--text-primary);font-weight:600">${fmt(rev)}</td>
+          <td class="right">${fmt(units, false)}</td>
+          <td class="right">
+            <div class="pct-bar-wrap">
+              <div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${Math.min(100,pct).toFixed(1)}%"></div></div>
+              <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);min-width:36px">${pct.toFixed(1)}%</span>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('detail-sku-tbody').innerHTML = rows ||
+        '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px">No SKU data for this platform/month</td></tr>';
     }
 
     // ─── KICK OFF ──────────────────────────────────────────────────────────────
