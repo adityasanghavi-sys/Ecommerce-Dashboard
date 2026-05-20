@@ -849,8 +849,8 @@
                   <th style="width:40px">#</th>
                   <th>SKU</th>
                   <th>Category</th>
-                  <th class="right">Revenue</th>
-                  <th class="right">Units (MTD)</th>
+                  <th class="right">MTD Revenue</th>
+                  <th class="right">MTD Units</th>
                   <th class="right">Est. Revenue</th>
                   <th class="right">% of Total</th>
                   <th>Platforms</th>
@@ -1759,31 +1759,10 @@
       renderSKUView();
     }
 
-    
-    // --- NEW: Map selected date range to specific days ---
-    function getDateBoundaries() {
-      const allDates = rawData.map(r => parseLocalDate(r.Date)).filter(d => !isNaN(d));
-      const latestDate = allDates.length ? new Date(Math.max(...allDates)) : new Date();
-      latestDate.setHours(0,0,0,0);
-      const t1 = new Date(latestDate);
-      const t2 = new Date(latestDate); t2.setDate(t2.getDate() - 1);
-      const cutoff7d = new Date(latestDate); cutoff7d.setDate(cutoff7d.getDate() - 7);
-      let customSd = new Date(0), customEd = new Date('2999-01-01');
-      if (activePeriod === 'custom') {
-         const s = document.getElementById('customStart').value;
-         const e = document.getElementById('customEnd').value;
-         if (s) { customSd = parseLocalDate(s); customSd.setHours(0,0,0,0); }
-         if (e) { customEd = parseLocalDate(e); customEd.setHours(0,0,0,0); }
-      }
-      return { latestDate, t1, t2, cutoff7d, customSd, customEd };
-    }
-
     function getSKUViewData() {
       const month = activeMonth;
       const platFilter = document.getElementById('skuPlatFilter')?.value || 'All';
       const search = (document.getElementById('skuSearch')?.value || '').toLowerCase();
-
-      const bounds = getDateBoundaries();
 
       // Filter SKU data
       let rows = skuData.filter(r => {
@@ -1801,37 +1780,11 @@
         if (!aggMap[key]) {
           aggMap[key] = { sku: key, category: String(r.Category), mtdRev: 0, mtdUnits: 0, estRev: 0, platforms: {}, days: Array(31).fill(0) };
         }
-
-        // --- NEW: Calculate Revenue dynamically based on period ---
-        let calculatedRev = 0;
-        if (activePeriod === 'mtd') {
-            calculatedRev = Number(r.MTDRevenue) || 0;
-        } else {
-            const rowMonth = parseInt(r.Month, 10);
-            for (let d = 1; d <= 31; d++) {
-                const val = Number(r['Day' + d]) || 0;
-                if (val > 0) {
-                    const cellDate = new Date(2026, rowMonth - 1, d); // 2026, 0-indexed month
-                    cellDate.setHours(0,0,0,0);
-                    let dateMatch = false;
-
-                    if (activePeriod === 't1') dateMatch = cellDate.getTime() === bounds.t1.getTime();
-                    else if (activePeriod === 't2') dateMatch = cellDate.getTime() === bounds.t2.getTime();
-                    else if (activePeriod === '7d') dateMatch = cellDate > bounds.cutoff7d && cellDate <= bounds.latestDate;
-                    else if (activePeriod === 'custom') dateMatch = cellDate >= bounds.customSd && cellDate <= bounds.customEd;
-
-                    if (dateMatch) calculatedRev += val;
-                }
-            }
-        }
-
-        aggMap[key].mtdRev   += calculatedRev; 
+        aggMap[key].mtdRev   += Number(r.MTDRevenue) || 0;
         aggMap[key].mtdUnits += Number(r.MTDUnits)   || 0;
         aggMap[key].estRev    = Math.max(aggMap[key].estRev, Number(r.EstRevenue) || 0);
-
         const p = String(r.Platform);
-        aggMap[key].platforms[p] = (aggMap[key].platforms[p] || 0) + calculatedRev;
-
+        aggMap[key].platforms[p] = (aggMap[key].platforms[p] || 0) + (Number(r.MTDRevenue) || 0);
         for (let d = 0; d < 31; d++) {
           aggMap[key].days[d] += Number(r['Day' + (d+1)]) || 0;
         }
@@ -1846,19 +1799,16 @@
       const totalRev = data.reduce((s, r) => s + r.mtdRev, 0);
       const totalUnits = data.reduce((s, r) => s + r.mtdUnits, 0);
 
-      const pLabels = { t1:'T-1', t2:'T-2', '7d':'7-Day', mtd:'MTD', custom:'Selected' };
-      const revLabel = pLabels[activePeriod] ? pLabels[activePeriod] + ' Revenue' : 'Revenue';
-
       // KPI cards
       const topSKU = data[0] || {};
       document.getElementById('sku-kpi-grid').innerHTML = `
         <div class="kpi-card" style="--accent:var(--orange)">
-          <div class="kpi-label">${revLabel}</div>
+          <div class="kpi-label">Total SKU Revenue</div>
           <div class="kpi-value">${fmt(totalRev)}</div>
           <div class="kpi-sub neutral">${data.length} SKUs</div>
         </div>
         <div class="kpi-card" style="--accent:var(--blue)">
-          <div class="kpi-label">Total Units (MTD)</div>
+          <div class="kpi-label">Total Units</div>
           <div class="kpi-value">${fmt(totalUnits, false)}</div>
           <div class="kpi-sub neutral">ASP ₹${totalUnits > 0 ? (totalRev/totalUnits).toFixed(0) : '--'}</div>
         </div>
@@ -1890,7 +1840,7 @@
         const platBadges = Object.keys(r.platforms).map(p =>
           `<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-family:'DM Mono',monospace;background:rgba(255,255,255,0.05);color:${PLAT_COLORS[p]||'#888'};margin-right:3px">${p}</span>`
         ).join('');
-        return `<tr style="cursor:pointer" onclick="openSKUDetail('${r.sku.replace(/'/g,"\\'")}')">
+        return `<tr style="cursor:pointer" onclick="openSKUDetail('${r.sku.replace(/'/g,"\'")}')">
           <td style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:11px">${i+1}</td>
           <td class="sku-name-cell">${r.sku}</td>
           <td><span class="cat-badge" style="background:${catStyle.bg};color:${catStyle.text}">${r.category}</span></td>
@@ -1937,41 +1887,18 @@
       catBadge.style.background = catStyle.bg;
       catBadge.style.color = catStyle.text;
 
-      const bounds = getDateBoundaries();
-
       // Per-platform breakdown
       const platData = {};
       allRows.forEach(r => {
         const p = String(r.Platform);
         if (!platData[p]) platData[p] = { mtdRev: 0, mtdUnits: 0, days: Array(31).fill(0) };
-
-        let calculatedRev = 0;
-        if (activePeriod === 'mtd') {
-            calculatedRev = Number(r.MTDRevenue) || 0;
-        } else {
-            const rowMonth = parseInt(r.Month, 10);
-            for (let d = 1; d <= 31; d++) {
-                const val = Number(r['Day' + d]) || 0;
-                if (val > 0) {
-                    const cellDate = new Date(2026, rowMonth - 1, d);
-                    cellDate.setHours(0,0,0,0);
-                    let dateMatch = false;
-                    if (activePeriod === 't1') dateMatch = cellDate.getTime() === bounds.t1.getTime();
-                    else if (activePeriod === 't2') dateMatch = cellDate.getTime() === bounds.t2.getTime();
-                    else if (activePeriod === '7d') dateMatch = cellDate > bounds.cutoff7d && cellDate <= bounds.latestDate;
-                    else if (activePeriod === 'custom') dateMatch = cellDate >= bounds.customSd && cellDate <= bounds.customEd;
-
-                    if (dateMatch) calculatedRev += val;
-                }
-            }
-        }
-
-        platData[p].mtdRev   += calculatedRev;
+        platData[p].mtdRev   += Number(r.MTDRevenue) || 0;
         platData[p].mtdUnits += Number(r.MTDUnits)   || 0;
         for (let d = 0; d < 31; d++) {
           platData[p].days[d] += Number(r['Day' + (d+1)]) || 0;
         }
       });
+
       // Platform KPI cards
       const platCards = Object.keys(platData).map(p => {
         const d = platData[p];
