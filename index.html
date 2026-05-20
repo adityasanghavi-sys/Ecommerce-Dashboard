@@ -699,6 +699,7 @@
         <button class="tab-btn" onclick="switchTab('zepto')" id="tab-zepto">Zepto</button>
         <button class="tab-btn" onclick="switchTab('instamart')" id="tab-instamart">Instamart</button>
         <button class="tab-btn" onclick="switchTab('bigbasket')" id="tab-bigbasket">Big Basket</button>
+        <button class="tab-btn" onclick="switchTab('skus')" id="tab-skus">SKU View</button>
       </div>
 
       <!-- ── OVERVIEW TAB ── -->
@@ -798,6 +799,90 @@
         <!-- No data -->
         <div class="compare-no-data" id="cmp-no-data" style="display:none">
           Select periods above and hit <strong>Compare →</strong>
+        </div>
+
+      </div>
+
+      <!-- ── SKU VIEW ── -->
+      <div id="view-skus" style="display:none">
+
+        <!-- Filters row -->
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+          <div class="control-group">
+            <button class="control-btn active" onclick="setSKUCat('All')" id="skucat-All">All</button>
+            <div class="control-divider"></div>
+            <button class="control-btn" onclick="setSKUCat('Ragi Chips')" id="skucat-Ragi Chips">Ragi Chips</button>
+            <div class="control-divider"></div>
+            <button class="control-btn" onclick="setSKUCat('Dipsters')" id="skucat-Dipsters">Dipsters</button>
+            <div class="control-divider"></div>
+            <button class="control-btn" onclick="setSKUCat('Puffs')" id="skucat-Puffs">Puffs</button>
+            <div class="control-divider"></div>
+            <button class="control-btn" onclick="setSKUCat('Others')" id="skucat-Others">Others</button>
+          </div>
+          <select class="ctrl-select" id="skuPlatFilter" onchange="renderSKUView()">
+            <option value="All">All Platforms</option>
+            <option value="Blinkit">Blinkit</option>
+            <option value="Zepto">Zepto</option>
+            <option value="Instamart">Instamart</option>
+            <option value="Big Basket">Big Basket</option>
+          </select>
+          <div style="margin-left:auto;position:relative;">
+            <input type="text" id="skuSearch" oninput="renderSKUView()" placeholder="Search SKU..." 
+              style="background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:'DM Sans',sans-serif;padding:7px 12px 7px 32px;outline:none;width:220px;">
+            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:13px;">⌕</span>
+          </div>
+        </div>
+
+        <!-- Summary KPI row -->
+        <div class="kpi-grid" id="sku-kpi-grid" style="margin-bottom:24px;"></div>
+
+        <!-- Leaderboard table -->
+        <div class="sku-table-wrap" id="sku-leaderboard-wrap">
+          <div class="sku-table-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>SKU Leaderboard</span>
+            <span id="sku-count-label" style="font-size:11px;color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0"></span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="sku-table" style="min-width:900px">
+              <thead>
+                <tr>
+                  <th style="width:40px">#</th>
+                  <th>SKU</th>
+                  <th>Category</th>
+                  <th class="right">MTD Revenue</th>
+                  <th class="right">MTD Units</th>
+                  <th class="right">Est. Revenue</th>
+                  <th class="right">% of Total</th>
+                  <th>Platforms</th>
+                </tr>
+              </thead>
+              <tbody id="sku-leaderboard-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SKU Detail: cross-platform breakdown (shown on row click) -->
+        <div id="sku-detail-panel" style="display:none;margin-top:24px;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <button onclick="closeSKUDetail()" style="background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;">← Back to leaderboard</button>
+            <span id="sku-detail-name" style="font-size:20px;font-weight:700;letter-spacing:-0.02em;color:var(--text-primary)"></span>
+            <span id="sku-detail-cat" class="cat-badge" style="font-size:11px"></span>
+          </div>
+
+          <!-- Cross-platform KPI cards -->
+          <div id="sku-platform-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px;"></div>
+
+          <!-- Cross-platform bar chart + day trend -->
+          <div class="mom-grid" style="margin-bottom:24px;">
+            <div class="chart-section">
+              <div class="chart-title">Revenue by Platform (₹)</div>
+              <div id="sku-chart-platform" style="height:260px"></div>
+            </div>
+            <div class="chart-section">
+              <div class="chart-title">Daily Trend — MTD</div>
+              <div id="sku-chart-trend" style="height:260px"></div>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -1013,6 +1098,8 @@
         openChannelView(PLATFORM_TAB_MAP[activeTab]);
         return;
       }
+      // If SKU tab is active, re-render SKU view
+      if (activeTab === 'skus') { renderSKUView(); return; }
 
       const data = getFilteredData();
       const agg  = aggregateByPlatform(data);
@@ -1219,7 +1306,7 @@
 
     // ─── TAB SWITCHING ─────────────────────────────────────────────────────────
     let activeTab = 'overview';
-    const ALL_TABS = ['overview','compare','blinkit','zepto','instamart','bigbasket'];
+    const ALL_TABS = ['overview','compare','blinkit','zepto','instamart','bigbasket','skus'];
     const PLATFORM_TAB_MAP = { 'blinkit':'Blinkit', 'zepto':'Zepto', 'instamart':'Instamart', 'bigbasket':'Big Basket' };
 
     function switchTab(tab) {
@@ -1231,10 +1318,12 @@
       document.getElementById('view-overview').style.display = tab === 'overview' ? 'block' : 'none';
       document.getElementById('view-compare').style.display  = tab === 'compare'  ? 'block' : 'none';
       document.getElementById('view-channel').style.display  = PLATFORM_TAB_MAP[tab] ? 'block' : 'none';
+      document.getElementById('view-skus').style.display     = tab === 'skus'     ? 'block' : 'none';
       const kg = document.getElementById('kpi-grid');
       const dc = document.getElementById('dashboard-content');
       if (kg) kg.style.display = tab === 'overview' ? 'grid' : 'none';
       if (dc) dc.style.display = tab === 'overview' ? 'flex'  : 'none';
+      if (tab === 'skus') { loadSKUData().then(() => renderSKUView()); }
       if (tab === 'compare') {
         const hasSummary = document.getElementById('cmp-summary').style.display !== 'none';
         if (!hasSummary) document.getElementById('cmp-no-data').style.display = 'block';
@@ -1647,6 +1736,233 @@
 
       document.getElementById('detail-sku-tbody').innerHTML = rows ||
         '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px">No SKU data for this platform/month</td></tr>';
+    }
+
+
+    // ─── SKU VIEW ENGINE ───────────────────────────────────────────────────────
+    let activeSKUCat = 'All';
+    let skuDetailChart1 = null, skuDetailChart2 = null;
+    const CAT_COLORS = {
+      'Ragi Chips': { bg:'rgba(249,115,22,0.15)', text:'#F97316' },
+      'Dipsters':   { bg:'rgba(168,85,247,0.15)', text:'#A855F7' },
+      'Puffs':      { bg:'rgba(34,197,94,0.15)',  text:'#22C55E' },
+      'Others':     { bg:'rgba(59,130,246,0.15)', text:'#3B82F6' },
+    };
+    const PLAT_COLORS = { 'Blinkit':'#EAB308', 'Zepto':'#3B82F6', 'Instamart':'#22C55E', 'Big Basket':'#EF4444' };
+
+    function setSKUCat(cat) {
+      activeSKUCat = cat;
+      ['All','Ragi Chips','Dipsters','Puffs','Others'].forEach(c => {
+        const btn = document.getElementById('skucat-' + c);
+        if (btn) btn.classList.toggle('active', c === cat);
+      });
+      renderSKUView();
+    }
+
+    function getSKUViewData() {
+      const month = activeMonth;
+      const platFilter = document.getElementById('skuPlatFilter')?.value || 'All';
+      const search = (document.getElementById('skuSearch')?.value || '').toLowerCase();
+
+      // Filter SKU data
+      let rows = skuData.filter(r => {
+        const mMatch = month === 'All' || Number(r.Month) === parseInt(month, 10);
+        const pMatch = platFilter === 'All' || String(r.Platform) === platFilter;
+        const cMatch = activeSKUCat === 'All' || String(r.Category) === activeSKUCat;
+        const sMatch = !search || String(r.SKU).toLowerCase().includes(search);
+        return mMatch && pMatch && cMatch && sMatch;
+      });
+
+      // Aggregate by SKU name across platforms
+      const aggMap = {};
+      rows.forEach(r => {
+        const key = String(r.SKU);
+        if (!aggMap[key]) {
+          aggMap[key] = { sku: key, category: String(r.Category), mtdRev: 0, mtdUnits: 0, estRev: 0, platforms: {}, days: Array(31).fill(0) };
+        }
+        aggMap[key].mtdRev   += Number(r.MTDRevenue) || 0;
+        aggMap[key].mtdUnits += Number(r.MTDUnits)   || 0;
+        aggMap[key].estRev    = Math.max(aggMap[key].estRev, Number(r.EstRevenue) || 0);
+        const p = String(r.Platform);
+        aggMap[key].platforms[p] = (aggMap[key].platforms[p] || 0) + (Number(r.MTDRevenue) || 0);
+        for (let d = 0; d < 31; d++) {
+          aggMap[key].days[d] += Number(r['Day' + (d+1)]) || 0;
+        }
+      });
+
+      return Object.values(aggMap).sort((a, b) => b.mtdRev - a.mtdRev);
+    }
+
+    function renderSKUView() {
+      if (skuData.length === 0) return;
+      const data = getSKUViewData();
+      const totalRev = data.reduce((s, r) => s + r.mtdRev, 0);
+      const totalUnits = data.reduce((s, r) => s + r.mtdUnits, 0);
+
+      // KPI cards
+      const topSKU = data[0] || {};
+      document.getElementById('sku-kpi-grid').innerHTML = `
+        <div class="kpi-card" style="--accent:var(--orange)">
+          <div class="kpi-label">Total SKU Revenue</div>
+          <div class="kpi-value">${fmt(totalRev)}</div>
+          <div class="kpi-sub neutral">${data.length} SKUs</div>
+        </div>
+        <div class="kpi-card" style="--accent:var(--blue)">
+          <div class="kpi-label">Total Units</div>
+          <div class="kpi-value">${fmt(totalUnits, false)}</div>
+          <div class="kpi-sub neutral">ASP ₹${totalUnits > 0 ? (totalRev/totalUnits).toFixed(0) : '--'}</div>
+        </div>
+        <div class="kpi-card" style="--accent:var(--yellow)">
+          <div class="kpi-label">Top SKU</div>
+          <div class="kpi-value" style="font-size:16px;line-height:1.3">${topSKU.sku || '--'}</div>
+          <div class="kpi-sub neutral">${fmt(topSKU.mtdRev || 0)}</div>
+        </div>
+        <div class="kpi-card" style="--accent:var(--purple)">
+          <div class="kpi-label">Top Category</div>
+          <div class="kpi-value" style="font-size:18px">${getTopCategory(data)}</div>
+          <div class="kpi-sub neutral">by revenue</div>
+        </div>
+      `;
+
+      // Update count label
+      document.getElementById('sku-count-label').textContent = data.length + ' SKUs';
+
+      // Leaderboard table
+      if (data.length === 0) {
+        document.getElementById('sku-leaderboard-body').innerHTML =
+          '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted)">No SKUs match the current filters</td></tr>';
+        return;
+      }
+
+      const rows = data.map((r, i) => {
+        const pct = totalRev > 0 ? (r.mtdRev / totalRev * 100) : 0;
+        const catStyle = CAT_COLORS[r.category] || { bg:'rgba(255,255,255,0.05)', text:'#888' };
+        const platBadges = Object.keys(r.platforms).map(p =>
+          `<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-family:'DM Mono',monospace;background:rgba(255,255,255,0.05);color:${PLAT_COLORS[p]||'#888'};margin-right:3px">${p}</span>`
+        ).join('');
+        return `<tr style="cursor:pointer" onclick="openSKUDetail('${r.sku.replace(/'/g,"\'")}')">
+          <td style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:11px">${i+1}</td>
+          <td class="sku-name-cell">${r.sku}</td>
+          <td><span class="cat-badge" style="background:${catStyle.bg};color:${catStyle.text}">${r.category}</span></td>
+          <td class="right" style="color:var(--text-primary);font-weight:600">${fmt(r.mtdRev)}</td>
+          <td class="right">${fmt(r.mtdUnits, false)}</td>
+          <td class="right" style="color:var(--text-muted)">${fmt(r.estRev)}</td>
+          <td class="right">
+            <div class="pct-bar-wrap">
+              <div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${Math.min(100,pct).toFixed(1)}%;background:${catStyle.text}"></div></div>
+              <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);min-width:36px">${pct.toFixed(1)}%</span>
+            </div>
+          </td>
+          <td>${platBadges}</td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('sku-leaderboard-body').innerHTML = rows;
+    }
+
+    function getTopCategory(data) {
+      const catMap = {};
+      data.forEach(r => { catMap[r.category] = (catMap[r.category] || 0) + r.mtdRev; });
+      return Object.keys(catMap).sort((a,b) => catMap[b] - catMap[a])[0] || '--';
+    }
+
+    function openSKUDetail(skuName) {
+      // Find all rows for this SKU across platforms + selected month
+      const month = activeMonth;
+      const allRows = skuData.filter(r => {
+        const mMatch = month === 'All' || Number(r.Month) === parseInt(month, 10);
+        return mMatch && String(r.SKU) === skuName;
+      });
+
+      if (allRows.length === 0) return;
+      const category = allRows[0].Category;
+      const catStyle = CAT_COLORS[category] || { bg:'rgba(255,255,255,0.05)', text:'#888' };
+
+      // Show detail panel
+      document.getElementById('sku-leaderboard-wrap').style.display = 'none';
+      document.getElementById('sku-detail-panel').style.display = 'block';
+      document.getElementById('sku-detail-name').textContent = skuName;
+      const catBadge = document.getElementById('sku-detail-cat');
+      catBadge.textContent = category;
+      catBadge.style.background = catStyle.bg;
+      catBadge.style.color = catStyle.text;
+
+      // Per-platform breakdown
+      const platData = {};
+      allRows.forEach(r => {
+        const p = String(r.Platform);
+        if (!platData[p]) platData[p] = { mtdRev: 0, mtdUnits: 0, days: Array(31).fill(0) };
+        platData[p].mtdRev   += Number(r.MTDRevenue) || 0;
+        platData[p].mtdUnits += Number(r.MTDUnits)   || 0;
+        for (let d = 0; d < 31; d++) {
+          platData[p].days[d] += Number(r['Day' + (d+1)]) || 0;
+        }
+      });
+
+      // Platform KPI cards
+      const platCards = Object.keys(platData).map(p => {
+        const d = platData[p];
+        const asp = d.mtdUnits > 0 ? (d.mtdRev / d.mtdUnits).toFixed(0) : '--';
+        return `<div class="kpi-card" style="--accent:${PLAT_COLORS[p]||'#888'}">
+          <div class="kpi-label">${p}</div>
+          <div class="kpi-value" style="font-size:22px">${fmt(d.mtdRev)}</div>
+          <div class="kpi-sub neutral">${fmt(d.mtdUnits,false)} units · ASP ₹${asp}</div>
+        </div>`;
+      }).join('');
+      document.getElementById('sku-platform-cards').innerHTML = platCards;
+
+      // Bar chart: revenue by platform
+      const platNames = Object.keys(platData);
+      const platRevs  = platNames.map(p => platData[p].mtdRev);
+      const platCols  = platNames.map(p => PLAT_COLORS[p] || '#888');
+
+      if (skuDetailChart1) skuDetailChart1.destroy();
+      skuDetailChart1 = new ApexCharts(document.querySelector('#sku-chart-platform'), {
+        series: [{ name: 'MTD Revenue', data: platRevs }],
+        chart: { type: 'bar', height: 240, toolbar: { show: false }, background: 'transparent', fontFamily: 'DM Sans, sans-serif' },
+        theme: { mode: 'dark' },
+        colors: platCols,
+        plotOptions: { bar: { borderRadius: 5, columnWidth: '50%', distributed: true } },
+        dataLabels: { enabled: false },
+        legend: { show: false },
+        grid: { borderColor: 'rgba(255,255,255,0.05)', strokeDashArray: 4 },
+        xaxis: { categories: platNames, labels: { style: { colors: '#555' } }, axisBorder: { show: false } },
+        yaxis: { labels: { formatter: v => fmt(v), style: { colors: '#555' } } },
+        tooltip: { y: { formatter: v => fmt(v) }, theme: 'dark' },
+      });
+      skuDetailChart1.render();
+
+      // Line chart: daily trend per platform
+      const dayLabels = Array.from({length:31}, (_,i) => 'D'+(i+1));
+      const series = Object.keys(platData).map(p => ({
+        name: p,
+        data: platData[p].days
+      }));
+      const lineColors = Object.keys(platData).map(p => PLAT_COLORS[p] || '#888');
+
+      if (skuDetailChart2) skuDetailChart2.destroy();
+      skuDetailChart2 = new ApexCharts(document.querySelector('#sku-chart-trend'), {
+        series: series,
+        chart: { type: 'line', height: 240, toolbar: { show: false }, background: 'transparent', fontFamily: 'DM Sans, sans-serif' },
+        theme: { mode: 'dark' },
+        colors: lineColors,
+        stroke: { width: 2, curve: 'smooth' },
+        markers: { size: 0 },
+        dataLabels: { enabled: false },
+        grid: { borderColor: 'rgba(255,255,255,0.05)', strokeDashArray: 4 },
+        xaxis: { categories: dayLabels, tickAmount: 10, labels: { style: { colors: '#555', fontSize:'10px' } }, axisBorder: { show: false } },
+        yaxis: { labels: { formatter: v => fmt(v), style: { colors: '#555' } } },
+        legend: { labels: { colors: '#888' }, position: 'top' },
+        tooltip: { y: { formatter: v => fmt(v) }, theme: 'dark' },
+      });
+      skuDetailChart2.render();
+    }
+
+    function closeSKUDetail() {
+      document.getElementById('sku-leaderboard-wrap').style.display = 'block';
+      document.getElementById('sku-detail-panel').style.display = 'none';
+      if (skuDetailChart1) { skuDetailChart1.destroy(); skuDetailChart1 = null; }
+      if (skuDetailChart2) { skuDetailChart2.destroy(); skuDetailChart2 = null; }
     }
 
     // ─── KICK OFF ──────────────────────────────────────────────────────────────
