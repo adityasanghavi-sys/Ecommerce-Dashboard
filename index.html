@@ -1004,6 +1004,10 @@
 
     // ─── RENDER ────────────────────────────────────────────────────────────────
     function render() {
+      // Don't re-render when channel detail view is open
+      if (document.getElementById('view-channel') && 
+          document.getElementById('view-channel').style.display === 'block') return;
+
       const data = getFilteredData();
       const agg  = aggregateByPlatform(data);
 
@@ -1464,10 +1468,15 @@
     }
 
     async function openChannelView(platform) {
-      // Show channel view, hide overview
+      // Show channel view, hide everything else
       document.getElementById('view-overview').style.display = 'none';
       document.getElementById('view-compare').style.display = 'none';
       document.getElementById('view-channel').style.display = 'block';
+      // Also hide the top-level KPI grid and dashboard content
+      const kg = document.getElementById('kpi-grid');
+      const dc = document.getElementById('dashboard-content');
+      if (kg) kg.style.display = 'none';
+      if (dc) dc.style.display = 'none';
 
       // Set platform name
       document.getElementById('detail-platform-name').textContent = platform;
@@ -1499,6 +1508,11 @@
     function closeChannelView() {
       document.getElementById('view-channel').style.display = 'none';
       document.getElementById('view-overview').style.display = 'block';
+      // Restore overview elements
+      const kg = document.getElementById('kpi-grid');
+      const dc = document.getElementById('dashboard-content');
+      if (kg) kg.style.display = 'grid';
+      if (dc) dc.style.display = 'flex';
     }
 
     function renderChannelKPIs(skuRows, omsRows, platform) {
