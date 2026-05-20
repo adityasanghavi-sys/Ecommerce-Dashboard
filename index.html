@@ -523,7 +523,8 @@
     function getFilteredData() {
       const platform = document.getElementById('platformFilter').value;
       return rawData.filter(row => {
-        const monthMatch = activeMonth === 'All' || String(row.Month) === activeMonth;
+        // Month in sheet is numeric (4, 5) — compare as integer
+        const monthMatch = activeMonth === 'All' || Number(row.Month) === parseInt(activeMonth, 10);
         const platMatch  = platform === 'All' || String(row.Platform) === platform;
         return monthMatch && platMatch;
       });
