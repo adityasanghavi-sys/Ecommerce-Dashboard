@@ -43,9 +43,19 @@
     
     <div class="pt-8 pb-2">
       <h1 class="text-3xl font-bold tracking-tight mb-6">Executive Overview</h1>
-      <div class="flex space-x-1 border-b border-white/10 overflow-x-auto scrollbar-hide" id="tab-container"></div>
+      <div class="flex items-center justify-between border-b border-white/10 pb-2">
+        <div class="flex space-x-1 overflow-x-auto scrollbar-hide" id="tab-container"></div>
+        
+        <div class="relative ml-auto"> 
+          <select id="monthDropdown" onchange="applyFilters()" class="appearance-none bg-[#111111] border border-white/10 rounded-lg py-2 pl-4 pr-10 text-sm font-medium text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors cursor-pointer shadow-lg">
+            <option value="All">All Time</option>
+            <option value="05" selected>May 2026</option>
+            <option value="04">April 2026</option>
+          </select>
+          <i data-lucide="calendar" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"></i>
+        </div>
+      </div>
     </div>
-
     <div class="sticky top-16 z-40 py-4 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5 flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-3 flex-wrap">
         
@@ -248,12 +258,26 @@
       
       if (!rawData.length) return;
 
+      // --- NEW: MONTH FILTERING LOGIC ---
+      let baseData = rawData;
+      const selectedMonth = document.getElementById('monthDropdown') ? document.getElementById('monthDropdown').value : '05';
+      if (selectedMonth !== 'All') {
+        baseData = rawData.filter(row => {
+          let d = new Date(row.Date);
+          if (!isNaN(d.getTime())) {
+            let m = String(d.getMonth() + 1).padStart(2, '0'); 
+            return m === selectedMonth;
+          }
+          return true; 
+        });
+      }
+
       // 1. Find the Absolute Latest Date in the Dataset
-      const dates = rawData.map(r => new Date(r.Date).getTime()).filter(t => !isNaN(t));
+      const dates = baseData.map(r => new Date(r.Date).getTime()).filter(t => !isNaN(t));
       const maxDate = new Date(Math.max(...dates));
       maxDate.setHours(0,0,0,0);
       
-      const filteredData = rawData.filter(row => {
+      const filteredData = baseData.filter(row => {
         const rowDate = new Date(row.Date);
         rowDate.setHours(0,0,0,0);
         
@@ -628,14 +652,25 @@
     }
 // --- PLATFORM VIEW ENGINE ---
     function renderPlatformView(data) {
-      // 1. Setup the structure for our 4 main platforms
+      // 1. Detect month for budgets
+      const selectedMonth = document.getElementById('monthDropdown') ? document.getElementById('monthDropdown').value : '05';
+      let zeptoBudget = 0, instamartBudget = 0;
+
+      if (selectedMonth === '05') { 
+        zeptoBudget = 2070000; instamartBudget = 1275000;
+      } else if (selectedMonth === '04') { 
+        zeptoBudget = 1500000; instamartBudget = 1000000; // Update April budgets here!
+      } else { 
+        zeptoBudget = 2070000 + 1500000; instamartBudget = 1275000 + 1000000;
+      }
+
+      // 2. Setup the structure
       const pStats = {
-        'Zepto': { gmv: 0, units: 0, budget: 2070000, products: {}, color: 'blue', textClass: 'text-blue-400' },
+        'Zepto': { gmv: 0, units: 0, budget: zeptoBudget, products: {}, color: 'blue', textClass: 'text-blue-400' },
         'Blinkit': { gmv: 0, units: 0, budget: 0, products: {}, color: 'yellow', textClass: 'text-yellow-400' },
-        'Instamart': { gmv: 0, units: 0, budget: 1275000, products: {}, color: 'green', textClass: 'text-green-400' },
+        'Instamart': { gmv: 0, units: 0, budget: instamartBudget, products: {}, color: 'green', textClass: 'text-green-400' },
         'Big Basket': { gmv: 0, units: 0, budget: 0, products: {}, color: 'red', textClass: 'text-red-400' }
       };
-
       // 2. Process the data
       data.forEach(row => {
         let rawName = String(row['Product Name'] || 'Unknown').trim();
