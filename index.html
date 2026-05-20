@@ -1511,46 +1511,7 @@
 
     // closeChannelView replaced by switchTab
 
-    function computeRevenueFromDays(skuRows) {
-      // Determine which day indices to sum based on active period + month
-      const month = activeMonth;
-      const monthNum = parseInt(month, 10);
-      const allDates = rawData.map(r => parseLocalDate(r.Date)).filter(d => !isNaN(d));
-      const latestDate = allDates.length ? new Date(Math.max(...allDates)) : new Date();
-      latestDate.setHours(0,0,0,0);
 
-      let dayNums = [];
-
-      if (activePeriod === 't1') {
-        dayNums = [latestDate.getDate()];
-      } else if (activePeriod === 't2') {
-        const t2 = new Date(latestDate); t2.setDate(t2.getDate() - 1);
-        dayNums = [t2.getDate()];
-      } else if (activePeriod === '7d') {
-        for (let i = 0; i < 7; i++) {
-          const d = new Date(latestDate); d.setDate(d.getDate() - i);
-          // Only include days that fall in the selected month
-          if (month === 'All' || d.getMonth() + 1 === monthNum) dayNums.push(d.getDate());
-        }
-      } else if (activePeriod === 'custom') {
-        const s = document.getElementById('customStart')?.value;
-        const e = document.getElementById('customEnd')?.value;
-        if (s && e) {
-          for (let d = new Date(s); d <= new Date(e); d.setDate(d.getDate() + 1)) {
-            if (month === 'All' || d.getMonth() + 1 === monthNum) dayNums.push(d.getDate());
-          }
-        } else { dayNums = Array.from({length:31},(_,i)=>i+1); }
-      } else {
-        // MTD / All — sum all days
-        dayNums = Array.from({length:31},(_,i)=>i+1);
-      }
-
-      let total = 0;
-      skuRows.forEach(r => {
-        dayNums.forEach(n => { total += Number(r['Day'+n]) || 0; });
-      });
-      return total;
-    }
 
     function renderChannelKPIs(skuRows, omsRows, platform) {
       // Revenue + Units from OMS (already filtered by period + platform)
