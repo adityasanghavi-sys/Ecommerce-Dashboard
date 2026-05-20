@@ -557,8 +557,12 @@
         dataLabels: { enabled: false },
         xaxis: { 
           categories: topProdLabels,
-          tickAmount: 4, /* <-- THIS IS THE FIX: Forces only 4 labels on the bottom */
-          labels: { formatter: (val) => formatNumber(val), style: { colors: '#9CA3AF' } }, 
+          tickAmount: 2, /* Reduced from 4 to 2 to give labels room to breathe */
+          labels: { 
+            formatter: (val) => formatNumber(val), 
+            style: { colors: '#9CA3AF' },
+            hideOverlappingLabels: true /* Extra protection against squishing */
+          }, 
           axisBorder: { show: false } 
         },
         yaxis: { 
