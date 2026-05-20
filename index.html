@@ -695,6 +695,10 @@
       <div class="tab-nav">
         <button class="tab-btn active" onclick="switchTab('overview')" id="tab-overview">Overview</button>
         <button class="tab-btn" onclick="switchTab('compare')" id="tab-compare">Compare</button>
+        <button class="tab-btn" onclick="switchTab('blinkit')" id="tab-blinkit">Blinkit</button>
+        <button class="tab-btn" onclick="switchTab('zepto')" id="tab-zepto">Zepto</button>
+        <button class="tab-btn" onclick="switchTab('instamart')" id="tab-instamart">Instamart</button>
+        <button class="tab-btn" onclick="switchTab('bigbasket')" id="tab-bigbasket">Big Basket</button>
       </div>
 
       <!-- ── OVERVIEW TAB ── -->
@@ -800,7 +804,7 @@
 
       <!-- ── CHANNEL DETAIL VIEW ── -->
       <div id="view-channel" style="display:none">
-        <button class="detail-back-btn" onclick="closeChannelView()">← Back to Overview</button>
+        
         <div class="detail-header">
           <div class="detail-platform-name" id="detail-platform-name">Platform</div>
           <div id="detail-roas-badge" class="platform-roas-badge" style="font-size:13px;padding:5px 12px"></div>
@@ -1004,9 +1008,8 @@
 
     // ─── RENDER ────────────────────────────────────────────────────────────────
     function render() {
-      // Don't re-render when channel detail view is open
-      if (document.getElementById('view-channel') && 
-          document.getElementById('view-channel').style.display === 'block') return;
+      // Don't re-render when a platform channel tab is active
+      if (PLATFORM_TAB_MAP && PLATFORM_TAB_MAP[activeTab]) return;
 
       const data = getFilteredData();
       const agg  = aggregateByPlatform(data);
@@ -1129,7 +1132,7 @@
         }
 
         html += `
-          <div class="platform-card" style="--p-color:${color};cursor:pointer" onclick="openChannelView('${p}')">
+          <div class="platform-card" style="--p-color:${color}">
             <div class="platform-name">
               ${p}
               <span class="platform-roas-badge ${badgeCls}">ROAS ${fmtRoas(roasVal)}</span>
@@ -1213,19 +1216,28 @@
 
     // ─── TAB SWITCHING ─────────────────────────────────────────────────────────
     let activeTab = 'overview';
+    const ALL_TABS = ['overview','compare','blinkit','zepto','instamart','bigbasket'];
+    const PLATFORM_TAB_MAP = { 'blinkit':'Blinkit', 'zepto':'Zepto', 'instamart':'Instamart', 'bigbasket':'Big Basket' };
 
     function switchTab(tab) {
       activeTab = tab;
-      ['overview','compare'].forEach(t => {
-        document.getElementById('view-' + t).style.display = t === tab ? 'block' : 'none';
-        document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+      ALL_TABS.forEach(t => {
+        const btn = document.getElementById('tab-' + t);
+        if (btn) btn.classList.toggle('active', t === tab);
       });
+      document.getElementById('view-overview').style.display = tab === 'overview' ? 'block' : 'none';
+      document.getElementById('view-compare').style.display  = tab === 'compare'  ? 'block' : 'none';
+      document.getElementById('view-channel').style.display  = PLATFORM_TAB_MAP[tab] ? 'block' : 'none';
+      const kg = document.getElementById('kpi-grid');
+      const dc = document.getElementById('dashboard-content');
+      if (kg) kg.style.display = tab === 'overview' ? 'grid' : 'none';
+      if (dc) dc.style.display = tab === 'overview' ? 'flex'  : 'none';
       if (tab === 'compare') {
-        // Show placeholder if no compare has been run yet
         const hasSummary = document.getElementById('cmp-summary').style.display !== 'none';
-        if (!hasSummary) {
-          document.getElementById('cmp-no-data').style.display = 'block';
-        }
+        if (!hasSummary) document.getElementById('cmp-no-data').style.display = 'block';
+      }
+      if (PLATFORM_TAB_MAP[tab]) {
+        openChannelView(PLATFORM_TAB_MAP[tab]);
       }
     }
 
@@ -1468,16 +1480,6 @@
     }
 
     async function openChannelView(platform) {
-      // Show channel view, hide everything else
-      document.getElementById('view-overview').style.display = 'none';
-      document.getElementById('view-compare').style.display = 'none';
-      document.getElementById('view-channel').style.display = 'block';
-      // Also hide the top-level KPI grid and dashboard content
-      const kg = document.getElementById('kpi-grid');
-      const dc = document.getElementById('dashboard-content');
-      if (kg) kg.style.display = 'none';
-      if (dc) dc.style.display = 'none';
-
       // Set platform name
       document.getElementById('detail-platform-name').textContent = platform;
       const cfg = PLATFORM_CONFIG[platform] || { color: '#888' };
@@ -1505,15 +1507,7 @@
       renderChannelSKUTable(filtered);
     }
 
-    function closeChannelView() {
-      document.getElementById('view-channel').style.display = 'none';
-      document.getElementById('view-overview').style.display = 'block';
-      // Restore overview elements
-      const kg = document.getElementById('kpi-grid');
-      const dc = document.getElementById('dashboard-content');
-      if (kg) kg.style.display = 'grid';
-      if (dc) dc.style.display = 'flex';
-    }
+    // closeChannelView replaced by switchTab
 
     function renderChannelKPIs(skuRows, omsRows, platform) {
       const totalMTDRev  = skuRows.reduce((s, r) => s + (Number(r.MTDRevenue) || 0), 0);
