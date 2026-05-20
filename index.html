@@ -491,9 +491,10 @@
     // ─── INIT ──────────────────────────────────────────────────────────────────
     async function init() {
       try {
-        const res = await fetch(API_URL);
+        const res = await fetch(API_URL, { redirect: 'follow' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        rawData = await res.json();
+        const text = await res.text();
+        rawData = JSON.parse(text);
         if (!Array.isArray(rawData) || rawData.length === 0) throw new Error('Empty dataset');
 
         document.getElementById('loading-state').classList.add('hidden');
