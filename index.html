@@ -763,16 +763,22 @@
       render();
     }
 
+function parseLocalDate(str) {
+      // Parse YYYY-MM-DD as local date, not UTC — prevents IST timezone shift
+      const parts = String(str).split('-');
+      if (parts.length === 3) return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      return new Date(str);
+    }
+
     function getFilteredData() {
       const platform = document.getElementById('platformFilter').value;
       const today = new Date(); today.setHours(0,0,0,0);
 
       // Find latest date in dataset
-      const allDates = rawData.map(r => new Date(r.Date)).filter(d => !isNaN(d));
+      const allDates = rawData.map(r => parseLocalDate(r.Date)).filter(d => !isNaN(d));
       const latestDate = allDates.length ? new Date(Math.max(...allDates)) : today;
       latestDate.setHours(0,0,0,0);
 
-      // T-1 = day before latest, T-2 = two days before latest
       const t1 = new Date(latestDate); t1.setDate(t1.getDate() - 1);
       const t2 = new Date(latestDate); t2.setDate(t2.getDate() - 2);
 
@@ -780,7 +786,7 @@
         const monthMatch = activeMonth === 'All' || Number(row.Month) === parseInt(activeMonth, 10);
         const platMatch  = platform === 'All' || String(row.Platform) === platform;
 
-        const rowDate = new Date(row.Date); rowDate.setHours(0,0,0,0);
+        const rowDate = parseLocalDate(row.Date); rowDate.setHours(0,0,0,0);
         let dateMatch = true;
 
         if (activePeriod === 't1') {
@@ -1116,7 +1122,7 @@
 
     function filterByDateRange(start, end) {
       return rawData.filter(r => {
-        const d = new Date(r.Date); d.setHours(0,0,0,0);
+        const d = parseLocalDate(r.Date); d.setHours(0,0,0,0);
         return d >= start && d <= end;
       });
     }
