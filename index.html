@@ -555,16 +555,16 @@
         colors: ['#8B5CF6'],
         plotOptions: { bar: { horizontal: true, borderRadius: 3 } },
         dataLabels: { enabled: false },
-        // THE FIX: Moved categories to xaxis and added a tooltip formatter
         xaxis: { 
           categories: topProdLabels,
+          tickAmount: 4, /* <-- THIS IS THE FIX: Forces only 4 labels on the bottom */
           labels: { formatter: (val) => formatNumber(val), style: { colors: '#9CA3AF' } }, 
           axisBorder: { show: false } 
         },
         yaxis: { 
           labels: { 
             style: { colors: '#E5E7EB' },
-            maxWidth: 400, // Forces the chart to give enough width for long FMCG names
+            maxWidth: 400, 
           } 
         },
         grid: { show: false },
