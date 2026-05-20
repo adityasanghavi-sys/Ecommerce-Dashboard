@@ -282,6 +282,12 @@
         rowDate.setHours(0,0,0,0);
         
         const pName = String(row.Platform).toLowerCase();
+
+        // --- NEW: BLOCK CATEGORY ROWS FROM ALL MATH ---
+        const prodName = String(row['Product Name'] || '').trim().toLowerCase();
+        const excludedCategories = ['total', 'ragi chips', 'dipsters', 'puffs', 'others'];
+        if (excludedCategories.includes(prodName)) return false; 
+        // ----------------------------------------------
         
         // --- Date Logic Engine ---
         let dateMatch = false;
