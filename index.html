@@ -414,13 +414,33 @@
         <p class="page-subtitle" id="data-subtitle">Loading...</p>
       </div>
       <div class="controls">
+        <!-- Period toggle -->
+        <div class="control-group">
+          <button class="control-btn" onclick="setPeriod('t1')" id="period-t1" title="T-1: Yesterday's data">T-1</button>
+          <div class="control-divider"></div>
+          <button class="control-btn" onclick="setPeriod('t2')" id="period-t2" title="T-2: Two days ago">T-2</button>
+          <div class="control-divider"></div>
+          <button class="control-btn" onclick="setPeriod('7d')" id="period-7d">7 Days</button>
+          <div class="control-divider"></div>
+          <button class="control-btn active" onclick="setPeriod('mtd')" id="period-mtd">MTD</button>
+          <div class="control-divider"></div>
+          <button class="control-btn" onclick="setPeriod('custom')" id="period-custom">Custom</button>
+        </div>
+
+        <!-- Custom date range (hidden by default) -->
+        <div id="custom-date-range" style="display:none; align-items:center; gap:6px;">
+          <input type="date" id="customStart" onchange="render()" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;padding:6px 8px;outline:none;font-family:'DM Sans',sans-serif;">
+          <span style="color:var(--text-muted);font-size:12px;">→</span>
+          <input type="date" id="customEnd" onchange="render()" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;padding:6px 8px;outline:none;font-family:'DM Sans',sans-serif;">
+        </div>
+
         <!-- Month toggle -->
         <div class="control-group">
           <button class="control-btn" onclick="setMonth('04')" id="btn-04">Apr 26</button>
           <div class="control-divider"></div>
           <button class="control-btn active" onclick="setMonth('05')" id="btn-05">May 26</button>
           <div class="control-divider"></div>
-          <button class="control-btn" onclick="setMonth('All')" id="btn-All">All Time</button>
+          <button class="control-btn" onclick="setMonth('All')" id="btn-All">All</button>
         </div>
 
         <!-- Platform filter -->
@@ -485,6 +505,7 @@
     // ─── STATE ─────────────────────────────────────────────────────────────────
     let rawData = [];
     let activeMonth = '05';
+    let activePeriod = 'mtd'; // t1, t2, 7d, mtd, custom
     let chartSales = null;
     let chartRoas = null;
 
@@ -523,12 +544,56 @@
 
     function getFilteredData() {
       const platform = document.getElementById('platformFilter').value;
+      const today = new Date(); today.setHours(0,0,0,0);
+
+      // Find latest date in dataset
+      const allDates = rawData.map(r => new Date(r.Date)).filter(d => !isNaN(d));
+      const latestDate = allDates.length ? new Date(Math.max(...allDates)) : today;
+      latestDate.setHours(0,0,0,0);
+
+      // T-1 = day before latest, T-2 = two days before latest
+      const t1 = new Date(latestDate); t1.setDate(t1.getDate() - 1);
+      const t2 = new Date(latestDate); t2.setDate(t2.getDate() - 2);
+
       return rawData.filter(row => {
-        // Month in sheet is numeric (4, 5) — compare as integer
         const monthMatch = activeMonth === 'All' || Number(row.Month) === parseInt(activeMonth, 10);
         const platMatch  = platform === 'All' || String(row.Platform) === platform;
-        return monthMatch && platMatch;
+
+        const rowDate = new Date(row.Date); rowDate.setHours(0,0,0,0);
+        let dateMatch = true;
+
+        if (activePeriod === 't1') {
+          dateMatch = rowDate.getTime() === t1.getTime();
+        } else if (activePeriod === 't2') {
+          dateMatch = rowDate.getTime() === t2.getTime();
+        } else if (activePeriod === '7d') {
+          const cutoff = new Date(latestDate); cutoff.setDate(cutoff.getDate() - 7);
+          dateMatch = rowDate >= cutoff && rowDate <= latestDate;
+        } else if (activePeriod === 'mtd') {
+          dateMatch = true; // MTD = all rows in selected month (month filter handles it)
+        } else if (activePeriod === 'custom') {
+          const s = document.getElementById('customStart').value;
+          const e = document.getElementById('customEnd').value;
+          const sd = s ? new Date(s) : new Date(0);
+          const ed = e ? new Date(e) : new Date('2999-01-01');
+          sd.setHours(0,0,0,0); ed.setHours(0,0,0,0);
+          dateMatch = rowDate >= sd && rowDate <= ed;
+        }
+
+        return monthMatch && platMatch && dateMatch;
       });
+    }
+
+    function setPeriod(p) {
+      activePeriod = p;
+      const customPicker = document.getElementById('custom-date-range');
+      customPicker.style.display = p === 'custom' ? 'flex' : 'none';
+      // Update button states
+      ['t1','t2','7d','mtd','custom'].forEach(k => {
+        const el = document.getElementById('period-' + k);
+        if (el) el.classList.toggle('active', k === p);
+      });
+      render();
     }
 
     // ─── HELPERS ───────────────────────────────────────────────────────────────
@@ -590,8 +655,9 @@
 
       // Update subtitle
       const platFilter = document.getElementById('platformFilter').value;
+      const periodLabels = { t1:'T-1 (yesterday)', t2:'T-2', '7d':'Last 7 days', mtd:'Month to date', custom:'Custom range' };
       document.getElementById('data-subtitle').textContent =
-        `${monthLabel(activeMonth)}${platFilter !== 'All' ? ' · '+platFilter : ''}  ·  ${data.length} records`;
+        `${monthLabel(activeMonth)} · ${periodLabels[activePeriod] || ''} ${platFilter !== 'All' ? '· '+platFilter : ''} · ${data.length} records`;
 
       renderKPIs(data, agg);
       renderPlatformCards(agg);
