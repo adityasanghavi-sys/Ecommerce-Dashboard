@@ -910,8 +910,8 @@
       latestDate.setHours(0,0,0,0);
 
       // T-1 = day before latest, T-2 = two days before latest
-      const t1 = new Date(latestDate); t1.setDate(t1.getDate() - 1);
-      const t2 = new Date(latestDate); t2.setDate(t2.getDate() - 2);
+      const t1 = new Date(latestDate);
+      const t2 = new Date(latestDate); t2.setDate(t2.getDate() - 1);
 
       return rawData.filter(row => {
         const monthMatch = activeMonth === 'All' || Number(row.Month) === parseInt(activeMonth, 10);
