@@ -3,946 +3,789 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Snackible Executive Dashboard</title>
+  <title>Snackible — Executive Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    body { background-color: #0a0a0a; color: #f3f4f6; font-family: 'Inter', sans-serif; }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #0a0a0a; }
-    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #555; }
-    .scrollbar-hide::-webkit-scrollbar { display: none; }
-    .apexcharts-tooltip { background: #111 !important; border: 1px border-white/10 !important; color: #fff; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); }
-    .apexcharts-tooltip-title { background: #000 !important; border-bottom: 1px solid #333 !important; }
-    
-    /* Dark Theme styling for the native calendar pickers */
-    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+    :root {
+      --bg: #080808;
+      --surface: #111111;
+      --surface-2: #181818;
+      --border: rgba(255,255,255,0.06);
+      --border-hover: rgba(255,255,255,0.12);
+      --text-primary: #f0f0f0;
+      --text-secondary: #888;
+      --text-muted: #555;
+      --orange: #F97316;
+      --blue: #3B82F6;
+      --green: #22C55E;
+      --yellow: #EAB308;
+      --red: #EF4444;
+      --purple: #A855F7;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+    }
+    .mono { font-family: 'DM Mono', monospace; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
+
+    /* Noise texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    /* Nav */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(8,8,8,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+      display: flex;
+      align-items: center;
+      padding: 0 32px;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .nav-logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--orange), #dc6b03);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      box-shadow: 0 0 20px rgba(249,115,22,0.3);
+    }
+    .nav-sub { color: var(--text-muted); font-weight: 400; font-size: 13px; margin-left: 4px; }
+
+    /* Loading */
+    #loading-state {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      gap: 16px;
+      transition: opacity 0.4s ease;
+    }
+    #loading-state.hidden { opacity: 0; pointer-events: none; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 2px solid var(--border);
+      border-top-color: var(--orange);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: var(--text-muted); font-size: 13px; letter-spacing: 0.05em; }
+
+    /* Error */
+    #error-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      gap: 12px;
+    }
+    #error-state.visible { display: flex; }
+    .error-icon { font-size: 32px; }
+    .error-msg { color: var(--text-secondary); font-size: 14px; }
+
+    /* Main layout */
+    .wrapper {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 32px 48px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Page header */
+    .page-header {
+      padding: 28px 0 20px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .page-title { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; }
+    .page-subtitle { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
+
+    /* Controls */
+    .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .control-group {
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .control-btn {
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      transition: all 0.15s;
+      font-family: 'DM Sans', sans-serif;
+      white-space: nowrap;
+    }
+    .control-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.04); }
+    .control-btn.active { color: var(--text-primary); background: rgba(255,255,255,0.08); }
+    .control-divider { width: 1px; background: var(--border); height: 20px; }
+
+    select.ctrl-select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      padding: 7px 32px 7px 12px;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    select.ctrl-select:hover { border-color: var(--border-hover); }
+    select.ctrl-select option { background: #1a1a1a; }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .kpi-grid { grid-template-columns: 1fr; } }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .kpi-card:hover { border-color: var(--border-hover); }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--accent, var(--orange));
+    }
+    .kpi-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+    .kpi-value.large { font-size: 32px; }
+    .kpi-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      font-family: 'DM Mono', monospace;
+    }
+    .kpi-sub.positive { color: var(--green); }
+    .kpi-sub.negative { color: var(--red); }
+    .kpi-sub.neutral { color: var(--text-secondary); }
+
+    /* Platform cards grid */
+    .platform-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .platform-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .platform-card:hover { border-color: var(--border-hover); transform: translateY(-1px); }
+    .platform-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 3px;
+      background: var(--p-color, var(--orange));
+    }
+    .platform-name {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .platform-roas-badge {
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.05);
+      color: var(--text-secondary);
+    }
+    .platform-roas-badge.good { color: var(--green); background: rgba(34,197,94,0.08); }
+    .platform-roas-badge.ok { color: var(--yellow); background: rgba(234,179,8,0.08); }
+
+    .p-stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .p-stat-row:last-child { border-bottom: none; }
+    .p-stat-label { font-size: 12px; color: var(--text-muted); }
+    .p-stat-value { font-size: 15px; font-weight: 600; letter-spacing: -0.02em; color: var(--text-primary); }
+    .p-stat-value.mono { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+
+    /* Chart section */
+    .chart-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .chart-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.02em;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+    }
+
+    /* MoM comparison section */
+    .mom-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 768px) { .mom-grid { grid-template-columns: 1fr; } }
+
+    /* Divider */
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Data freshness badge */
+    .freshness {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace;
+    }
+    .freshness-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px rgba(34,197,94,0.6);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* No data state */
+    .no-data {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 40px;
+      font-size: 13px;
+    }
+
+    /* Responsive nav */
+    @media (max-width: 600px) {
+      .wrapper { padding: 0 16px 40px; }
+      nav { padding: 0 16px; }
+    }
   </style>
 </head>
-<body class="selection:bg-blue-500/30">
+<body>
 
-  <nav class="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-md">
-    <div class="max-w-[1600px] mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]">S</div>
-        <span class="text-xl font-semibold tracking-tight">SNACKIBLE <span class="text-gray-500 font-normal">Analytics</span></span>
-      </div>
-      <div class="flex items-center gap-4">
-        <button class="p-2 hover:bg-white/5 rounded-full relative transition">
-          <i data-lucide="bell" class="w-5 h-5 text-gray-400"></i>
-          <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-[#0a0a0a]"></span>
-        </button>
-      </div>
+  <!-- Loading overlay -->
+  <div id="loading-state">
+    <div class="spinner"></div>
+    <p class="loading-text">PULLING DATA</p>
+  </div>
+
+  <!-- Nav -->
+  <nav>
+    <div class="nav-logo">
+      <div class="nav-logo-icon">S</div>
+      SNACKIBLE <span class="nav-sub">/ executive</span>
+    </div>
+    <div class="freshness" id="freshness-badge" style="display:none">
+      <div class="freshness-dot"></div>
+      <span id="freshness-text">live</span>
     </div>
   </nav>
 
-  <div class="max-w-[1600px] mx-auto px-4 lg:px-8 pb-12">
-    
-    <div class="pt-8 pb-2">
-      <h1 class="text-3xl font-bold tracking-tight mb-6">Executive Overview</h1>
-      <div class="flex items-center justify-between border-b border-white/10 pb-2">
-        <div class="flex space-x-1 overflow-x-auto scrollbar-hide" id="tab-container"></div>
-        
-        <div class="relative ml-auto"> 
-          <select id="monthDropdown" onchange="applyFilters()" class="appearance-none bg-[#111111] border border-white/10 rounded-lg py-2 pl-4 pr-10 text-sm font-medium text-gray-200 focus:outline-none focus:border-blue-500/50 transition-colors cursor-pointer shadow-lg">
-            <option value="All">All Time</option>
-            <option value="05" selected>May 2026</option>
-            <option value="04">April 2026</option>
-          </select>
-          <i data-lucide="calendar" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"></i>
-        </div>
+  <div class="wrapper">
+
+    <!-- Page header + controls -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Executive Overview</h1>
+        <p class="page-subtitle" id="data-subtitle">Loading...</p>
       </div>
-    </div>
-    <div class="sticky top-16 z-40 py-4 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5 flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-3 flex-wrap">
-        
-        <div class="relative flex items-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 transition-colors">
-          <i data-lucide="calendar" class="w-4 h-4 text-gray-400 mr-2"></i>
-          <select id="dateFilter" onchange="setDateRange(this.value)" class="bg-transparent text-sm font-medium text-gray-200 outline-none appearance-none cursor-pointer pr-4">
-            <option value="latest" class="bg-gray-900 text-white">Latest Day</option>
-            <option value="7d" class="bg-gray-900 text-white">Last 7 Days</option>
-            <option value="30d" class="bg-gray-900 text-white">Last 30 Days</option>
-            <option value="all" class="bg-gray-900 text-white" selected>All Time</option>
-            <option value="custom" class="bg-gray-900 text-blue-400">Custom Range...</option>
-          </select>
-          <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 absolute right-2 pointer-events-none"></i>
+      <div class="controls">
+        <!-- Month toggle -->
+        <div class="control-group">
+          <button class="control-btn" onclick="setMonth('04')" id="btn-04">Apr 26</button>
+          <div class="control-divider"></div>
+          <button class="control-btn active" onclick="setMonth('05')" id="btn-05">May 26</button>
+          <div class="control-divider"></div>
+          <button class="control-btn" onclick="setMonth('All')" id="btn-All">All Time</button>
         </div>
 
-        <div id="custom-date-picker" class="hidden items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-2 py-1 transition-colors">
-          <input type="date" id="startDate" onchange="applyFilters()" class="bg-transparent text-sm text-gray-300 outline-none cursor-pointer">
-          <span class="text-gray-500 text-sm">to</span>
-          <input type="date" id="endDate" onchange="applyFilters()" class="bg-transparent text-sm text-gray-300 outline-none cursor-pointer">
-        </div>
-
-      </div>
-      
-      <div class="flex items-center gap-3">
-        <div class="relative flex items-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 transition-colors">
-          <i data-lucide="filter" class="w-4 h-4 text-gray-400 mr-2"></i>
-          <select id="platformFilter" onchange="setPlatform(this.value)" class="bg-transparent text-sm font-medium text-gray-200 outline-none appearance-none cursor-pointer pr-4">
-            <option value="All" class="bg-gray-900 text-white">All Platforms</option>
-            <option value="Blinkit" class="bg-gray-900 text-white">Blinkit</option>
-            <option value="Zepto" class="bg-gray-900 text-white">Zepto</option>
-            <option value="Instamart" class="bg-gray-900 text-white">Instamart</option>
-            <option value="Big Basket" class="bg-gray-900 text-white">Big Basket</option>
-          </select>
-          <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 absolute right-2 pointer-events-none"></i>
-        </div>
+        <!-- Platform filter -->
+        <select class="ctrl-select" id="platformFilter" onchange="render()">
+          <option value="All">All Platforms</option>
+          <option value="Zepto">Zepto</option>
+          <option value="Blinkit">Blinkit</option>
+          <option value="Instamart">Instamart</option>
+          <option value="Big Basket">Big Basket</option>
+          <option value="Amazon">Amazon</option>
+          <option value="First Club">First Club</option>
+        </select>
       </div>
     </div>
 
-    <main class="mt-6 flex flex-col gap-6">
-      <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4" id="kpi-grid"></div>
+    <!-- Error state -->
+    <div id="error-state">
+      <div class="error-icon">⚠</div>
+      <p class="error-msg" id="error-msg">Could not load data. Check the Apps Script URL.</p>
+    </div>
 
-      <div id="dashboard-content" class="flex flex-col gap-6">
-        <div id="platform-summary-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+    <!-- Main content (hidden until data loads) -->
+    <div id="main-content" style="display:none">
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div class="lg:col-span-2 flex flex-col gap-6">
-            <div class="h-[400px] rounded-xl bg-[#111111] border border-white/5 p-5 shadow-lg">
-              <h3 class="text-sm font-semibold text-gray-300 mb-2">Daily GMV Trend (₹)</h3>
-              <div id="chart-daily-trend" class="w-full h-full pb-6"></div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="h-[350px] rounded-xl bg-[#111111] border border-white/5 p-5 shadow-lg">
-                <h3 class="text-sm font-semibold text-gray-300 mb-2">Platform Contribution</h3>
-                <div id="chart-platform-share" class="w-full h-full pb-4 flex justify-center"></div>
-              </div>
-              <div class="h-[350px] rounded-xl bg-[#111111] border border-white/5 p-5 shadow-lg">
-                <h3 class="text-sm font-semibold text-gray-300 mb-2">Top 5 Products by GMV</h3>
-                <div id="chart-top-products" class="w-full h-full pb-4"></div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="lg:col-span-1 flex flex-col gap-6">
-            <div class="h-80 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-gray-600 border-dashed">AI Insights Panel (Step 7)</div>
-          </div>
+      <!-- KPI Row -->
+      <div class="section-label">Summary</div>
+      <div class="kpi-grid" id="kpi-grid"></div>
+
+      <!-- Chart: Sales + ROAS by Platform -->
+      <div class="section-label">Platform Breakdown</div>
+      <div class="mom-grid">
+        <div class="chart-section">
+          <div class="chart-title">Sales by Platform (₹)</div>
+          <div id="chart-sales" style="height:260px"></div>
+        </div>
+        <div class="chart-section">
+          <div class="chart-title">ROAS by Platform</div>
+          <div id="chart-roas" style="height:260px"></div>
         </div>
       </div>
-      <div id="product-view-content" class="hidden flex-col gap-6">
-        
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="product-kpi-grid">
-           </div>
 
-        <div class="bg-[#111111] border border-white/5 rounded-xl shadow-lg flex flex-col overflow-hidden">
-          
-          <div class="p-5 border-b border-white/5 flex flex-wrap justify-between items-center gap-4">
-            <h3 class="text-lg font-semibold text-gray-100">SKU Performance</h3>
-            <div class="relative">
-              <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
-              <input type="text" id="productSearch" onkeyup="renderProductTable(window.currentFilteredData)" placeholder="Search products..." class="bg-[#0a0a0a] border border-white/10 rounded-md py-1.5 pl-9 pr-4 text-sm text-gray-200 focus:outline-none focus:border-blue-500/50 w-64 transition-all">
-            </div>
-          </div>
-          
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm text-gray-400">
-              <thead class="text-xs uppercase bg-[#0a0a0a]/50 text-gray-500 border-b border-white/5">
-  <tr>
-    <th scope="col" class="px-6 py-3 font-medium cursor-pointer hover:text-white transition-colors" onclick="sortProductTable('name')">
-      Product Name <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50"></i>
-    </th>
-    <th scope="col" class="px-6 py-3 font-medium text-right cursor-pointer hover:text-white transition-colors" onclick="sortProductTable('gmv')">
-      GMV (₹) <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50"></i>
-    </th>
-    <th scope="col" class="px-6 py-3 font-medium text-right cursor-pointer hover:text-white transition-colors" onclick="sortProductTable('units')">
-      Units <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50"></i>
-    </th>
-    <th scope="col" class="px-6 py-3 font-medium text-right cursor-pointer hover:text-white transition-colors" onclick="sortProductTable('asp')">
-      ASP (₹) <i data-lucide="arrow-up-down" class="inline w-3 h-3 ml-1 opacity-50"></i>
-    </th>
-    <th scope="col" class="px-6 py-3 font-medium text-center">Top Platform</th>
-  </tr>
-</thead>
-              <tbody id="product-table-body" class="divide-y divide-white/5">
-                </tbody>
-            </table>
-          </div>
-          
-        </div>
-      </div>
-      <div id="platform-view-content" class="hidden flex-col gap-6">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="platform-cards-container">
-          </div>
-      </div>
-    </main>
+      <!-- Platform Cards -->
+      <div class="section-label">Per Platform</div>
+      <div class="platform-grid" id="platform-grid"></div>
+
+    </div>
   </div>
 
   <script>
-    lucide.createIcons();
-    const filters = { dateRange: 'all', platform: 'All', tab: 'Overview' };
-    let rawData = [];
-    let chartInstances = {}; 
-    // --- FIXED MONTHLY BUDGETS (Zepto & Instamart Only) ---
-    const monthlyBudgets = {
-      'Zepto': 2070000,      // 20.7 Lakhs
-      'Blinkit': 0,          
-      'Instamart': 1275000,  // 12.75 Lakhs (Swiggy)
-      'Big Basket': 0        
-    };
-
-    const tabs = [{ name: 'Overview', icon: 'layout-dashboard' }, { name: 'Platform View', icon: 'shopping-cart' }, { name: 'Product View', icon: 'package' }];
-
-    function renderTabs() {
-      document.getElementById('tab-container').innerHTML = tabs.map(tab => {
-        const c = filters.tab === tab.name ? 'border-orange-500 text-orange-400' : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-white/20';
-        return `<button onclick="setActiveTab('${tab.name}')" class="flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${c}"><i data-lucide="${tab.icon}" class="w-4 h-4"></i> ${tab.name}</button>`;
-      }).join('');
-      lucide.createIcons(); 
-    }
-
-    // *** PASTE YOUR GOOGLE API URL HERE ***
+    // ─── CONFIG ────────────────────────────────────────────────────────────────
     const API_URL = "https://script.google.com/macros/s/AKfycbwjmrasY2jMol0y3FHJ_vs2nVAGQgZ50yQIASQUWRQKXBRvhufqf9zlm5PNRetGM_fF/exec";
 
-    async function fetchAndRenderData() {
+    const PLATFORM_CONFIG = {
+      'Zepto':      { color: '#3B82F6', budget: { '04': 1500000, '05': 2070000 } },
+      'Blinkit':    { color: '#EAB308', budget: { '04': 0,       '05': 0 } },
+      'Instamart':  { color: '#22C55E', budget: { '04': 1000000, '05': 1275000 } },
+      'Big Basket': { color: '#EF4444', budget: { '04': 0,       '05': 0 } },
+      'Amazon':     { color: '#F97316', budget: { '04': 0,       '05': 0 } },
+      'First Club': { color: '#A855F7', budget: { '04': 0,       '05': 0 } },
+    };
+
+    // ─── STATE ─────────────────────────────────────────────────────────────────
+    let rawData = [];
+    let activeMonth = '05';
+    let chartSales = null;
+    let chartRoas = null;
+
+    // ─── INIT ──────────────────────────────────────────────────────────────────
+    async function init() {
       try {
-        const response = await fetch(API_URL);
-        rawData = await response.json();
-        
-        // Auto-set the date pickers to the latest date available so they aren't blank
-        if (rawData.length > 0) {
-          const maxTime = Math.max(...rawData.map(r => new Date(r.Date).getTime()).filter(t => !isNaN(t)));
-          const maxDateStr = new Date(maxTime).toISOString().split('T')[0];
-          document.getElementById('startDate').value = maxDateStr;
-          document.getElementById('endDate').value = maxDateStr;
-        }
+        const res = await fetch(API_URL);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        rawData = await res.json();
+        if (!Array.isArray(rawData) || rawData.length === 0) throw new Error('Empty dataset');
 
-        applyFilters(); 
-      } catch (error) {
-        console.error("Connection Error:", error);
+        document.getElementById('loading-state').classList.add('hidden');
+        document.getElementById('main-content').style.display = 'block';
+        document.getElementById('freshness-badge').style.display = 'inline-flex';
+        document.getElementById('freshness-text').textContent = `${rawData.length} rows`;
+
+        render();
+      } catch (err) {
+        document.getElementById('loading-state').classList.add('hidden');
+        const es = document.getElementById('error-state');
+        es.classList.add('visible');
+        document.getElementById('error-msg').textContent = err.message || 'Could not load data.';
+        console.error(err);
       }
     }
 
-    function setDateRange(val) { 
-      filters.dateRange = val; 
-      
-      // Show/Hide the custom date picker inputs
-      const customPicker = document.getElementById('custom-date-picker');
-      if (val === 'custom') {
-        customPicker.classList.remove('hidden');
-        customPicker.classList.add('flex');
-      } else {
-        customPicker.classList.add('hidden');
-        customPicker.classList.remove('flex');
-      }
-      
-      applyFilters(); 
-    }
-    
-    function setPlatform(val) { filters.platform = val; applyFilters(); }
-    function setActiveTab(tabName) { filters.tab = tabName; renderTabs(); applyFilters(); }
-
-    function applyFilters() {
-      const isOverview = filters.tab === 'Overview';
-      const isProductView = filters.tab === 'Product View';
-      const isPlatformView = filters.tab === 'Platform View';
-      
-      // Route Overview Elements
-      document.getElementById('kpi-grid').style.display = isOverview ? 'grid' : 'none';
-      document.getElementById('dashboard-content').style.display = isOverview ? 'flex' : 'none';
-      
-      // Route Product View Elements
-      const productViewEl = document.getElementById('product-view-content');
-      if (productViewEl) productViewEl.style.display = isProductView ? 'flex' : 'none';
-
-      // Route Platform View Elements
-      const platformViewEl = document.getElementById('platform-view-content');
-      if (platformViewEl) platformViewEl.style.display = isPlatformView ? 'flex' : 'none';
-      
-      // Save filtered data globally so the search bar can access it instantly
-      window.currentFilteredData = [];
-      
-      if (!rawData.length) return;
-
-      // --- NEW: MONTH FILTERING LOGIC ---
-      let baseData = rawData;
-      const selectedMonth = document.getElementById('monthDropdown') ? document.getElementById('monthDropdown').value : '05';
-      if (selectedMonth !== 'All') {
-        baseData = rawData.filter(row => {
-          let d = new Date(row.Date);
-          if (!isNaN(d.getTime())) {
-            let m = String(d.getMonth() + 1).padStart(2, '0'); 
-            return m === selectedMonth;
-          }
-          return true; 
-        });
-      }
-
-      // 1. Find the Absolute Latest Date in the Dataset
-      const dates = baseData.map(r => new Date(r.Date).getTime()).filter(t => !isNaN(t));
-      const maxDate = new Date(Math.max(...dates));
-      maxDate.setHours(0,0,0,0);
-      
-      const filteredData = baseData.filter(row => {
-        const rowDate = new Date(row.Date);
-        rowDate.setHours(0,0,0,0);
-        
-        const pName = String(row.Platform).toLowerCase();
-
-        // --- NEW: BLOCK CATEGORY ROWS FROM ALL MATH ---
-        const prodName = String(row['Product Name'] || '').trim().toLowerCase();
-        const excludedCategories = ['total', 'ragi chips', 'dipsters', 'puffs', 'others'];
-        if (excludedCategories.includes(prodName)) return false; 
-        // ----------------------------------------------
-        
-        // --- Date Logic Engine ---
-        let dateMatch = false;
-        if (filters.dateRange === 'all') {
-          dateMatch = true;
-        } else if (filters.dateRange === 'latest') {
-          dateMatch = rowDate.getTime() === maxDate.getTime();
-        } else if (filters.dateRange === '7d') {
-          let cutoff = new Date(maxDate); cutoff.setDate(cutoff.getDate() - 7);
-          dateMatch = rowDate > cutoff && rowDate <= maxDate;
-        } else if (filters.dateRange === '30d') {
-          let cutoff = new Date(maxDate); cutoff.setDate(cutoff.getDate() - 30);
-          dateMatch = rowDate > cutoff && rowDate <= maxDate;
-        } else if (filters.dateRange === 'custom') {
-          let sVal = document.getElementById('startDate').value;
-          let eVal = document.getElementById('endDate').value;
-          let sDate = sVal ? new Date(sVal) : new Date(0);
-          let eDate = eVal ? new Date(eVal) : new Date('2999-01-01');
-          sDate.setHours(0,0,0,0); eDate.setHours(0,0,0,0);
-          dateMatch = rowDate >= sDate && rowDate <= eDate;
-        }
-
-        // --- Platform Logic Engine ---
-        const platMatch = filters.platform === 'All' || pName.includes(filters.platform.toLowerCase());
-        
-        return dateMatch && platMatch;
+    // ─── FILTERS ───────────────────────────────────────────────────────────────
+    function setMonth(m) {
+      activeMonth = m;
+      ['04','05','All'].forEach(k => {
+        document.getElementById('btn-' + k).classList.toggle('active', k === m);
       });
-
-      calculateAndRenderKPIs(filteredData);
-      renderPlatformSummaries(filteredData);
-      renderCharts(filteredData);
-     window.currentFilteredData = filteredData;
-      if (filters.tab === 'Product View') {
-        renderProductView(filteredData);
-      }
-      
-      // ---> YOUR NEW TRIGGER LINE <---
-      if (filters.tab === 'Platform View') {
-        renderPlatformView(filteredData); 
-      }
-    } // <-- This is the bracket that ends the applyFilters() function
-
-    function formatNumber(num, isCurrency = true) {
-      if (!num) return isCurrency ? '₹0' : '0';
-      let formatted = num >= 100000 ? (num / 100000).toFixed(1) + 'L' : num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toFixed(0);
-      return isCurrency ? '₹' + formatted : formatted;
+      render();
     }
 
-    function calculateAndRenderKPIs(data) {
-      let totalGmv = 0, totalUnits = 0;
-      let platforms = { 'Zepto': 0, 'Blinkit': 0, 'Instamart': 0, 'Big Basket': 0 };
+    function getFilteredData() {
+      const platform = document.getElementById('platformFilter').value;
+      return rawData.filter(row => {
+        const monthMatch = activeMonth === 'All' || String(row.Month) === activeMonth;
+        const platMatch  = platform === 'All' || String(row.Platform) === platform;
+        return monthMatch && platMatch;
+      });
+    }
 
+    // ─── HELPERS ───────────────────────────────────────────────────────────────
+    function fmt(n, isCurrency = true) {
+      if (!n || isNaN(n)) return isCurrency ? '₹0' : '0';
+      let s = n >= 10000000 ? (n/10000000).toFixed(2)+'Cr'
+            : n >= 100000  ? (n/100000).toFixed(2)+'L'
+            : n >= 1000    ? (n/1000).toFixed(1)+'K'
+            : Number(n).toFixed(0);
+      return isCurrency ? '₹'+s : s;
+    }
+
+    function fmtRoas(r) {
+      if (!r || isNaN(r) || r === 0) return '--';
+      return Number(r).toFixed(2) + 'x';
+    }
+
+    function roasBadgeClass(r) {
+      if (!r || r === 0) return '';
+      return r >= 2 ? 'good' : 'ok';
+    }
+
+    function monthLabel(m) {
+      return m === '04' ? 'April 2026' : m === '05' ? 'May 2026' : 'All Time';
+    }
+
+    // ─── AGGREGATE ─────────────────────────────────────────────────────────────
+    function aggregateByPlatform(data) {
+      const agg = {};
       data.forEach(row => {
-        let gmv = Number(row.GMV) || 0;
-        let units = Number(row.Units) || 0;
-        let pName = String(row.Platform).toLowerCase();
-        
-        totalGmv += gmv; 
-        totalUnits += units; 
-
-        if (pName.includes('zepto')) platforms['Zepto'] += gmv;
-        else if (pName.includes('blinkit')) platforms['Blinkit'] += gmv;
-        else if (pName.includes('swiggy') || pName.includes('instamart')) platforms['Instamart'] += gmv;
-        else if (pName.includes('big basket') || pName.includes('bigbasket')) platforms['Big Basket'] += gmv;
+        const p = String(row.Platform || '').trim();
+        if (!p) return;
+        if (!agg[p]) agg[p] = { sales: 0, spends: 0, units: 0, roasSum: 0, roasCount: 0 };
+        agg[p].sales  += Number(row.Sales)  || 0;
+        agg[p].spends += Number(row.Spends) || 0;
+        agg[p].units  += Number(row.Units)  || 0;
+        const roas = Number(row.ROAS);
+        if (roas > 0) { agg[p].roasSum += roas; agg[p].roasCount++; }
       });
-
-// Calculate Fixed Spends & Pacing ROAS (Only using platforms with budgets)
-      let totalSpends = monthlyBudgets['Zepto'] + monthlyBudgets['Instamart'];
-      let roasGmv = platforms['Zepto'] + platforms['Instamart']; // Only use sales from ad-backed platforms
-      let blendedRoas = totalSpends > 0 ? (roasGmv / totalSpends).toFixed(2) + 'x' : '--';
-
-      document.getElementById('kpi-grid').innerHTML = `
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-orange-500 col-span-2 md:col-span-1 lg:col-span-2">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Sales</h3>
-          <p class="text-3xl font-bold text-white">${formatNumber(totalGmv)}</p>
-        </div>
-        
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-purple-500 col-span-2 md:col-span-1 lg:col-span-2">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Ad Budget</h3>
-          <p class="text-3xl font-bold text-white">${formatNumber(totalSpends)}</p>
-        </div>
-
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-green-400 col-span-2 md:col-span-1 lg:col-span-2">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Pacing ROAS</h3>
-          <p class="text-3xl font-bold text-white">${blendedRoas}</p>
-        </div>
-
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-2 border-t-gray-500 col-span-2 md:col-span-1 lg:col-span-2">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Units</h3>
-          <p class="text-3xl font-bold text-white">${formatNumber(totalUnits, false)}</p>
-        </div>
-        
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-4 shadow-lg border-t-2 border-t-blue-500 col-span-2 md:col-span-1 lg:col-span-2">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Zepto</h3>
-          <p class="text-xl font-bold text-white">${formatNumber(platforms['Zepto'])}</p>
-          <p class="text-xs text-blue-400 mt-1">ROAS: ${(platforms['Zepto'] / monthlyBudgets['Zepto']).toFixed(2)}x</p>
-        </div>
-
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-4 shadow-lg border-t-2 border-t-yellow-500 col-span-2 md:col-span-1 lg:col-span-2">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Blinkit</h3>
-          <p class="text-xl font-bold text-white">${formatNumber(platforms['Blinkit'])}</p>
-          <p class="text-xs text-gray-600 mt-1">ROAS: --</p>
-        </div>
-
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-4 shadow-lg border-t-2 border-t-green-500 col-span-2 md:col-span-1 lg:col-span-2">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Instamart</h3>
-          <p class="text-xl font-bold text-white">${formatNumber(platforms['Instamart'])}</p>
-          <p class="text-xs text-green-400 mt-1">ROAS: ${(platforms['Instamart'] / monthlyBudgets['Instamart']).toFixed(2)}x</p>
-        </div>
-
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-4 shadow-lg border-t-2 border-t-red-600 col-span-2 md:col-span-1 lg:col-span-2">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">BigBasket</h3>
-          <p class="text-xl font-bold text-white">${formatNumber(platforms['Big Basket'])}</p>
-          <p class="text-xs text-gray-600 mt-1">ROAS: --</p>
-        </div>
-      `;
-    }
-
-    function renderPlatformSummaries(data) {
-      let pStats = {
-        'Zepto': { gmv: 0, units: 0, days: new Set(), color: 'text-blue-500' },
-        'Blinkit': { gmv: 0, units: 0, days: new Set(), color: 'text-yellow-500' },
-        'Instamart': { gmv: 0, units: 0, days: new Set(), color: 'text-green-500' },
-        'Big Basket': { gmv: 0, units: 0, days: new Set(), color: 'text-red-500' }
-      };
-
-      let allUniqueDays = new Set();
-
-      data.forEach(row => {
-        let gmv = Number(row.GMV) || 0;
-        let units = Number(row.Units) || 0;
-        let pName = String(row.Platform).toLowerCase();
-        let dateStr = new Date(row.Date).toDateString();
-
-        allUniqueDays.add(dateStr);
-
-        let matchedKey = null;
-        if (pName.includes('zepto')) matchedKey = 'Zepto';
-        else if (pName.includes('blinkit')) matchedKey = 'Blinkit';
-        else if (pName.includes('swiggy') || pName.includes('instamart')) matchedKey = 'Instamart';
-        else if (pName.includes('big basket') || pName.includes('bigbasket')) matchedKey = 'Big Basket';
-
-        if (matchedKey) {
-          pStats[matchedKey].gmv += gmv;
-          pStats[matchedKey].units += units;
-          if (gmv > 0 || units > 0) pStats[matchedKey].days.add(dateStr);
-        }
-      });
-
-      let totalDays = allUniqueDays.size;
-      let html = '';
-
-      Object.keys(pStats).forEach(platform => {
-        let stats = pStats[platform];
-        html += `
-          <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg flex flex-col gap-3">
-            <h3 class="text-sm font-semibold ${stats.color}">${platform}</h3>
-            
-            <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-              <span class="text-gray-400">Sales</span>
-              <span class="text-gray-100 font-medium">${formatNumber(stats.gmv)}</span>
-            </div>
-            
-            <div class="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-              <span class="text-gray-400">Units</span>
-              <span class="text-gray-100 font-medium">${formatNumber(stats.units, false)}</span>
-            </div>
-            
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-gray-400">Active days</span>
-              <span class="text-gray-100 font-medium">${stats.days.size}/${totalDays || 1}</span>
-            </div>
-          </div>
-        `;
-      });
-      document.getElementById('platform-summary-grid').innerHTML = html;
-    }
-
-    function renderCharts(data) {
-      const darkConfig = { mode: 'dark', background: 'transparent' };
-      const brandColors = ['#EAB308', '#3B82F6', '#22C55E', '#DC2626', '#8B5CF6']; 
-
-      const dailyMap = {};
-      data.forEach(row => {
-        const d = new Date(row.Date).toLocaleDateString('en-GB', {day: 'numeric', month: 'short'});
-        if(!dailyMap[d]) dailyMap[d] = 0;
-        dailyMap[d] += Number(row.GMV) || 0;
-      });
-      const sortedDates = Object.keys(dailyMap).sort((a, b) => new Date(a + ' 2026') - new Date(b + ' 2026'));
-      const dailyValues = sortedDates.map(d => dailyMap[d]);
-
-      const pMap = { 'Blinkit': 0, 'Zepto': 0, 'Instamart': 0, 'BigBasket': 0 };
-      data.forEach(row => {
-        let pName = String(row.Platform).toLowerCase();
-        let gmv = Number(row.GMV) || 0;
-        if (pName.includes('zepto')) pMap['Zepto'] += gmv;
-        else if (pName.includes('blinkit')) pMap['Blinkit'] += gmv;
-        else if (pName.includes('swiggy') || pName.includes('instamart')) pMap['Instamart'] += gmv;
-        else if (pName.includes('big basket') || pName.includes('bigbasket')) pMap['BigBasket'] += gmv;
-      });
-
-      const prodMap = {};
-      data.forEach(row => {
-        let rawName = String(row['Product Name'] || 'Unknown').trim();
-        let pName = rawName.toLowerCase().split(' ').map(word => 
-          word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(' ');
-
-        // EXCLUDE CATEGORY & SUBTOTAL ROWS
-        const excludedCategories = ['total', 'ragi chips', 'dipsters', 'puffs', 'others'];
-        if (excludedCategories.includes(pName.toLowerCase())) return;
-
-        if(!prodMap[pName]) prodMap[pName] = 0;
-        prodMap[pName] += Number(row.GMV) || 0;
-      });
-      const topProducts = Object.entries(prodMap).sort((a,b) => b[1]-a[1]).slice(0,5);
-      const topProdLabels = topProducts.map(p => p[0]); // Keeps the full product name
-      const topProdValues = topProducts.map(p => p[1]);
-
-      if(chartInstances.daily) chartInstances.daily.destroy();
-      if(chartInstances.platform) chartInstances.platform.destroy();
-      if(chartInstances.products) chartInstances.products.destroy();
-
-      const optDaily = {
-        series: [{ name: 'GMV', data: dailyValues }],
-        chart: { type: 'bar', height: 320, toolbar: { show: false }, ...darkConfig },
-        colors: ['#F97316'],
-        plotOptions: { bar: { borderRadius: 4, columnWidth: '50%' } },
-        dataLabels: { enabled: false },
-        xaxis: { categories: sortedDates, labels: { style: { colors: '#9CA3AF' } }, axisBorder: { show: false } },
-        yaxis: { labels: { formatter: (val) => formatNumber(val), style: { colors: '#9CA3AF' } } },
-        grid: { borderColor: '#333', strokeDashArray: 4, yaxis: { lines: { show: true } } }
-      };
-      chartInstances.daily = new ApexCharts(document.querySelector("#chart-daily-trend"), optDaily);
-      chartInstances.daily.render();
-
-      const optPlatform = {
-        series: Object.values(pMap),
-        labels: Object.keys(pMap),
-        chart: { type: 'donut', height: 280, ...darkConfig },
-        colors: brandColors,
-        stroke: { show: true, colors: '#111', width: 2 },
-        dataLabels: { 
-          enabled: true,
-          style: { fontSize: '12px', fontWeight: 'bold' },
-          dropShadow: { enabled: true, top: 1, left: 1, blur: 2, opacity: 0.8 }
-        },
-        legend: { position: 'bottom', labels: { colors: '#9CA3AF' } },
-        tooltip: { 
-          y: { 
-            formatter: function(val, opts) {
-               // Grabs the exact percentage calculated by the chart
-               let percent = opts.w.globals.seriesPercent[opts.seriesIndex];
-               return formatNumber(val) + " (" + percent.toFixed(1) + "%)";
-            } 
-          } 
-        }
-      };
-      chartInstances.platform = new ApexCharts(document.querySelector("#chart-platform-share"), optPlatform);
-      chartInstances.platform.render();
-
-      const optProducts = {
-        series: [{ name: 'GMV', data: topProdValues }],
-        chart: { type: 'bar', height: 280, toolbar: { show: false }, ...darkConfig },
-        colors: ['#8B5CF6'],
-        plotOptions: { bar: { horizontal: true, borderRadius: 3 } },
-        dataLabels: { enabled: false },
-        xaxis: { 
-          categories: topProdLabels,
-          tickAmount: 2, /* Reduced from 4 to 2 to give labels room to breathe */
-          labels: { 
-            formatter: (val) => formatNumber(val), 
-            style: { colors: '#9CA3AF' },
-            hideOverlappingLabels: true /* Extra protection against squishing */
-          }, 
-          axisBorder: { show: false } 
-        },
-        yaxis: { 
-          labels: { 
-            style: { colors: '#E5E7EB' },
-            maxWidth: 400, 
-          } 
-        },
-        grid: { show: false },
-        tooltip: { y: { formatter: (val) => formatNumber(val) } }
-      };
-      chartInstances.products = new ApexCharts(document.querySelector("#chart-top-products"), optProducts);
-      chartInstances.products.render();
-    }
-// --- PRODUCT VIEW ENGINE ---
-    function renderProductView(data) {
-      // 1. Aggregate data by Product
-      const productMap = {};
-      
-      data.forEach(row => {
-        let rawName = String(row['Product Name'] || 'Unknown').trim();
-        
-        // Force Title Case
-        let pName = rawName.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-        
-        // Exclude Category Rows
-        const excludedCategories = ['total', 'ragi chips', 'dipsters', 'puffs', 'others'];
-        if (excludedCategories.includes(pName.toLowerCase())) return;
-
-        // Safely declare variables
-        let gmv = Number(row.GMV) || 0;
-        let units = Number(row.Units) || 0;
-        let platform = String(row.Platform).trim();
-        
-        if (!productMap[pName]) {
-          productMap[pName] = { gmv: 0, units: 0, platforms: {} };
-        }
-        
-        // Do the math
-        productMap[pName].gmv += gmv;
-        productMap[pName].units += units;
-        
-        if (!productMap[pName].platforms[platform]) {
-          productMap[pName].platforms[platform] = 0;
-        }
-        productMap[pName].platforms[platform] += gmv;
-      });
-
-      // 2. Convert to array and sort by GMV
-      let productArray = Object.keys(productMap).map(name => {
-        let stats = productMap[name];
-        let topPlatform = Object.keys(stats.platforms).reduce((a, b) => stats.platforms[a] > stats.platforms[b] ? a : b, "");
-        
-        return {
-          name: name,
-          gmv: stats.gmv,
-          units: stats.units,
-          asp: stats.units > 0 ? (stats.gmv / stats.units) : 0,
-          topPlatform: topPlatform
-        };
-      }).sort((a, b) => b.gmv - a.gmv);
-
-      // Save globally for the search bar
-      window.currentProductData = productArray;
-      
-      // 3. Calculate KPIs
-      let activeSkus = productArray.length;
-      let topRevSku = activeSkus > 0 ? productArray[0].name : '--';
-      let topVolSku = activeSkus > 0 ? [...productArray].sort((a,b) => b.units - a.units)[0].name : '--';
-      
-      let totalGmv = productArray.reduce((sum, p) => sum + p.gmv, 0);
-      let totalUnits = productArray.reduce((sum, p) => sum + p.units, 0);
-      let blendedAsp = totalUnits > 0 ? (totalGmv / totalUnits) : 0;
-
-      // 4. Render KPI Cards
-      document.getElementById('product-kpi-grid').innerHTML = `
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-4 shadow-lg border-t-2 border-t-blue-500">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Active SKUs</h3>
-          <p class="text-2xl font-bold text-white">${activeSkus}</p>
-        </div>
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-4 shadow-lg border-t-2 border-t-purple-500 overflow-hidden">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 whitespace-nowrap text-ellipsis">Top Revenue SKU</h3>
-          <p class="text-sm font-bold text-white truncate" title="${topRevSku}">${topRevSku}</p>
-        </div>
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-4 shadow-lg border-t-2 border-t-orange-500 overflow-hidden">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 whitespace-nowrap text-ellipsis">Top Volume SKU</h3>
-          <p class="text-sm font-bold text-white truncate" title="${topVolSku}">${topVolSku}</p>
-        </div>
-        <div class="bg-[#111111] border border-white/5 rounded-xl p-4 shadow-lg border-t-2 border-t-green-500">
-          <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Blended ASP</h3>
-          <p class="text-2xl font-bold text-white">₹${blendedAsp.toFixed(1)}</p>
-        </div>
-      `;
-
-      // 5. Render the data table
-      renderProductTable();
-    }
-// --- PLATFORM VIEW ENGINE ---
-    function renderPlatformView(data) {
-      // 1. Detect month for budgets
-      const selectedMonth = document.getElementById('monthDropdown') ? document.getElementById('monthDropdown').value : '05';
-      let zeptoBudget = 0, instamartBudget = 0;
-
-      if (selectedMonth === '05') { 
-        zeptoBudget = 2070000; instamartBudget = 1275000;
-      } else if (selectedMonth === '04') { 
-        zeptoBudget = 1500000; instamartBudget = 1000000; // Update April budgets here!
-      } else { 
-        zeptoBudget = 2070000 + 1500000; instamartBudget = 1275000 + 1000000;
-      }
-
-      // 2. Setup the structure
-      const pStats = {
-        'Zepto': { gmv: 0, units: 0, budget: zeptoBudget, products: {}, color: 'blue', textClass: 'text-blue-400' },
-        'Blinkit': { gmv: 0, units: 0, budget: 0, products: {}, color: 'yellow', textClass: 'text-yellow-400' },
-        'Instamart': { gmv: 0, units: 0, budget: instamartBudget, products: {}, color: 'green', textClass: 'text-green-400' },
-        'Big Basket': { gmv: 0, units: 0, budget: 0, products: {}, color: 'red', textClass: 'text-red-400' }
-      };
-      // 2. Process the data
-      data.forEach(row => {
-        let rawName = String(row['Product Name'] || 'Unknown').trim();
-        let pName = rawName.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-        
-        // Exclude Category Rows (same as Product View)
-        const excludedCategories = ['total', 'ragi chips', 'dipsters', 'puffs', 'others'];
-        if (excludedCategories.includes(pName.toLowerCase())) return;
-
-        let gmv = Number(row.GMV) || 0;
-        let units = Number(row.Units) || 0;
-        let pLower = String(row.Platform).toLowerCase();
-
-        // Match to standard platform name
-        let targetP = null;
-        if (pLower.includes('zepto')) targetP = 'Zepto';
-        else if (pLower.includes('blinkit')) targetP = 'Blinkit';
-        else if (pLower.includes('swiggy') || pLower.includes('instamart')) targetP = 'Instamart';
-        else if (pLower.includes('big basket') || pLower.includes('bigbasket')) targetP = 'Big Basket';
-
-        if (targetP) {
-          pStats[targetP].gmv += gmv;
-          pStats[targetP].units += units;
-          if (!pStats[targetP].products[pName]) pStats[targetP].products[pName] = 0;
-          pStats[targetP].products[pName] += gmv; // Aggregate GMV per product per platform
-        }
-      });
-
-      // 3. Generate the HTML for the Cards
-      let html = '';
-      
-      Object.keys(pStats).forEach(platform => {
-        let stats = pStats[platform];
-        if (stats.gmv === 0) return; // Skip if no data
-        
-        let asp = stats.units > 0 ? (stats.gmv / stats.units).toFixed(1) : 0;
-        let roas = stats.budget > 0 ? (stats.gmv / stats.budget).toFixed(2) + 'x' : '--';
-        
-        // Get Top 3 SKUs for this specific platform
-        let top3 = Object.entries(stats.products)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 3);
-          
-        let top3Html = top3.map((prod, index) => `
-          <div class="flex justify-between items-center text-sm border-t border-white/5 pt-2 mt-2">
-            <span class="text-gray-300 truncate pr-2"><span class="text-gray-500 mr-1">${index + 1}.</span> ${prod[0]}</span>
-            <span class="text-white font-medium">${formatNumber(prod[1])}</span>
-          </div>
-        `).join('');
-
-        html += `
-          <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-4 border-t-${stats.color}-500 flex flex-col h-full">
-            
-            <div class="flex justify-between items-start mb-4">
-              <h3 class="text-xl font-bold text-white">${platform}</h3>
-              <span class="px-2.5 py-1 rounded-md bg-white/5 text-xs font-semibold ${stats.textClass}">ROAS: ${roas}</span>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4 mb-6">
-              <div>
-                <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">GMV</p>
-                <p class="text-2xl font-bold text-white">${formatNumber(stats.gmv)}</p>
-              </div>
-              <div>
-                <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Units</p>
-                <p class="text-2xl font-bold text-white">${formatNumber(stats.units, false)}</p>
-              </div>
-              <div>
-                <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">ASP</p>
-                <p class="text-lg font-semibold text-gray-300">₹${asp}</p>
-              </div>
-              <div>
-                <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Budget</p>
-                <p class="text-lg font-semibold text-gray-300">${stats.budget > 0 ? formatNumber(stats.budget) : '--'}</p>
-              </div>
-            </div>
-            
-            <div class="mt-auto">
-              <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Top Drivers</h4>
-              <div class="bg-[#0a0a0a] rounded-lg p-3 border border-white/5">
-                ${top3Html || '<p class="text-gray-600 text-sm italic">No product data</p>'}
-              </div>
-            </div>
-            
-          </div>
-        `;
-      });
-
-      // 4. Inject into the page
-      document.getElementById('platform-cards-container').innerHTML = html;
-    }
-// --- SEARCH & SORT LOGIC ---
-    let currentSort = { column: 'gmv', direction: 'desc' };
-
-    function sortProductTable(column) {
-      if (currentSort.column === column) {
-        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-      } else {
-        currentSort.column = column;
-        currentSort.direction = 'desc'; 
-      }
-      renderProductTable();
-    }
-
-    function renderProductTable() {
-      // 1. Sort the global array first
-      (window.currentProductData || []).sort((a, b) => {
-        let valA = a[currentSort.column];
-        let valB = b[currentSort.column];
-        
-        if (typeof valA === 'string') {
-          return currentSort.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      // compute avg ROAS and effective ROAS
+      Object.keys(agg).forEach(p => {
+        const d = agg[p];
+        // Prefer computed ROAS (Sales/Spends) if spends available; else use avg from sheet
+        if (d.spends > 0) {
+          d.roas = d.sales / d.spends;
+        } else if (d.roasCount > 0) {
+          d.roas = d.roasSum / d.roasCount;
         } else {
-          return currentSort.direction === 'asc' ? valA - valB : valB - valA;
+          d.roas = 0;
         }
       });
+      return agg;
+    }
 
-      // 2. Then apply the search filter
-      let searchTerm = (document.getElementById('productSearch')?.value || '').toLowerCase();
-      let filteredProducts = (window.currentProductData || []).filter(p => 
-        p.name.toLowerCase().includes(searchTerm)
-      );
+    // ─── RENDER ────────────────────────────────────────────────────────────────
+    function render() {
+      const data = getFilteredData();
+      const agg  = aggregateByPlatform(data);
 
-      let tbody = document.getElementById('product-table-body');
-      
-      if (filteredProducts.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No products found.</td></tr>`;
+      // Update subtitle
+      const platFilter = document.getElementById('platformFilter').value;
+      document.getElementById('data-subtitle').textContent =
+        `${monthLabel(activeMonth)}${platFilter !== 'All' ? ' · '+platFilter : ''}  ·  ${data.length} records`;
+
+      renderKPIs(data, agg);
+      renderPlatformCards(agg);
+      renderCharts(agg);
+    }
+
+    // ─── KPI CARDS ─────────────────────────────────────────────────────────────
+    function renderKPIs(data, agg) {
+      const totalSales  = Object.values(agg).reduce((s, d) => s + d.sales, 0);
+      const totalSpends = Object.values(agg).reduce((s, d) => s + d.spends, 0);
+      const totalUnits  = Object.values(agg).reduce((s, d) => s + d.units, 0);
+
+      // Blended ROAS only from platforms with spends
+      const adSales  = Object.values(agg).filter(d => d.spends > 0).reduce((s,d) => s+d.sales, 0);
+      const adSpends = Object.values(agg).filter(d => d.spends > 0).reduce((s,d) => s+d.spends, 0);
+      const blendedRoas = adSpends > 0 ? adSales / adSpends : 0;
+
+      // Best ROAS platform
+      let bestPlatform = '--', bestRoas = 0;
+      Object.keys(agg).forEach(p => {
+        if (agg[p].roas > bestRoas && agg[p].spends > 0) { bestRoas = agg[p].roas; bestPlatform = p; }
+      });
+
+      const platformCount = Object.keys(agg).length;
+
+      const cards = [
+        {
+          label: 'Total Sales',
+          value: fmt(totalSales),
+          sub: `${platformCount} platform${platformCount !== 1 ? 's' : ''}`,
+          accent: 'var(--orange)',
+          subClass: 'neutral'
+        },
+        {
+          label: 'Total Ad Spends',
+          value: fmt(totalSpends),
+          sub: totalSpends > 0 ? 'Tracked budget' : 'No tracked spends',
+          accent: 'var(--purple)',
+          subClass: 'neutral'
+        },
+        {
+          label: 'Blended ROAS',
+          value: blendedRoas > 0 ? fmtRoas(blendedRoas) : '--',
+          sub: blendedRoas >= 2 ? '▲ Healthy' : blendedRoas > 0 ? '△ Monitor' : 'Spends not tracked',
+          accent: blendedRoas >= 2 ? 'var(--green)' : blendedRoas > 0 ? 'var(--yellow)' : 'var(--text-muted)',
+          subClass: blendedRoas >= 2 ? 'positive' : blendedRoas > 0 ? 'neutral' : 'neutral'
+        },
+        {
+          label: 'Total Units',
+          value: fmt(totalUnits, false),
+          sub: totalSales > 0 && totalUnits > 0 ? `ASP ₹${(totalSales/totalUnits).toFixed(0)}` : '',
+          accent: 'var(--blue)',
+          subClass: 'neutral'
+        },
+        {
+          label: 'Best ROAS Platform',
+          value: bestPlatform,
+          sub: bestRoas > 0 ? fmtRoas(bestRoas) : '--',
+          accent: bestPlatform !== '--' ? (PLATFORM_CONFIG[bestPlatform]?.color || 'var(--green)') : 'var(--text-muted)',
+          subClass: 'positive'
+        },
+        {
+          label: 'Active Platforms',
+          value: platformCount,
+          sub: `of ${Object.keys(PLATFORM_CONFIG).length} tracked`,
+          accent: 'var(--yellow)',
+          subClass: 'neutral'
+        },
+      ];
+
+      document.getElementById('kpi-grid').innerHTML = cards.map(c => `
+        <div class="kpi-card" style="--accent:${c.accent}">
+          <div class="kpi-label">${c.label}</div>
+          <div class="kpi-value">${c.value}</div>
+          ${c.sub ? `<div class="kpi-sub ${c.subClass}">${c.sub}</div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    // ─── PLATFORM CARDS ────────────────────────────────────────────────────────
+    function renderPlatformCards(agg) {
+      const platformFilter = document.getElementById('platformFilter').value;
+
+      const platforms = Object.keys(agg).sort((a,b) => agg[b].sales - agg[a].sales);
+
+      if (platforms.length === 0) {
+        document.getElementById('platform-grid').innerHTML = '<div class="no-data">No data for selected filters.</div>';
         return;
       }
 
       let html = '';
-      filteredProducts.forEach(p => {
-        let pColor = 'bg-gray-800 text-gray-300';
-        let platLower = p.topPlatform.toLowerCase();
-        if (platLower.includes('zepto')) pColor = 'bg-blue-900/50 text-blue-400 border border-blue-700/50';
-        else if (platLower.includes('blinkit')) pColor = 'bg-yellow-900/50 text-yellow-400 border border-yellow-700/50';
-        else if (platLower.includes('instamart') || platLower.includes('swiggy')) pColor = 'bg-green-900/50 text-green-400 border border-green-700/50';
-        else if (platLower.includes('big basket') || platLower.includes('bigbasket')) pColor = 'bg-red-900/50 text-red-400 border border-red-700/50';
+      platforms.forEach(p => {
+        const d = agg[p];
+        const cfg = PLATFORM_CONFIG[p] || { color: '#888', budget: {} };
+        const color = cfg.color;
+        const budget = cfg.budget[activeMonth] || cfg.budget['05'] || 0;
+
+        const roasVal = d.roas;
+        const badgeCls = roasBadgeClass(roasVal);
+        const asp = d.units > 0 ? (d.sales / d.units).toFixed(0) : 0;
+
+        // Budget pacing
+        let pacingHtml = '';
+        if (budget > 0) {
+          const pct = Math.min(100, ((d.spends || 0) / budget) * 100).toFixed(1);
+          pacingHtml = `
+            <div class="p-stat-row">
+              <span class="p-stat-label">Budget Pacing</span>
+              <span class="p-stat-value mono">${pct}%</span>
+            </div>`;
+        }
 
         html += `
-          <tr class="hover:bg-white/[0.05] transition-colors border-b border-white/5 last:border-0">
-            <td class="px-6 py-4 font-medium text-gray-200">${p.name}</td>
-            <td class="px-6 py-4 text-right text-white font-semibold">${formatNumber(p.gmv)}</td>
-            <td class="px-6 py-4 text-right text-gray-300">${formatNumber(p.units, false)}</td>
-            <td class="px-6 py-4 text-right text-gray-400">₹${p.asp.toFixed(1)}</td>
-            <td class="px-6 py-4 text-center">
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${pColor}">
-                ${p.topPlatform}
-              </span>
-            </td>
-          </tr>
-        `;
+          <div class="platform-card" style="--p-color:${color}">
+            <div class="platform-name">
+              ${p}
+              <span class="platform-roas-badge ${badgeCls}">ROAS ${fmtRoas(roasVal)}</span>
+            </div>
+            <div class="p-stat-row">
+              <span class="p-stat-label">Sales</span>
+              <span class="p-stat-value">${fmt(d.sales)}</span>
+            </div>
+            <div class="p-stat-row">
+              <span class="p-stat-label">Units</span>
+              <span class="p-stat-value">${fmt(d.units, false)}</span>
+            </div>
+            <div class="p-stat-row">
+              <span class="p-stat-label">Spends</span>
+              <span class="p-stat-value mono">${d.spends > 0 ? fmt(d.spends) : '--'}</span>
+            </div>
+            <div class="p-stat-row">
+              <span class="p-stat-label">ASP</span>
+              <span class="p-stat-value mono">${asp > 0 ? '₹'+asp : '--'}</span>
+            </div>
+            ${pacingHtml}
+          </div>`;
       });
-      
-      tbody.innerHTML = html;
+
+      document.getElementById('platform-grid').innerHTML = html;
     }
-    // --- PLATFORM VIEW ENGINE ---
-    function renderPlatformView(data) {
-      // 1. Setup the structure for our 4 main platforms
-      const pStats = {
-        'Zepto': { gmv: 0, units: 0, budget: 2070000, products: {}, color: 'blue', textClass: 'text-blue-400' },
-        'Blinkit': { gmv: 0, units: 0, budget: 0, products: {}, color: 'yellow', textClass: 'text-yellow-400' },
-        'Instamart': { gmv: 0, units: 0, budget: 1275000, products: {}, color: 'green', textClass: 'text-green-400' },
-        'Big Basket': { gmv: 0, units: 0, budget: 0, products: {}, color: 'red', textClass: 'text-red-400' }
+
+    // ─── CHARTS ────────────────────────────────────────────────────────────────
+    function renderCharts(agg) {
+      const platforms = Object.keys(agg).sort((a,b) => agg[b].sales - agg[a].sales);
+      const colors = platforms.map(p => PLATFORM_CONFIG[p]?.color || '#888');
+      const salesVals = platforms.map(p => agg[p].sales);
+      const roasVals  = platforms.map(p => parseFloat(agg[p].roas.toFixed(2)));
+
+      const baseOpts = {
+        chart: { toolbar: { show: false }, background: 'transparent', fontFamily: 'DM Sans, sans-serif' },
+        theme: { mode: 'dark' },
+        grid: { borderColor: 'rgba(255,255,255,0.05)', strokeDashArray: 4, yaxis: { lines: { show: true } }, xaxis: { lines: { show: false } } },
+        xaxis: {
+          categories: platforms,
+          labels: { style: { colors: '#555', fontSize: '12px' }, rotate: 0 },
+          axisBorder: { show: false }, axisTicks: { show: false }
+        },
+        plotOptions: { bar: { borderRadius: 5, columnWidth: '55%', distributed: true } },
+        dataLabels: { enabled: false },
+        legend: { show: false },
+        tooltip: { theme: 'dark' },
       };
 
-      // 2. Process the data
-      data.forEach(row => {
-        let rawName = String(row['Product Name'] || 'Unknown').trim();
-        let pName = rawName.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-        
-        // Exclude Category Rows
-        const excludedCategories = ['total', 'ragi chips', 'dipsters', 'puffs', 'others'];
-        if (excludedCategories.includes(pName.toLowerCase())) return;
+      if (chartSales) chartSales.destroy();
+      chartSales = new ApexCharts(document.querySelector('#chart-sales'), {
+        ...baseOpts,
+        series: [{ name: 'Sales', data: salesVals }],
+        chart: { ...baseOpts.chart, type: 'bar', height: 240 },
+        colors: colors,
+        yaxis: { labels: { formatter: v => fmt(v), style: { colors: '#555', fontSize: '11px' } } },
+        tooltip: { y: { formatter: v => fmt(v) }, theme: 'dark' }
+      });
+      chartSales.render();
 
-        let gmv = Number(row.GMV) || 0;
-        let units = Number(row.Units) || 0;
-        let pLower = String(row.Platform).toLowerCase();
-
-        // Match to standard platform name
-        let targetP = null;
-        if (pLower.includes('zepto')) targetP = 'Zepto';
-        else if (pLower.includes('blinkit')) targetP = 'Blinkit';
-        else if (pLower.includes('swiggy') || pLower.includes('instamart')) targetP = 'Instamart';
-        else if (pLower.includes('big basket') || pLower.includes('bigbasket')) targetP = 'Big Basket';
-
-        if (targetP) {
-          pStats[targetP].gmv += gmv;
-          pStats[targetP].units += units;
-          if (!pStats[targetP].products[pName]) pStats[targetP].products[pName] = 0;
-          pStats[targetP].products[pName] += gmv;
+      if (chartRoas) chartRoas.destroy();
+      chartRoas = new ApexCharts(document.querySelector('#chart-roas'), {
+        ...baseOpts,
+        series: [{ name: 'ROAS', data: roasVals }],
+        chart: { ...baseOpts.chart, type: 'bar', height: 240 },
+        colors: colors,
+        yaxis: { labels: { formatter: v => v > 0 ? v.toFixed(1)+'x' : '--', style: { colors: '#555', fontSize: '11px' } } },
+        tooltip: { y: { formatter: v => fmtRoas(v) }, theme: 'dark' },
+        annotations: {
+          yaxis: roasVals.some(v => v > 0) ? [{
+            y: 1,
+            borderColor: 'rgba(255,255,255,0.15)',
+            strokeDashArray: 4,
+            label: { text: '1x', style: { color: '#555', background: 'transparent', fontSize: '10px' } }
+          }] : []
         }
       });
-
-      // 3. Generate the HTML for the Cards
-      let html = '';
-      
-      Object.keys(pStats).forEach(platform => {
-        let stats = pStats[platform];
-        if (stats.gmv === 0) return; // Skip if no data
-        
-        let asp = stats.units > 0 ? (stats.gmv / stats.units).toFixed(1) : 0;
-        let roas = stats.budget > 0 ? (stats.gmv / stats.budget).toFixed(2) + 'x' : '--';
-        
-        // Get Top 3 SKUs for this specific platform
-        let top3 = Object.entries(stats.products)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 3);
-          
-        let top3Html = top3.map((prod, index) => `
-          <div class="flex justify-between items-center text-sm border-t border-white/5 pt-2 mt-2">
-            <span class="text-gray-300 truncate pr-2"><span class="text-gray-500 mr-1">${index + 1}.</span> ${prod[0]}</span>
-            <span class="text-white font-medium">${formatNumber(prod[1])}</span>
-          </div>
-        `).join('');
-
-        html += `
-          <div class="bg-[#111111] border border-white/5 rounded-xl p-5 shadow-lg border-t-4 border-t-${stats.color}-500 flex flex-col h-full">
-            
-            <div class="flex justify-between items-start mb-4">
-              <h3 class="text-xl font-bold text-white">${platform}</h3>
-              <span class="px-2.5 py-1 rounded-md bg-white/5 text-xs font-semibold ${stats.textClass}">ROAS: ${roas}</span>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4 mb-6">
-              <div>
-                <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">GMV</p>
-                <p class="text-2xl font-bold text-white">${formatNumber(stats.gmv)}</p>
-              </div>
-              <div>
-                <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Units</p>
-                <p class="text-2xl font-bold text-white">${formatNumber(stats.units, false)}</p>
-              </div>
-              <div>
-                <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">ASP</p>
-                <p class="text-lg font-semibold text-gray-300">₹${asp}</p>
-              </div>
-              <div>
-                <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Budget</p>
-                <p class="text-lg font-semibold text-gray-300">${stats.budget > 0 ? formatNumber(stats.budget) : '--'}</p>
-              </div>
-            </div>
-            
-            <div class="mt-auto">
-              <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Top Drivers</h4>
-              <div class="bg-[#0a0a0a] rounded-lg p-3 border border-white/5">
-                ${top3Html || '<p class="text-gray-600 text-sm italic">No product data</p>'}
-              </div>
-            </div>
-            
-          </div>
-        `;
-      });
-
-      // 4. Inject into the page
-      document.getElementById('platform-cards-container').innerHTML = html;
+      chartRoas.render();
     }
 
-    renderTabs();
-    fetchAndRenderData();
-    renderTabs();
-    fetchAndRenderData();
+    // ─── KICK OFF ──────────────────────────────────────────────────────────────
+    init();
   </script>
 </body>
 </html>
