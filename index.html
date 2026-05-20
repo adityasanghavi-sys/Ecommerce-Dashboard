@@ -381,6 +381,130 @@
       font-size: 13px;
     }
 
+
+    /* Tab nav */
+    .tab-nav {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
+      margin-bottom: -1px;
+    }
+    .tab-btn:hover { color: var(--text-primary); }
+    .tab-btn.active { color: var(--text-primary); border-bottom-color: var(--orange); }
+
+    /* Compare tab */
+    .compare-mode-toggle {
+      display: inline-flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .cmode-btn {
+      padding: 7px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
+    }
+    .cmode-btn.active { color: var(--text-primary); background: rgba(255,255,255,0.08); }
+
+    .compare-pickers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 640px) { .compare-pickers { grid-template-columns: 1fr; } }
+
+    .compare-picker-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+    }
+    .compare-picker-card.period-a { border-top: 2px solid #F97316; }
+    .compare-picker-card.period-b { border-top: 2px solid #3B82F6; }
+    .picker-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .picker-label.a { color: #F97316; }
+    .picker-label.b { color: #3B82F6; }
+    .picker-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .cpicker {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      padding: 6px 10px;
+      outline: none;
+      cursor: pointer;
+    }
+    .cpicker:focus { border-color: var(--border-hover); }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; }
+
+    .compare-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 900px) { .compare-summary-grid { grid-template-columns: repeat(2,1fr); } }
+
+    .compare-stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .compare-stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 8px; }
+    .compare-stat-row { display: flex; justify-content: space-between; align-items: center; }
+    .compare-stat-val { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; }
+    .compare-stat-val.a { color: #F97316; }
+    .compare-stat-val.b { color: #3B82F6; }
+    .compare-delta {
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      margin-top: 6px;
+    }
+    .compare-delta.pos { color: var(--green); }
+    .compare-delta.neg { color: var(--red); }
+    .compare-delta.neu { color: var(--text-muted); }
+
+    .compare-no-data {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 60px 20px;
+      font-size: 13px;
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+    }
     /* Responsive nav */
     @media (max-width: 600px) {
       .wrapper { padding: 0 16px 40px; }
@@ -471,26 +595,112 @@
     <!-- Main content (hidden until data loads) -->
     <div id="main-content" style="display:none">
 
-      <!-- KPI Row -->
-      <div class="section-label">Summary</div>
-      <div class="kpi-grid" id="kpi-grid"></div>
-
-      <!-- Chart: Sales + ROAS by Platform -->
-      <div class="section-label">Platform Breakdown</div>
-      <div class="mom-grid">
-        <div class="chart-section">
-          <div class="chart-title">Sales by Platform (₹)</div>
-          <div id="chart-sales" style="height:260px"></div>
-        </div>
-        <div class="chart-section">
-          <div class="chart-title">ROAS by Platform</div>
-          <div id="chart-roas" style="height:260px"></div>
-        </div>
+      <!-- Tab Nav -->
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('overview')" id="tab-overview">Overview</button>
+        <button class="tab-btn" onclick="switchTab('compare')" id="tab-compare">Compare</button>
       </div>
 
-      <!-- Platform Cards -->
-      <div class="section-label">Per Platform</div>
-      <div class="platform-grid" id="platform-grid"></div>
+      <!-- ── OVERVIEW TAB ── -->
+      <div id="view-overview">
+        <div class="section-label">Summary</div>
+        <div class="kpi-grid" id="kpi-grid"></div>
+
+        <div class="section-label">Platform Breakdown</div>
+        <div class="mom-grid">
+          <div class="chart-section">
+            <div class="chart-title">Sales by Platform (₹)</div>
+            <div id="chart-sales" style="height:260px"></div>
+          </div>
+          <div class="chart-section">
+            <div class="chart-title">ROAS by Platform</div>
+            <div id="chart-roas" style="height:260px"></div>
+          </div>
+        </div>
+
+        <div class="section-label">Per Platform</div>
+        <div class="platform-grid" id="platform-grid"></div>
+      </div>
+
+      <!-- ── COMPARE TAB ── -->
+      <div id="view-compare" style="display:none">
+
+        <!-- Mode toggle -->
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+          <div class="compare-mode-toggle">
+            <button class="cmode-btn active" onclick="setCmpMode('day')" id="cmode-day">Day vs Day</button>
+            <button class="cmode-btn" onclick="setCmpMode('week')" id="cmode-week">Week vs Week</button>
+          </div>
+          <button onclick="runCompare()" style="background:var(--orange);color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Compare →</button>
+        </div>
+
+        <!-- Day pickers -->
+        <div class="compare-pickers" id="day-pickers">
+          <div class="compare-picker-card period-a">
+            <div class="picker-label a">Period A</div>
+            <div class="picker-row">
+              <input type="date" id="cmp-day-a" class="cpicker">
+            </div>
+          </div>
+          <div class="compare-picker-card period-b">
+            <div class="picker-label b">Period B</div>
+            <div class="picker-row">
+              <input type="date" id="cmp-day-b" class="cpicker">
+            </div>
+          </div>
+        </div>
+
+        <!-- Week pickers -->
+        <div class="compare-pickers" id="week-pickers" style="display:none">
+          <div class="compare-picker-card period-a">
+            <div class="picker-label a">Week A — Start Date</div>
+            <div class="picker-row">
+              <input type="date" id="cmp-week-a-start" class="cpicker">
+              <span style="color:var(--text-muted);font-size:12px;">→ +6 days</span>
+            </div>
+          </div>
+          <div class="compare-picker-card period-b">
+            <div class="picker-label b">Week B — Start Date</div>
+            <div class="picker-row">
+              <input type="date" id="cmp-week-b-start" class="cpicker">
+              <span style="color:var(--text-muted);font-size:12px;">→ +6 days</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary stat cards -->
+        <div class="compare-summary-grid" id="cmp-summary" style="display:none"></div>
+
+        <!-- Bar chart: snapshot -->
+        <div id="cmp-bar-wrap" style="display:none">
+          <div class="section-label" id="cmp-bar-label">Sales by Platform</div>
+          <div class="mom-grid">
+            <div class="chart-section">
+              <div class="chart-title">Sales Comparison (₹)</div>
+              <div id="cmp-chart-sales" style="height:280px"></div>
+            </div>
+            <div class="chart-section">
+              <div class="chart-title">ROAS Comparison</div>
+              <div id="cmp-chart-roas" style="height:280px"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Line chart: week trend (week mode only) -->
+        <div id="cmp-line-wrap" style="display:none">
+          <div class="section-label">Daily Sales Trend</div>
+          <div class="chart-section">
+            <div class="chart-title">Week A vs Week B — Daily Sales (₹)</div>
+            <div id="cmp-chart-trend" style="height:300px"></div>
+          </div>
+        </div>
+
+        <!-- No data -->
+        <div class="compare-no-data" id="cmp-no-data" style="display:none">
+          Select periods above and hit <strong>Compare →</strong>
+        </div>
+
+      </div>
 
     </div>
   </div>
@@ -861,6 +1071,246 @@
         }
       });
       chartRoas.render();
+    }
+
+
+    // ─── TAB SWITCHING ─────────────────────────────────────────────────────────
+    let activeTab = 'overview';
+
+    function switchTab(tab) {
+      activeTab = tab;
+      ['overview','compare'].forEach(t => {
+        document.getElementById('view-' + t).style.display = t === tab ? 'block' : 'none';
+        document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+      });
+      if (tab === 'compare') {
+        // Show placeholder if no compare has been run yet
+        const hasSummary = document.getElementById('cmp-summary').style.display !== 'none';
+        if (!hasSummary) {
+          document.getElementById('cmp-no-data').style.display = 'block';
+        }
+      }
+    }
+
+    // ─── COMPARE ENGINE ────────────────────────────────────────────────────────
+    let cmpMode = 'day';
+    let cmpChartSales = null, cmpChartRoas = null, cmpChartTrend = null;
+
+    function setCmpMode(m) {
+      cmpMode = m;
+      ['day','week'].forEach(k => {
+        document.getElementById('cmode-' + k).classList.toggle('active', k === m);
+        document.getElementById(k + '-pickers').style.display = k === m ? 'grid' : 'none';
+      });
+      // hide results when mode changes
+      ['cmp-summary','cmp-bar-wrap','cmp-line-wrap','cmp-no-data'].forEach(id => {
+        document.getElementById(id).style.display = 'none';
+      });
+    }
+
+    function getDateRange(startStr, days) {
+      const start = new Date(startStr); start.setHours(0,0,0,0);
+      const end   = new Date(start);   end.setDate(end.getDate() + days - 1); end.setHours(0,0,0,0);
+      return { start, end };
+    }
+
+    function filterByDateRange(start, end) {
+      return rawData.filter(r => {
+        const d = new Date(r.Date); d.setHours(0,0,0,0);
+        return d >= start && d <= end;
+      });
+    }
+
+    function aggregatePeriod(rows) {
+      // Returns { total: {sales,spends,roas,units}, byPlatform: {}, byDate: {} }
+      const total = { sales: 0, spends: 0, units: 0, roasSum: 0, roasCount: 0 };
+      const byPlatform = {};
+      const byDate = {};
+
+      rows.forEach(r => {
+        const sales  = Number(r.Sales)  || 0;
+        const spends = Number(r.Spends) || 0;
+        const roas   = Number(r.ROAS)   || 0;
+        const units  = Number(r.Units)  || 0;
+        const plat   = String(r.Platform);
+        const date   = String(r.Date);
+
+        total.sales  += sales;
+        total.spends += spends;
+        total.units  += units;
+        if (roas > 0) { total.roasSum += roas; total.roasCount++; }
+
+        if (!byPlatform[plat]) byPlatform[plat] = { sales:0, spends:0, roas:0, roasCount:0, units:0 };
+        byPlatform[plat].sales  += sales;
+        byPlatform[plat].spends += spends;
+        byPlatform[plat].units  += units;
+        if (roas > 0) { byPlatform[plat].roas += roas; byPlatform[plat].roasCount++; }
+
+        if (!byDate[date]) byDate[date] = 0;
+        byDate[date] += sales;
+      });
+
+      // Compute ROAS per platform
+      Object.keys(byPlatform).forEach(p => {
+        const d = byPlatform[p];
+        d.roas = d.spends > 0 ? (d.sales / d.spends) : (d.roasCount > 0 ? d.roas / d.roasCount : 0);
+      });
+      total.roas = total.spends > 0 ? (total.sales / total.spends)
+                 : total.roasCount > 0 ? (total.roasSum / total.roasCount) : 0;
+
+      return { total, byPlatform, byDate };
+    }
+
+    function delta(a, b) {
+      if (!b) return null;
+      return ((a - b) / b * 100).toFixed(1);
+    }
+
+    function runCompare() {
+      document.getElementById('cmp-no-data').style.display = 'none';
+      let rowsA, rowsB, labelA, labelB, datesA, datesB;
+
+      if (cmpMode === 'day') {
+        const dayA = document.getElementById('cmp-day-a').value;
+        const dayB = document.getElementById('cmp-day-b').value;
+        if (!dayA || !dayB) { alert('Pick both dates.'); return; }
+        const rA = getDateRange(dayA, 1), rB = getDateRange(dayB, 1);
+        rowsA = filterByDateRange(rA.start, rA.end);
+        rowsB = filterByDateRange(rB.start, rB.end);
+        labelA = dayA; labelB = dayB;
+        datesA = null; datesB = null;
+      } else {
+        const wA = document.getElementById('cmp-week-a-start').value;
+        const wB = document.getElementById('cmp-week-b-start').value;
+        if (!wA || !wB) { alert('Pick both week start dates.'); return; }
+        const rA = getDateRange(wA, 7), rB = getDateRange(wB, 7);
+        rowsA = filterByDateRange(rA.start, rA.end);
+        rowsB = filterByDateRange(rB.start, rB.end);
+        labelA = wA + ' (7d)'; labelB = wB + ' (7d)';
+        datesA = rA; datesB = rB;
+      }
+
+      const aggA = aggregatePeriod(rowsA);
+      const aggB = aggregatePeriod(rowsB);
+
+      renderCompareSummary(aggA, aggB, labelA, labelB);
+      renderCompareCharts(aggA, aggB, labelA, labelB, datesA, datesB);
+    }
+
+    function renderCompareSummary(aggA, aggB, labelA, labelB) {
+      const metrics = [
+        { key: 'sales',  label: 'Total Sales',  fmt: v => fmt(v),           valA: aggA.total.sales,  valB: aggB.total.sales },
+        { key: 'spends', label: 'Ad Spends',     fmt: v => fmt(v),           valA: aggA.total.spends, valB: aggB.total.spends },
+        { key: 'roas',   label: 'ROAS',          fmt: v => v > 0 ? v.toFixed(2)+'x' : '--', valA: aggA.total.roas, valB: aggB.total.roas },
+        { key: 'units',  label: 'Total Units',   fmt: v => fmt(v, false),    valA: aggA.total.units,  valB: aggB.total.units },
+      ];
+
+      const html = metrics.map(m => {
+        const d = delta(m.valA, m.valB);
+        const dClass = d === null ? 'neu' : Number(d) >= 0 ? 'pos' : 'neg';
+        const dText  = d === null ? '--' : (Number(d) >= 0 ? '▲ ' : '▼ ') + Math.abs(d) + '%';
+        return `
+          <div class="compare-stat-card">
+            <div class="compare-stat-label">${m.label}</div>
+            <div class="compare-stat-row">
+              <div>
+                <div style="font-size:10px;color:#F97316;margin-bottom:3px;font-family:'DM Mono',monospace">${labelA}</div>
+                <div class="compare-stat-val a">${m.fmt(m.valA)}</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:10px;color:#3B82F6;margin-bottom:3px;font-family:'DM Mono',monospace">${labelB}</div>
+                <div class="compare-stat-val b">${m.fmt(m.valB)}</div>
+              </div>
+            </div>
+            <div class="compare-delta ${dClass}">${dText} A vs B</div>
+          </div>`;
+      }).join('');
+
+      document.getElementById('cmp-summary').innerHTML = html;
+      document.getElementById('cmp-summary').style.display = 'grid';
+    }
+
+    function renderCompareCharts(aggA, aggB, labelA, labelB, datesA, datesB) {
+      // Collect all platforms present in either period
+      const allPlats = [...new Set([
+        ...Object.keys(aggA.byPlatform),
+        ...Object.keys(aggB.byPlatform)
+      ])].sort();
+
+      const salesA = allPlats.map(p => aggA.byPlatform[p]?.sales || 0);
+      const salesB = allPlats.map(p => aggB.byPlatform[p]?.sales || 0);
+      const roasA  = allPlats.map(p => parseFloat((aggA.byPlatform[p]?.roas || 0).toFixed(2)));
+      const roasB  = allPlats.map(p => parseFloat((aggB.byPlatform[p]?.roas || 0).toFixed(2)));
+
+      const baseBar = {
+        chart: { type: 'bar', toolbar: { show: false }, background: 'transparent', fontFamily: 'DM Sans, sans-serif', height: 260 },
+        theme: { mode: 'dark' },
+        plotOptions: { bar: { borderRadius: 4, columnWidth: '65%', grouped: true } },
+        dataLabels: { enabled: false },
+        grid: { borderColor: 'rgba(255,255,255,0.05)', strokeDashArray: 4 },
+        xaxis: { categories: allPlats, labels: { style: { colors: '#555', fontSize: '12px' } }, axisBorder: { show: false }, axisTicks: { show: false } },
+        legend: { labels: { colors: '#888' }, position: 'top' },
+        tooltip: { theme: 'dark' },
+        colors: ['#F97316', '#3B82F6'],
+      };
+
+      if (cmpChartSales) cmpChartSales.destroy();
+      cmpChartSales = new ApexCharts(document.querySelector('#cmp-chart-sales'), {
+        ...baseBar,
+        series: [{ name: labelA, data: salesA }, { name: labelB, data: salesB }],
+        yaxis: { labels: { formatter: v => fmt(v), style: { colors: '#555' } } },
+        tooltip: { y: { formatter: v => fmt(v) }, theme: 'dark' },
+      });
+      cmpChartSales.render();
+
+      if (cmpChartRoas) cmpChartRoas.destroy();
+      cmpChartRoas = new ApexCharts(document.querySelector('#cmp-chart-roas'), {
+        ...baseBar,
+        series: [{ name: labelA, data: roasA }, { name: labelB, data: roasB }],
+        yaxis: { labels: { formatter: v => v > 0 ? v.toFixed(1)+'x' : '--', style: { colors: '#555' } } },
+        tooltip: { y: { formatter: v => v > 0 ? v.toFixed(2)+'x' : '--' }, theme: 'dark' },
+      });
+      cmpChartRoas.render();
+
+      document.getElementById('cmp-bar-wrap').style.display = 'block';
+
+      // Line chart — only for week mode
+      if (cmpMode === 'week' && datesA && datesB) {
+        // Build day-offset labels (Day 1..7) and series
+        const dayLabels = ['Day 1','Day 2','Day 3','Day 4','Day 5','Day 6','Day 7'];
+
+        function buildDaySeries(agg, startDate) {
+          return Array.from({length: 7}, (_, i) => {
+            const d = new Date(startDate.start);
+            d.setDate(d.getDate() + i);
+            const key = d.toISOString().split('T')[0];
+            return agg.byDate[key] || 0;
+          });
+        }
+
+        const seriesA = buildDaySeries(aggA, datesA);
+        const seriesB = buildDaySeries(aggB, datesB);
+
+        if (cmpChartTrend) cmpChartTrend.destroy();
+        cmpChartTrend = new ApexCharts(document.querySelector('#cmp-chart-trend'), {
+          series: [{ name: labelA, data: seriesA }, { name: labelB, data: seriesB }],
+          chart: { type: 'line', height: 280, toolbar: { show: false }, background: 'transparent', fontFamily: 'DM Sans, sans-serif' },
+          theme: { mode: 'dark' },
+          colors: ['#F97316', '#3B82F6'],
+          stroke: { width: 2.5, curve: 'smooth' },
+          markers: { size: 4, strokeWidth: 0 },
+          dataLabels: { enabled: false },
+          grid: { borderColor: 'rgba(255,255,255,0.05)', strokeDashArray: 4 },
+          xaxis: { categories: dayLabels, labels: { style: { colors: '#555' } }, axisBorder: { show: false } },
+          yaxis: { labels: { formatter: v => fmt(v), style: { colors: '#555' } } },
+          legend: { labels: { colors: '#888' }, position: 'top' },
+          tooltip: { y: { formatter: v => fmt(v) }, theme: 'dark' },
+        });
+        cmpChartTrend.render();
+        document.getElementById('cmp-line-wrap').style.display = 'block';
+      } else {
+        document.getElementById('cmp-line-wrap').style.display = 'none';
+      }
     }
 
     // ─── KICK OFF ──────────────────────────────────────────────────────────────
