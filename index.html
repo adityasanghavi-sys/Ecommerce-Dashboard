@@ -1553,19 +1553,19 @@
     }
 
     function renderChannelKPIs(skuRows, omsRows, platform) {
-      const periodRevenue = computeRevenueFromDays(skuRows);
-      const totalMTDUnit  = skuRows.reduce((s, r) => s + (Number(r.MTDUnits)  || 0), 0);
-      const totalEstRev   = skuRows.reduce((s, r) => s + (Number(r.EstRevenue)|| 0), 0);
-
-      // ROAS from OMS rows (already filtered by period via omsFiltered in openChannelView)
+      // Revenue + Units from OMS (already filtered by period + platform)
       const totalSales  = omsRows.reduce((s, r) => s + (Number(r.Sales)  || 0), 0);
+      const totalUnits  = omsRows.reduce((s, r) => s + (Number(r.Units)  || 0), 0);
       const totalSpends = omsRows.reduce((s, r) => s + (Number(r.Spends) || 0), 0);
       const roas = totalSpends > 0 ? (totalSales / totalSpends) : 0;
+
+      // Est Revenue from SKU sheet (always full month projection)
+      const totalEstRev = skuRows.reduce((s, r) => s + (Number(r.EstRevenue) || 0), 0);
 
       const cfg = PLATFORM_CONFIG[platform] || { color: '#888' };
       const pLabels = { t1:'T-1 Revenue', t2:'T-2 Revenue', '7d':'7-Day Revenue', mtd:'MTD Revenue', custom:'Revenue', all:'Revenue' };
       const revLabel = pLabels[activePeriod] || 'Revenue';
-      const asp = periodRevenue > 0 && totalMTDUnit > 0 ? (periodRevenue / totalMTDUnit).toFixed(0) : '--';
+      const asp = totalSales > 0 && totalUnits > 0 ? (totalSales / totalUnits).toFixed(0) : '--';
 
       const badge = document.getElementById('detail-roas-badge');
       badge.textContent = roas > 0 ? 'ROAS ' + roas.toFixed(2) + 'x' : 'ROAS --';
@@ -1574,7 +1574,7 @@
       document.getElementById('detail-kpi-grid').innerHTML = `
         <div class="kpi-card" style="--accent:${cfg.color}">
           <div class="kpi-label">${revLabel}</div>
-          <div class="kpi-value">${fmt(periodRevenue)}</div>
+          <div class="kpi-value">${fmt(totalSales)}</div>
           <div class="kpi-sub neutral">ASP ₹${asp}</div>
         </div>
         <div class="kpi-card" style="--accent:var(--green)">
@@ -1583,9 +1583,9 @@
           <div class="kpi-sub ${roas >= 2 ? 'positive' : 'neutral'}">${roas >= 2 ? '▲ Healthy' : roas > 0 ? '△ Monitor' : 'No spends tracked'}</div>
         </div>
         <div class="kpi-card" style="--accent:var(--blue)">
-          <div class="kpi-label">MTD Units</div>
-          <div class="kpi-value">${fmt(totalMTDUnit, false)}</div>
-          <div class="kpi-sub neutral">Full month units</div>
+          <div class="kpi-label">Units Sold</div>
+          <div class="kpi-value">${fmt(totalUnits, false)}</div>
+          <div class="kpi-sub neutral">${omsRows.length} days of data</div>
         </div>
         <div class="kpi-card" style="--accent:var(--purple)">
           <div class="kpi-label">Est. Revenue</div>
