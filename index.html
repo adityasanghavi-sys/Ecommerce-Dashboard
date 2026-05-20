@@ -910,8 +910,8 @@
       latestDate.setHours(0,0,0,0);
 
       // T-1 = day before latest, T-2 = two days before latest
-      const t1 = new Date(latestDate); t1.setDate(t1.getDate() - 1);
-      const t2 = new Date(latestDate); t2.setDate(t2.getDate() - 2);
+      const t1 = new Date(latestDate);
+      const t2 = new Date(latestDate); t2.setDate(t2.getDate() - 1);
 
       return rawData.filter(row => {
         const monthMatch = activeMonth === 'All' || Number(row.Month) === parseInt(activeMonth, 10);
@@ -1473,6 +1473,7 @@
         const res = await fetch(SKU_URL, { redirect: 'follow' });
         const text = await res.text();
         skuData = JSON.parse(text);
+        console.log('SKU rows loaded:', skuData.length, 'sample:', skuData[0]);
       } catch(e) {
         console.error('SKU fetch failed:', e);
         skuData = [];
@@ -1491,8 +1492,9 @@
       // Filter SKU data for this platform + selected month
       const month = activeMonth; // "04", "05", or "All"
       const filtered = skuData.filter(r => {
-        // SKU_Data Month comes as integer (4,5) — compare numerically
-        const mMatch = month === 'All' || Number(r.Month) === parseInt(month, 10);
+        // Month could be string "04"/"05" or integer 4/5 — handle both
+        const skuM = String(r.Month).trim();
+        const mMatch = month === 'All' || skuM === month || skuM === String(parseInt(month,10)) || Number(skuM) === parseInt(month,10);
         return mMatch && String(r.Platform) === platform;
       });
 
@@ -1555,13 +1557,12 @@
       // Build date → sales map from OMS rows
       const dateMap = {};
       omsRows.forEach(r => {
-        const d = String(r.Date).split('T')[0]; // strip time if present
+        const d = String(r.Date).split('T')[0].substring(0, 10); // always YYYY-MM-DD
         dateMap[d] = (dateMap[d] || 0) + (Number(r.Sales) || 0);
       });
-      const sortedDates = Object.keys(dateMap).sort();
+      const sortedDates = Object.keys(dateMap).sort(); // lexicographic sort works on YYYY-MM-DD
       const labels = sortedDates.map(d => {
-        // d is "2026-05-01" — extract day/month cleanly
-        const parts = String(d).split('T')[0].split('-');
+        const parts = d.split('-'); // ["2026","05","01"]
         return parts.length === 3 ? parts[2] + '/' + parts[1] : d;
       });
       const values = sortedDates.map(d => dateMap[d]);
