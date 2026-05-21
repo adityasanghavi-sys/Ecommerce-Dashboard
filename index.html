@@ -1122,8 +1122,8 @@
       const totalUnits  = Object.values(agg).reduce((s, d) => s + d.units, 0);
 
       // Blended ROAS only from platforms with spends
-      const adSales  = Object.values(agg).filter(d => d.spends > 0).reduce((s,d) => s+d.sales, 0);
-      const adSpends = Object.values(agg).filter(d => d.spends > 0).reduce((s,d) => s+d.spends, 0);
+     const adSales  = Object.values(agg).reduce((s,d) => s+d.sales, 0);
+    const adSpends = Object.values(agg).reduce((s,d) => s+d.spends, 0);
       const blendedRoas = adSpends > 0 ? adSales / adSpends : 0;
 
       // Best ROAS platform
