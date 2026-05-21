@@ -1122,8 +1122,8 @@
       const totalUnits  = Object.values(agg).reduce((s, d) => s + d.units, 0);
 
       // Blended ROAS only from platforms with spends
-     const adSales  = Object.values(agg).reduce((s,d) => s+d.sales, 0);
-    const adSpends = Object.values(agg).reduce((s,d) => s+d.spends, 0);
+      const adSales  = Object.values(agg).filter(d => d.spends > 0).reduce((s,d) => s+d.sales, 0);
+      const adSpends = Object.values(agg).filter(d => d.spends > 0).reduce((s,d) => s+d.spends, 0);
       const blendedRoas = adSpends > 0 ? adSales / adSpends : 0;
 
       // Best ROAS platform
@@ -1572,52 +1572,30 @@
       }
     }
 
-    async function loadSKUData() {
-      if (skuData.length > 0) return; 
-      try {
-        const res = await fetch(SKU_URL, { redirect: 'follow' });
-        const text = await res.text();
-        let fetchedData = JSON.parse(text);
+    async function openChannelView(platform) {
+      // Set platform name
+      document.getElementById('detail-platform-name').textContent = platform;
+      const cfg = PLATFORM_CONFIG[platform] || { color: '#888' };
+      document.getElementById('detail-platform-name').style.color = cfg.color;
 
-        // Scan actual data to find the last day with sales (dynamic denominator)
-        let daysElapsed = 1;
-        fetchedData.forEach(r => {
-            if (Number(r.Month) === 5) {
-                for (let d = 31; d >= 1; d--) {
-                    if ((Number(r['Day' + d]) || 0) > 0) {
-                        if (d > daysElapsed) daysElapsed = d;
-                        break;
-                    }
-                }
-            }
-        });
+      // Load SKU data if not yet loaded
+      await loadSKUData();
 
-        fetchedData.forEach(r => {
-            // Force re-calculate MTD Revenue from daily columns
-            // This bypasses the sheet's MTDRevenue column which had the data swap
-            let trueMtdRev = 0;
-            for (let d = 1; d <= 31; d++) {
-                trueMtdRev += Number(r['Day' + d]) || 0;
-            }
-            r.MTDRevenue = trueMtdRev; 
+      // Filter SKU data for this platform + selected month
+      const month = activeMonth; // "04", "05", or "All"
+      const filtered = skuData.filter(r => {
+        // Month in SKU_Data is integer 4 or 5
+        const mMatch = month === 'All' || Number(r.Month) === parseInt(month, 10);
+        return mMatch && String(r.Platform) === platform;
+      });
 
-            // Calculate Forecast based on true MTD
-            const m = Number(r.Month);
-            if (m === 4) {
-                r.EstRevenue = trueMtdRev; 
-            } else if (m === 5) {
-                r.EstRevenue = (trueMtdRev / daysElapsed) * 31; 
-            } else {
-                r.EstRevenue = trueMtdRev;
-            }
-        });
+      // Get OMS data filtered by platform + month + active period
+      const omsFiltered = getFilteredData().filter(r => String(r.Platform) === platform);
 
-        skuData = fetchedData;
-        console.log('SKU rows loaded:', skuData.length, 'Days elapsed detected:', daysElapsed);
-      } catch(e) {
-        console.error('SKU fetch failed:', e);
-        skuData = [];
-      }
+      renderChannelKPIs(filtered, omsFiltered, platform);
+      renderChannelDailyChart(omsFiltered);
+      renderChannelCatDonut(filtered, cfg.color);
+      renderChannelSKUTable(filtered);
     }
 
     // closeChannelView replaced by switchTab
@@ -1786,21 +1764,7 @@
       const platFilter = document.getElementById('skuPlatFilter')?.value || 'All';
       const search = (document.getElementById('skuSearch')?.value || '').toLowerCase();
 
-      const bounds = getDateBoundaries();
-      
-      // Match the foolproof scanning logic here as well
-      let daysElapsed = 1;
-      skuData.forEach(r => {
-          if (Number(r.Month) === 5) {
-              for (let d = 31; d >= 1; d--) {
-                  if ((Number(r['Day' + d]) || 0) > 0) {
-                      if (d > daysElapsed) daysElapsed = d;
-                      break;
-                  }
-              }
-          }
-      });
-
+      // Filter SKU data
       let rows = skuData.filter(r => {
         const mMatch = month === 'All' || Number(r.Month) === parseInt(month, 10);
         const pMatch = platFilter === 'All' || String(r.Platform) === platFilter;
@@ -1809,53 +1773,18 @@
         return mMatch && pMatch && cMatch && sMatch;
       });
 
+      // Aggregate by SKU name across platforms
       const aggMap = {};
       rows.forEach(r => {
         const key = String(r.SKU);
         if (!aggMap[key]) {
           aggMap[key] = { sku: key, category: String(r.Category), mtdRev: 0, mtdUnits: 0, estRev: 0, platforms: {}, days: Array(31).fill(0) };
         }
-
-        let calculatedRev = 0;
-        let fullMtdRev = 0; // Pure MTD built directly from the daily sum
-
-        const rowMonth = parseInt(r.Month, 10);
-        for (let d = 1; d <= 31; d++) {
-            const val = Number(r['Day' + d]) || 0;
-            if (val > 0) {
-                fullMtdRev += val;
-                
-                const cellDate = new Date(2026, rowMonth - 1, d); 
-                cellDate.setHours(0,0,0,0);
-                let dateMatch = false;
-
-                if (activePeriod === 'mtd') dateMatch = true;
-                else if (activePeriod === 't1') dateMatch = cellDate.getTime() === bounds.t1.getTime();
-                else if (activePeriod === 't2') dateMatch = cellDate.getTime() === bounds.t2.getTime();
-                else if (activePeriod === '7d') dateMatch = cellDate > bounds.cutoff7d && cellDate <= bounds.latestDate;
-                else if (activePeriod === 'custom') dateMatch = cellDate >= bounds.customSd && cellDate <= bounds.customEd;
-
-                if (dateMatch) calculatedRev += val;
-            }
-        }
-
-        // --- NEW: Dynamic Mathematical Run-Rate ---
-        let dynamicEstRev = 0;
-        if (rowMonth === 4) {
-            dynamicEstRev = fullMtdRev; // April is complete, Forecast = Actual
-        } else if (rowMonth === 5) {
-            dynamicEstRev = (fullMtdRev / daysElapsed) * 31; // May Forecast
-        } else {
-            dynamicEstRev = fullMtdRev;
-        }
-
-        aggMap[key].mtdRev   += calculatedRev; 
-        aggMap[key].mtdUnits += Number(r.MTDUnits) || 0;
-        aggMap[key].estRev   += dynamicEstRev; 
-
+        aggMap[key].mtdRev   += Number(r.MTDRevenue) || 0;
+        aggMap[key].mtdUnits += Number(r.MTDUnits)   || 0;
+        aggMap[key].estRev    = Math.max(aggMap[key].estRev, Number(r.EstRevenue) || 0);
         const p = String(r.Platform);
-        aggMap[key].platforms[p] = (aggMap[key].platforms[p] || 0) + calculatedRev;
-
+        aggMap[key].platforms[p] = (aggMap[key].platforms[p] || 0) + (Number(r.MTDRevenue) || 0);
         for (let d = 0; d < 31; d++) {
           aggMap[key].days[d] += Number(r['Day' + (d+1)]) || 0;
         }
@@ -1938,6 +1867,7 @@
     }
 
     function openSKUDetail(skuName) {
+      // Find all rows for this SKU across platforms + selected month
       const month = activeMonth;
       const allRows = skuData.filter(r => {
         const mMatch = month === 'All' || Number(r.Month) === parseInt(month, 10);
@@ -1948,6 +1878,7 @@
       const category = allRows[0].Category;
       const catStyle = CAT_COLORS[category] || { bg:'rgba(255,255,255,0.05)', text:'#888' };
 
+      // Show detail panel
       document.getElementById('sku-leaderboard-wrap').style.display = 'none';
       document.getElementById('sku-detail-panel').style.display = 'block';
       document.getElementById('sku-detail-name').textContent = skuName;
@@ -1956,37 +1887,19 @@
       catBadge.style.background = catStyle.bg;
       catBadge.style.color = catStyle.text;
 
-      const bounds = getDateBoundaries();
-
+      // Per-platform breakdown
       const platData = {};
       allRows.forEach(r => {
         const p = String(r.Platform);
         if (!platData[p]) platData[p] = { mtdRev: 0, mtdUnits: 0, days: Array(31).fill(0) };
-
-        let calculatedRev = 0;
-        const rowMonth = parseInt(r.Month, 10);
-        for (let d = 1; d <= 31; d++) {
-            const val = Number(r['Day' + d]) || 0;
-            if (val > 0) {
-                platData[p].days[d-1] += val; // Populate chart data
-                
-                const cellDate = new Date(2026, rowMonth - 1, d);
-                cellDate.setHours(0,0,0,0);
-                let dateMatch = false;
-                if (activePeriod === 'mtd') dateMatch = true;
-                else if (activePeriod === 't1') dateMatch = cellDate.getTime() === bounds.t1.getTime();
-                else if (activePeriod === 't2') dateMatch = cellDate.getTime() === bounds.t2.getTime();
-                else if (activePeriod === '7d') dateMatch = cellDate > bounds.cutoff7d && cellDate <= bounds.latestDate;
-                else if (activePeriod === 'custom') dateMatch = cellDate >= bounds.customSd && cellDate <= bounds.customEd;
-
-                if (dateMatch) calculatedRev += val;
-            }
-        }
-
-        platData[p].mtdRev   += calculatedRev;
+        platData[p].mtdRev   += Number(r.MTDRevenue) || 0;
         platData[p].mtdUnits += Number(r.MTDUnits)   || 0;
+        for (let d = 0; d < 31; d++) {
+          platData[p].days[d] += Number(r['Day' + (d+1)]) || 0;
+        }
       });
 
+      // Platform KPI cards
       const platCards = Object.keys(platData).map(p => {
         const d = platData[p];
         const asp = d.mtdUnits > 0 ? (d.mtdRev / d.mtdUnits).toFixed(0) : '--';
@@ -1998,13 +1911,14 @@
       }).join('');
       document.getElementById('sku-platform-cards').innerHTML = platCards;
 
+      // Bar chart: revenue by platform
       const platNames = Object.keys(platData);
       const platRevs  = platNames.map(p => platData[p].mtdRev);
       const platCols  = platNames.map(p => PLAT_COLORS[p] || '#888');
 
       if (skuDetailChart1) skuDetailChart1.destroy();
       skuDetailChart1 = new ApexCharts(document.querySelector('#sku-chart-platform'), {
-        series: [{ name: 'Revenue', data: platRevs }],
+        series: [{ name: 'MTD Revenue', data: platRevs }],
         chart: { type: 'bar', height: 240, toolbar: { show: false }, background: 'transparent', fontFamily: 'DM Sans, sans-serif' },
         theme: { mode: 'dark' },
         colors: platCols,
@@ -2018,6 +1932,7 @@
       });
       skuDetailChart1.render();
 
+      // Line chart: daily trend per platform
       const dayLabels = Array.from({length:31}, (_,i) => 'D'+(i+1));
       const series = Object.keys(platData).map(p => ({
         name: p,
@@ -2042,6 +1957,7 @@
       });
       skuDetailChart2.render();
     }
+
     function closeSKUDetail() {
       document.getElementById('sku-leaderboard-wrap').style.display = 'block';
       document.getElementById('sku-detail-panel').style.display = 'none';
