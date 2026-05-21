@@ -1759,12 +1759,13 @@
       renderSKUView();
     }
 
-    function getSKUViewData() {
+  function getSKUViewData() {
       const month = activeMonth;
       const platFilter = document.getElementById('skuPlatFilter')?.value || 'All';
       const search = (document.getElementById('skuSearch')?.value || '').toLowerCase();
 
-      // Filter SKU data
+      const bounds = getDateBoundaries();
+
       let rows = skuData.filter(r => {
         const mMatch = month === 'All' || Number(r.Month) === parseInt(month, 10);
         const pMatch = platFilter === 'All' || String(r.Platform) === platFilter;
@@ -1773,18 +1774,41 @@
         return mMatch && pMatch && cMatch && sMatch;
       });
 
-      // Aggregate by SKU name across platforms
       const aggMap = {};
       rows.forEach(r => {
         const key = String(r.SKU);
         if (!aggMap[key]) {
           aggMap[key] = { sku: key, category: String(r.Category), mtdRev: 0, mtdUnits: 0, estRev: 0, platforms: {}, days: Array(31).fill(0) };
         }
-        aggMap[key].mtdRev   += Number(r.MTDRevenue) || 0;
-        aggMap[key].mtdUnits += Number(r.MTDUnits)   || 0;
-        aggMap[key].estRev    = Math.max(aggMap[key].estRev, Number(r.EstRevenue) || 0);
+
+        let calculatedRev = 0;
+        const rowMonth = parseInt(r.Month, 10);
+        for (let d = 1; d <= 31; d++) {
+            const val = Number(r['Day' + d]) || 0;
+            if (val > 0) {
+                const cellDate = new Date(2026, rowMonth - 1, d); 
+                cellDate.setHours(0,0,0,0);
+                let dateMatch = false;
+
+                if (activePeriod === 'mtd') dateMatch = true;
+                else if (activePeriod === 't1') dateMatch = cellDate.getTime() === bounds.t1.getTime();
+                else if (activePeriod === 't2') dateMatch = cellDate.getTime() === bounds.t2.getTime();
+                else if (activePeriod === '7d') dateMatch = cellDate > bounds.cutoff7d && cellDate <= bounds.latestDate;
+                else if (activePeriod === 'custom') dateMatch = cellDate >= bounds.customSd && cellDate <= bounds.customEd;
+
+                if (dateMatch) calculatedRev += val;
+            }
+        }
+
+        aggMap[key].mtdRev   += calculatedRev; 
+        aggMap[key].mtdUnits += Number(r.MTDUnits) || 0;
+        
+        // --- CRITICAL FIX: Add forecasts together instead of taking the Max ---
+        aggMap[key].estRev   += Number(r.EstRevenue) || 0; 
+
         const p = String(r.Platform);
-        aggMap[key].platforms[p] = (aggMap[key].platforms[p] || 0) + (Number(r.MTDRevenue) || 0);
+        aggMap[key].platforms[p] = (aggMap[key].platforms[p] || 0) + calculatedRev;
+
         for (let d = 0; d < 31; d++) {
           aggMap[key].days[d] += Number(r['Day' + (d+1)]) || 0;
         }
