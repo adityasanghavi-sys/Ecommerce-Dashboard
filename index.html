@@ -719,8 +719,10 @@
 
         <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
           <div class="compare-mode-toggle">
-            <button class="cmode-btn active" onclick="setCmpMode('day')" id="cmode-day">Day vs Day</button>
+<button class="cmode-btn active" onclick="setCmpMode('day')" id="cmode-day">Day vs Day</button>
             <button class="cmode-btn" onclick="setCmpMode('week')" id="cmode-week">Week vs Week</button>
+            <button class="cmode-btn" onclick="setCmpMode('month')" id="cmode-month">Month vs Month</button>
+            <button class="cmode-btn" onclick="setCmpMode('custom')" id="cmode-custom">Custom Range</button>
           </div>
           <button onclick="runCompare()" style="background:var(--orange);color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Compare →</button>
         </div>
@@ -757,6 +759,76 @@
           </div>
         </div>
 
+        <!-- Month pickers -->
+        <div class="compare-pickers" id="month-pickers" style="display:none">
+          <div class="compare-picker-card period-a">
+            <div class="picker-label a">Month A</div>
+            <div class="picker-row">
+              <select id="cmp-month-a" class="cpicker">
+                <option value="">Select month</option>
+              </select>
+            </div>
+          </div>
+          <div class="compare-picker-card period-b">
+            <div class="picker-label b">Month B</div>
+            <div class="picker-row">
+              <select id="cmp-month-b" class="cpicker">
+                <option value="">Select month</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom range pickers -->
+        <div id="custom-range-pickers" style="display:none">
+          <!-- Mode toggle: date range vs days count -->
+          <div style="display:flex;gap:8px;margin-bottom:16px;">
+            <button class="cmode-btn active" onclick="setCustomMode('daterange')" id="ccmode-daterange" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-size:12px;">Date Range</button>
+            <button class="cmode-btn" onclick="setCustomMode('daycount')" id="ccmode-daycount" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-size:12px;">Start + No. of Days</button>
+          </div>
+          <!-- Date range mode -->
+          <div class="compare-pickers" id="custom-daterange-pickers">
+            <div class="compare-picker-card period-a">
+              <div class="picker-label a">Period A</div>
+              <div class="picker-row">
+                <input type="date" id="cmp-custom-a-start" class="cpicker" placeholder="Start">
+                <span style="color:var(--text-muted);font-size:12px;">→</span>
+                <input type="date" id="cmp-custom-a-end" class="cpicker" placeholder="End">
+              </div>
+            </div>
+            <div class="compare-picker-card period-b">
+              <div class="picker-label b">Period B</div>
+              <div class="picker-row">
+                <input type="date" id="cmp-custom-b-start" class="cpicker" placeholder="Start">
+                <span style="color:var(--text-muted);font-size:12px;">→</span>
+                <input type="date" id="cmp-custom-b-end" class="cpicker" placeholder="End">
+              </div>
+            </div>
+          </div>
+          <!-- Day count mode -->
+          <div class="compare-pickers" id="custom-daycount-pickers" style="display:none">
+            <div class="compare-picker-card period-a">
+              <div class="picker-label a">Period A — Start Date</div>
+              <div class="picker-row">
+                <input type="date" id="cmp-custom-a-dcstart" class="cpicker">
+                <span style="color:var(--text-muted);font-size:12px;">+</span>
+                <input type="number" id="cmp-custom-a-days" class="cpicker" placeholder="Days" min="1" max="365" style="width:80px">
+                <span style="color:var(--text-muted);font-size:12px;">days</span>
+              </div>
+            </div>
+            <div class="compare-picker-card period-b">
+              <div class="picker-label b">Period B — Start Date</div>
+              <div class="picker-row">
+                <input type="date" id="cmp-custom-b-dcstart" class="cpicker">
+                <span style="color:var(--text-muted);font-size:12px;">+</span>
+                <input type="number" id="cmp-custom-b-days" class="cpicker" placeholder="Days" min="1" max="365" style="width:80px">
+                <span style="color:var(--text-muted);font-size:12px;">days</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary stat cards -->
         <div class="compare-summary-grid" id="cmp-summary" style="display:none"></div>
 
         <div id="cmp-bar-wrap" style="display:none">
@@ -1309,14 +1381,52 @@
     let cmpMode = 'day';
     let cmpChartSales = null, cmpChartRoas = null, cmpChartTrend = null;
 
-    function setCmpMode(m) {
+ function setCmpMode(m) {
       cmpMode = m;
-      ['day','week'].forEach(k => {
-        document.getElementById('cmode-' + k).classList.toggle('active', k === m);
-        document.getElementById(k + '-pickers').style.display = k === m ? 'grid' : 'none';
+      ['day','week','month','custom'].forEach(k => {
+        const btn = document.getElementById('cmode-' + k);
+        if (btn) btn.classList.toggle('active', k === m);
       });
+      document.getElementById('day-pickers').style.display        = m === 'day'    ? 'grid' : 'none';
+      document.getElementById('week-pickers').style.display       = m === 'week'   ? 'grid' : 'none';
+      document.getElementById('month-pickers').style.display      = m === 'month'  ? 'grid' : 'none';
+      document.getElementById('custom-range-pickers').style.display = m === 'custom' ? 'block' : 'none';
       ['cmp-summary','cmp-bar-wrap','cmp-line-wrap','cmp-no-data'].forEach(id => {
         document.getElementById(id).style.display = 'none';
+      });
+      if (m === 'month') populateMonthDropdowns();
+    }
+
+    let customSubMode = 'daterange';
+    function setCustomMode(cm) {
+      customSubMode = cm;
+      ['daterange','daycount'].forEach(k => {
+        const btn = document.getElementById('ccmode-' + k);
+        if (btn) btn.classList.toggle('active', k === cm);
+      });
+      document.getElementById('custom-daterange-pickers').style.display = cm === 'daterange' ? 'grid' : 'none';
+      document.getElementById('custom-daycount-pickers').style.display  = cm === 'daycount'  ? 'grid' : 'none';
+    }
+
+    function populateMonthDropdowns() {
+      // Derive available months from rawData
+      const monthSet = new Set();
+      rawData.forEach(r => {
+        const d = new Date(r.Date);
+        if (!isNaN(d)) {
+          const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+          monthSet.add(key);
+        }
+      });
+      const months = [...monthSet].sort();
+      const labels = { '01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'May','06':'Jun','07':'Jul','08':'Aug','09':'Sep','10':'Oct','11':'Nov','12':'Dec' };
+      const opts = months.map(m => {
+        const [yr, mo] = m.split('-');
+        return `<option value="${m}">${labels[mo]} ${yr}</option>`;
+      }).join('');
+      ['cmp-month-a','cmp-month-b'].forEach(id => {
+        const el = document.getElementById(id);
+        el.innerHTML = '<option value="">Select month</option>' + opts;
       });
     }
 
@@ -1380,7 +1490,49 @@
       document.getElementById('cmp-no-data').style.display = 'none';
       let rowsA, rowsB, labelA, labelB, datesA, datesB;
 
-      if (cmpMode === 'day') {
+      if (cmpMode === 'month') {
+        const mA = document.getElementById('cmp-month-a').value;
+        const mB = document.getElementById('cmp-month-b').value;
+        if (!mA || !mB) { alert('Select both months.'); return; }
+        const [yrA, moA] = mA.split('-').map(Number);
+        const [yrB, moB] = mB.split('-').map(Number);
+        const startA = new Date(yrA, moA-1, 1); startA.setHours(0,0,0,0);
+        const endA   = new Date(yrA, moA, 0);   endA.setHours(0,0,0,0);
+        const startB = new Date(yrB, moB-1, 1); startB.setHours(0,0,0,0);
+        const endB   = new Date(yrB, moB, 0);   endB.setHours(0,0,0,0);
+        rowsA = filterByDateRange(startA, endA);
+        rowsB = filterByDateRange(startB, endB);
+        const mNames = { 1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'May',6:'Jun',7:'Jul',8:'Aug',9:'Sep',10:'Oct',11:'Nov',12:'Dec' };
+        labelA = `${mNames[moA]} ${yrA}`; labelB = `${mNames[moB]} ${yrB}`;
+        datesA = null; datesB = null;
+      } else if (cmpMode === 'custom') {
+        if (customSubMode === 'daterange') {
+          const asStart = document.getElementById('cmp-custom-a-start').value;
+          const asEnd   = document.getElementById('cmp-custom-a-end').value;
+          const bsStart = document.getElementById('cmp-custom-b-start').value;
+          const bsEnd   = document.getElementById('cmp-custom-b-end').value;
+          if (!asStart || !asEnd || !bsStart || !bsEnd) { alert('Fill all four dates.'); return; }
+          const rA = { start: new Date(asStart), end: new Date(asEnd) };
+          const rB = { start: new Date(bsStart), end: new Date(bsEnd) };
+          rA.start.setHours(0,0,0,0); rA.end.setHours(0,0,0,0);
+          rB.start.setHours(0,0,0,0); rB.end.setHours(0,0,0,0);
+          rowsA = filterByDateRange(rA.start, rA.end);
+          rowsB = filterByDateRange(rB.start, rB.end);
+          labelA = `${asStart} → ${asEnd}`; labelB = `${bsStart} → ${bsEnd}`;
+        } else {
+          const adcS = document.getElementById('cmp-custom-a-dcstart').value;
+          const adcD = parseInt(document.getElementById('cmp-custom-a-days').value);
+          const bdcS = document.getElementById('cmp-custom-b-dcstart').value;
+          const bdcD = parseInt(document.getElementById('cmp-custom-b-days').value);
+          if (!adcS || !adcD || !bdcS || !bdcD) { alert('Fill all fields.'); return; }
+          const rA = getDateRange(adcS, adcD);
+          const rB = getDateRange(bdcS, bdcD);
+          rowsA = filterByDateRange(rA.start, rA.end);
+          rowsB = filterByDateRange(rB.start, rB.end);
+          labelA = `${adcS} (${adcD}d)`; labelB = `${bdcS} (${bdcD}d)`;
+        }
+        datesA = null; datesB = null;
+      } else if (cmpMode === 'day') {
         const dayA = document.getElementById('cmp-day-a').value;
         const dayB = document.getElementById('cmp-day-b').value;
         if (!dayA || !dayB) { alert('Pick both dates.'); return; }
