@@ -381,8 +381,6 @@
       font-size: 13px;
     }
 
-
-
     /* Channel detail view */
     .detail-back-btn {
       display: inline-flex;
@@ -478,13 +476,18 @@
     .pct-bar-wrap { display: flex; align-items: center; gap: 8px; }
     .pct-bar-bg { flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; }
     .pct-bar-fill { height: 4px; border-radius: 2px; background: var(--orange); }
-    /* Tab nav */
+    
+    /* Tab nav - UPDATED to allow horizontal scrolling */
     .tab-nav {
       display: flex;
       gap: 2px;
       margin-bottom: 24px;
       border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      scrollbar-width: none; /* Firefox */
     }
+    .tab-nav::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
     .tab-btn {
       padding: 10px 18px;
       font-size: 13px;
@@ -497,6 +500,7 @@
       font-family: 'DM Sans', sans-serif;
       transition: all 0.15s;
       margin-bottom: -1px;
+      white-space: nowrap;
     }
     .tab-btn:hover { color: var(--text-primary); }
     .tab-btn.active { color: var(--text-primary); border-bottom-color: var(--orange); }
@@ -610,13 +614,11 @@
 </head>
 <body>
 
-  <!-- Loading overlay -->
   <div id="loading-state">
     <div class="spinner"></div>
     <p class="loading-text">PULLING DATA</p>
   </div>
 
-  <!-- Nav -->
   <nav>
     <div class="nav-logo">
       <div class="nav-logo-icon">S</div>
@@ -630,7 +632,6 @@
 
   <div class="wrapper">
 
-    <!-- Page header + controls -->
     <div class="page-header">
       <div class="page-header-top">
         <div>
@@ -639,7 +640,6 @@
         </div>
       </div>
       <div class="controls">
-        <!-- Period toggle -->
         <div class="control-group">
           <button class="control-btn" onclick="setPeriod('t1')" id="period-t1" title="T-1: Yesterday's data">T-1</button>
           <div class="control-divider"></div>
@@ -652,14 +652,12 @@
           <button class="control-btn" onclick="setPeriod('custom')" id="period-custom">Custom</button>
         </div>
 
-        <!-- Custom date range (hidden by default) -->
         <div id="custom-date-range" style="display:none; align-items:center; gap:6px;">
           <input type="date" id="customStart" onchange="render()" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;padding:6px 8px;outline:none;font-family:'DM Sans',sans-serif;">
           <span style="color:var(--text-muted);font-size:12px;">→</span>
           <input type="date" id="customEnd" onchange="render()" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;padding:6px 8px;outline:none;font-family:'DM Sans',sans-serif;">
         </div>
 
-        <!-- Month toggle -->
         <div class="control-group">
           <button class="control-btn" onclick="setMonth('04')" id="btn-04">Apr 26</button>
           <div class="control-divider"></div>
@@ -668,7 +666,6 @@
           <button class="control-btn" onclick="setMonth('All')" id="btn-All">All</button>
         </div>
 
-        <!-- Platform filter -->
         <select class="ctrl-select" id="platformFilter" onchange="render()">
           <option value="All">All Platforms</option>
           <option value="Zepto">Zepto</option>
@@ -679,19 +676,15 @@
           <option value="First Club">First Club</option>
         </select>
       </div>
-      <!-- end controls -->
-    </div>
+      </div>
 
-    <!-- Error state -->
     <div id="error-state">
       <div class="error-icon">⚠</div>
       <p class="error-msg" id="error-msg">Could not load data. Check the Apps Script URL.</p>
     </div>
 
-    <!-- Main content (hidden until data loads) -->
     <div id="main-content" style="display:none">
 
-      <!-- Tab Nav -->
       <div class="tab-nav">
         <button class="tab-btn active" onclick="switchTab('overview')" id="tab-overview">Overview</button>
         <button class="tab-btn" onclick="switchTab('compare')" id="tab-compare">Compare</button>
@@ -702,7 +695,6 @@
         <button class="tab-btn" onclick="switchTab('skus')" id="tab-skus">SKU View</button>
       </div>
 
-      <!-- ── OVERVIEW TAB ── -->
       <div id="view-overview">
         <div class="section-label">Summary</div>
         <div class="kpi-grid" id="kpi-grid"></div>
@@ -723,10 +715,8 @@
         <div class="platform-grid" id="platform-grid"></div>
       </div>
 
-      <!-- ── COMPARE TAB ── -->
       <div id="view-compare" style="display:none">
 
-        <!-- Mode toggle -->
         <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
           <div class="compare-mode-toggle">
             <button class="cmode-btn active" onclick="setCmpMode('day')" id="cmode-day">Day vs Day</button>
@@ -735,7 +725,6 @@
           <button onclick="runCompare()" style="background:var(--orange);color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Compare →</button>
         </div>
 
-        <!-- Day pickers -->
         <div class="compare-pickers" id="day-pickers">
           <div class="compare-picker-card period-a">
             <div class="picker-label a">Period A</div>
@@ -751,7 +740,6 @@
           </div>
         </div>
 
-        <!-- Week pickers -->
         <div class="compare-pickers" id="week-pickers" style="display:none">
           <div class="compare-picker-card period-a">
             <div class="picker-label a">Week A — Start Date</div>
@@ -769,10 +757,8 @@
           </div>
         </div>
 
-        <!-- Summary stat cards -->
         <div class="compare-summary-grid" id="cmp-summary" style="display:none"></div>
 
-        <!-- Bar chart: snapshot -->
         <div id="cmp-bar-wrap" style="display:none">
           <div class="section-label" id="cmp-bar-label">Sales by Platform</div>
           <div class="mom-grid">
@@ -787,7 +773,6 @@
           </div>
         </div>
 
-        <!-- Line chart: week trend (week mode only) -->
         <div id="cmp-line-wrap" style="display:none">
           <div class="section-label">Daily Sales Trend</div>
           <div class="chart-section">
@@ -796,17 +781,14 @@
           </div>
         </div>
 
-        <!-- No data -->
         <div class="compare-no-data" id="cmp-no-data" style="display:none">
           Select periods above and hit <strong>Compare →</strong>
         </div>
 
       </div>
 
-      <!-- ── SKU VIEW ── -->
       <div id="view-skus" style="display:none">
 
-        <!-- Filters row -->
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
           <div class="control-group">
             <button class="control-btn active" onclick="setSKUCat('All')" id="skucat-All">All</button>
@@ -833,10 +815,8 @@
           </div>
         </div>
 
-        <!-- Summary KPI row -->
         <div class="kpi-grid" id="sku-kpi-grid" style="margin-bottom:24px;"></div>
 
-        <!-- Leaderboard table -->
         <div class="sku-table-wrap" id="sku-leaderboard-wrap">
           <div class="sku-table-header" style="display:flex;justify-content:space-between;align-items:center;">
             <span>SKU Leaderboard</span>
@@ -849,9 +829,9 @@
                   <th style="width:40px">#</th>
                   <th>SKU</th>
                   <th>Category</th>
-                  <th class="right">MTD Revenue</th>
-                  <th class="right">MTD Units</th>
-                  <th class="right">Platform Forecast</th>
+                  <th class="right">Revenue</th>
+                  <th class="right">Units (MTD)</th>
+                  <th class="right">Est. Revenue</th>
                   <th class="right">% of Total</th>
                   <th>Platforms</th>
                 </tr>
@@ -861,7 +841,6 @@
           </div>
         </div>
 
-        <!-- SKU Detail: cross-platform breakdown (shown on row click) -->
         <div id="sku-detail-panel" style="display:none;margin-top:24px;">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
             <button onclick="closeSKUDetail()" style="background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;">← Back to leaderboard</button>
@@ -869,17 +848,15 @@
             <span id="sku-detail-cat" class="cat-badge" style="font-size:11px"></span>
           </div>
 
-          <!-- Cross-platform KPI cards -->
           <div id="sku-platform-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px;"></div>
 
-          <!-- Cross-platform bar chart + day trend -->
           <div class="mom-grid" style="margin-bottom:24px;">
             <div class="chart-section">
               <div class="chart-title">Revenue by Platform (₹)</div>
               <div id="sku-chart-platform" style="height:260px"></div>
             </div>
             <div class="chart-section">
-              <div class="chart-title">Daily Trend — MTD</div>
+              <div class="chart-title">Daily Trend</div>
               <div id="sku-chart-trend" style="height:260px"></div>
             </div>
           </div>
@@ -887,7 +864,6 @@
 
       </div>
 
-      <!-- ── CHANNEL DETAIL VIEW ── -->
       <div id="view-channel" style="display:none">
         
         <div class="detail-header">
@@ -912,7 +888,7 @@
               <tr>
                 <th>SKU</th>
                 <th>Category</th>
-                <th class="right">Platform Forecast</th>
+                <th class="right">Est. Revenue</th>
                 <th class="right">MTD Revenue</th>
                 <th class="right">MTD Units</th>
                 <th class="right">% of Total</th>
@@ -971,16 +947,22 @@
       }
     }
 
+    // ─── DATE HELPERS (NEW FIX) ────────────────────────────────────────────────
+    function parseLocalDate(str) {
+      const parts = String(str).split('T')[0].split('-');
+      if (parts.length === 3) return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      return new Date(str);
+    }
+
     // ─── FILTERS ───────────────────────────────────────────────────────────────
     function setMonth(m) {
       activeMonth = m;
       ['04','05','All'].forEach(k => {
         document.getElementById('btn-' + k).classList.toggle('active', k === m);
       });
-      // If switching to a past month, reset period to MTD (T-1/T-2 only make sense for current month)
       if (m !== '05' && (activePeriod === 't1' || activePeriod === 't2')) {
         setPeriod('mtd');
-        return; // setPeriod calls render()
+        return;
       }
       render();
     }
@@ -989,12 +971,12 @@
       const platform = document.getElementById('platformFilter').value;
       const today = new Date(); today.setHours(0,0,0,0);
 
-      // Find latest date in dataset
-      const allDates = rawData.map(r => new Date(r.Date)).filter(d => !isNaN(d));
+      // Find latest date in dataset (FIXED TIMEZONE BUG)
+      const allDates = rawData.map(r => parseLocalDate(r.Date)).filter(d => !isNaN(d));
       const latestDate = allDates.length ? new Date(Math.max(...allDates)) : today;
       latestDate.setHours(0,0,0,0);
 
-      // T-1 = day before latest, T-2 = two days before latest
+      // FIXED T-1 LOGIC
       const t1 = new Date(latestDate);
       const t2 = new Date(latestDate); t2.setDate(t2.getDate() - 1);
 
@@ -1002,7 +984,7 @@
         const monthMatch = activeMonth === 'All' || Number(row.Month) === parseInt(activeMonth, 10);
         const platMatch  = platform === 'All' || String(row.Platform) === platform;
 
-        const rowDate = new Date(row.Date); rowDate.setHours(0,0,0,0);
+        const rowDate = parseLocalDate(row.Date); rowDate.setHours(0,0,0,0);
         let dateMatch = true;
 
         if (activePeriod === 't1') {
@@ -1011,14 +993,14 @@
           dateMatch = rowDate.getTime() === t2.getTime();
         } else if (activePeriod === '7d') {
           const cutoff = new Date(latestDate); cutoff.setDate(cutoff.getDate() - 7);
-          dateMatch = rowDate >= cutoff && rowDate <= latestDate;
+          dateMatch = rowDate > cutoff && rowDate <= latestDate;
         } else if (activePeriod === 'mtd') {
-          dateMatch = true; // MTD = all rows in selected month (month filter handles it)
+          dateMatch = true; 
         } else if (activePeriod === 'custom') {
           const s = document.getElementById('customStart').value;
           const e = document.getElementById('customEnd').value;
-          const sd = s ? new Date(s) : new Date(0);
-          const ed = e ? new Date(e) : new Date('2999-01-01');
+          const sd = s ? parseLocalDate(s) : new Date(0);
+          const ed = e ? parseLocalDate(e) : new Date('2999-01-01');
           sd.setHours(0,0,0,0); ed.setHours(0,0,0,0);
           dateMatch = rowDate >= sd && rowDate <= ed;
         }
@@ -1031,7 +1013,6 @@
       activePeriod = p;
       const customPicker = document.getElementById('custom-date-range');
       customPicker.style.display = p === 'custom' ? 'flex' : 'none';
-      // Update button states
       ['t1','t2','7d','mtd','custom'].forEach(k => {
         const el = document.getElementById('period-' + k);
         if (el) el.classList.toggle('active', k === p);
@@ -1076,10 +1057,8 @@
         const roas = Number(row.ROAS);
         if (roas > 0) { agg[p].roasSum += roas; agg[p].roasCount++; }
       });
-      // compute avg ROAS and effective ROAS
       Object.keys(agg).forEach(p => {
         const d = agg[p];
-        // Prefer computed ROAS (Sales/Spends) if spends available; else use avg from sheet
         if (d.spends > 0) {
           d.roas = d.sales / d.spends;
         } else if (d.roasCount > 0) {
@@ -1093,18 +1072,15 @@
 
     // ─── RENDER ────────────────────────────────────────────────────────────────
     function render() {
-      // If a platform tab is active, re-render channel view with new filters
       if (typeof PLATFORM_TAB_MAP !== 'undefined' && PLATFORM_TAB_MAP[activeTab]) {
         openChannelView(PLATFORM_TAB_MAP[activeTab]);
         return;
       }
-      // If SKU tab is active, re-render SKU view
       if (activeTab === 'skus') { renderSKUView(); return; }
 
       const data = getFilteredData();
       const agg  = aggregateByPlatform(data);
 
-      // Update subtitle
       const platFilter = document.getElementById('platformFilter').value;
       const periodLabels = { t1:'T-1 (yesterday)', t2:'T-2', '7d':'Last 7 days', mtd:'Month to date', custom:'Custom range' };
       document.getElementById('data-subtitle').textContent =
@@ -1121,12 +1097,10 @@
       const totalSpends = Object.values(agg).reduce((s, d) => s + d.spends, 0);
       const totalUnits  = Object.values(agg).reduce((s, d) => s + d.units, 0);
 
-      // Blended ROAS only from platforms with spends
       const adSales  = Object.values(agg).filter(d => d.spends > 0).reduce((s,d) => s+d.sales, 0);
       const adSpends = Object.values(agg).filter(d => d.spends > 0).reduce((s,d) => s+d.spends, 0);
       const blendedRoas = adSpends > 0 ? adSales / adSpends : 0;
 
-      // Best ROAS platform
       let bestPlatform = '--', bestRoas = 0;
       Object.keys(agg).forEach(p => {
         if (agg[p].roas > bestRoas && agg[p].spends > 0) { bestRoas = agg[p].roas; bestPlatform = p; }
@@ -1183,7 +1157,7 @@
         <div class="kpi-card" style="--accent:${c.accent}">
           <div class="kpi-label">${c.label}</div>
           <div class="kpi-value">${c.value}</div>
-          ${c.sub ? `<div class="kpi-sub ${c.subClass}">${c.sub}</div>` : ''}
+          <div class="kpi-sub ${c.subClass}">${c.sub || ''}</div>
         </div>
       `).join('');
     }
@@ -1191,7 +1165,6 @@
     // ─── PLATFORM CARDS ────────────────────────────────────────────────────────
     function renderPlatformCards(agg) {
       const platformFilter = document.getElementById('platformFilter').value;
-
       const platforms = Object.keys(agg).sort((a,b) => agg[b].sales - agg[a].sales);
 
       if (platforms.length === 0) {
@@ -1210,7 +1183,6 @@
         const badgeCls = roasBadgeClass(roasVal);
         const asp = d.units > 0 ? (d.sales / d.units).toFixed(0) : 0;
 
-        // Budget pacing
         let pacingHtml = '';
         if (budget > 0) {
           const pct = Math.min(100, ((d.spends || 0) / budget) * 100).toFixed(1);
@@ -1343,7 +1315,6 @@
         document.getElementById('cmode-' + k).classList.toggle('active', k === m);
         document.getElementById(k + '-pickers').style.display = k === m ? 'grid' : 'none';
       });
-      // hide results when mode changes
       ['cmp-summary','cmp-bar-wrap','cmp-line-wrap','cmp-no-data'].forEach(id => {
         document.getElementById(id).style.display = 'none';
       });
@@ -1357,13 +1328,12 @@
 
     function filterByDateRange(start, end) {
       return rawData.filter(r => {
-        const d = new Date(r.Date); d.setHours(0,0,0,0);
+        const d = parseLocalDate(r.Date); d.setHours(0,0,0,0); // FIXED TIMEZONE
         return d >= start && d <= end;
       });
     }
 
     function aggregatePeriod(rows) {
-      // Returns { total: {sales,spends,roas,units}, byPlatform: {}, byDate: {} }
       const total = { sales: 0, spends: 0, units: 0, roasSum: 0, roasCount: 0 };
       const byPlatform = {};
       const byDate = {};
@@ -1391,7 +1361,6 @@
         byDate[date] += sales;
       });
 
-      // Compute ROAS per platform
       Object.keys(byPlatform).forEach(p => {
         const d = byPlatform[p];
         d.roas = d.spends > 0 ? (d.sales / d.spends) : (d.roasCount > 0 ? d.roas / d.roasCount : 0);
@@ -1440,8 +1409,8 @@
 
     function renderCompareSummary(aggA, aggB, labelA, labelB) {
       const metrics = [
-        { key: 'sales',  label: 'Total Sales',  fmt: v => fmt(v),           valA: aggA.total.sales,  valB: aggB.total.sales },
-        { key: 'spends', label: 'Ad Spends',     fmt: v => fmt(v),           valA: aggA.total.spends, valB: aggB.total.spends },
+        { key: 'sales',  label: 'Total Sales',  fmt: v => fmt(v),            valA: aggA.total.sales,  valB: aggB.total.sales },
+        { key: 'spends', label: 'Ad Spends',     fmt: v => fmt(v),            valA: aggA.total.spends, valB: aggB.total.spends },
         { key: 'roas',   label: 'ROAS',          fmt: v => v > 0 ? v.toFixed(2)+'x' : '--', valA: aggA.total.roas, valB: aggB.total.roas },
         { key: 'units',  label: 'Total Units',   fmt: v => fmt(v, false),    valA: aggA.total.units,  valB: aggB.total.units },
       ];
@@ -1472,7 +1441,6 @@
     }
 
     function renderCompareCharts(aggA, aggB, labelA, labelB, datesA, datesB) {
-      // Collect all platforms present in either period
       const allPlats = [...new Set([
         ...Object.keys(aggA.byPlatform),
         ...Object.keys(aggB.byPlatform)
@@ -1515,11 +1483,8 @@
 
       document.getElementById('cmp-bar-wrap').style.display = 'block';
 
-      // Line chart — only for week mode
       if (cmpMode === 'week' && datesA && datesB) {
-        // Build day-offset labels (Day 1..7) and series
         const dayLabels = ['Day 1','Day 2','Day 3','Day 4','Day 5','Day 6','Day 7'];
-
         function buildDaySeries(agg, startDate) {
           return Array.from({length: 7}, (_, i) => {
             const d = new Date(startDate.start);
@@ -1559,13 +1524,67 @@
     let skuData = [];
     let detailChartDaily = null, detailChartCat = null;
 
+    // DEFINED GLOBALLY TO AVOID REFERENCE ERRORS
+    function getDateBoundaries() {
+      const allDates = rawData.map(r => parseLocalDate(r.Date)).filter(d => !isNaN(d));
+      const latestDate = allDates.length ? new Date(Math.max(...allDates)) : new Date();
+      latestDate.setHours(0,0,0,0);
+      const t1 = new Date(latestDate);
+      const t2 = new Date(latestDate); t2.setDate(t2.getDate() - 1);
+      const cutoff7d = new Date(latestDate); cutoff7d.setDate(cutoff7d.getDate() - 7);
+      let customSd = new Date(0), customEd = new Date('2999-01-01');
+      if (activePeriod === 'custom') {
+         const s = document.getElementById('customStart').value;
+         const e = document.getElementById('customEnd').value;
+         if (s) { customSd = parseLocalDate(s); customSd.setHours(0,0,0,0); }
+         if (e) { customEd = parseLocalDate(e); customEd.setHours(0,0,0,0); }
+      }
+      return { latestDate, t1, t2, cutoff7d, customSd, customEd };
+    }
+
     async function loadSKUData() {
-      if (skuData.length > 0) return; // already loaded
+      if (skuData.length > 0) return; 
       try {
         const res = await fetch(SKU_URL, { redirect: 'follow' });
         const text = await res.text();
-        skuData = JSON.parse(text);
-        console.log('SKU rows loaded:', skuData.length, 'sample:', skuData[0]);
+
+        // --- DEFENSIVE SHIELD: Prevent crash if Google sends empty data ---
+        if (!text || text.trim() === '') {
+            console.warn('⚠️ Empty response for SKU Data.');
+            skuData = [];
+            const tbody = document.getElementById('sku-leaderboard-body');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted)">⚠️ No SKU Data Found.</td></tr>';
+            return;
+        }
+
+        let fetchedData = JSON.parse(text);
+
+        // --- CALENDAR MATH: Strictly use the OMS reporting date ---
+        const allDates = rawData.map(r => parseLocalDate(r.Date)).filter(d => !isNaN(d));
+        const latestDate = allDates.length ? new Date(Math.max(...allDates)) : new Date();
+        const daysElapsed = latestDate.getDate() || 1;
+
+        fetchedData.forEach(r => {
+            // Rebuild TRUE MTD Revenue
+            let trueMtdRev = 0;
+            for (let d = 1; d <= 31; d++) {
+                trueMtdRev += Number(r['Day' + d]) || 0;
+            }
+            r.MTDRevenue = trueMtdRev; 
+
+            // Calculate Forecast based strictly on calendar days
+            const m = Number(r.Month);
+            const daysInMonth = new Date(2026, m, 0).getDate(); 
+
+            if (m === latestDate.getMonth() + 1) { 
+                r.EstRevenue = (trueMtdRev / daysElapsed) * daysInMonth; 
+            } else {
+                r.EstRevenue = trueMtdRev; 
+            }
+        });
+
+        skuData = fetchedData;
+        console.log('SKU rows loaded:', skuData.length, 'Calendar days elapsed:', daysElapsed);
       } catch(e) {
         console.error('SKU fetch failed:', e);
         skuData = [];
@@ -1573,23 +1592,18 @@
     }
 
     async function openChannelView(platform) {
-      // Set platform name
       document.getElementById('detail-platform-name').textContent = platform;
       const cfg = PLATFORM_CONFIG[platform] || { color: '#888' };
       document.getElementById('detail-platform-name').style.color = cfg.color;
 
-      // Load SKU data if not yet loaded
       await loadSKUData();
 
-      // Filter SKU data for this platform + selected month
-      const month = activeMonth; // "04", "05", or "All"
+      const month = activeMonth;
       const filtered = skuData.filter(r => {
-        // Month in SKU_Data is integer 4 or 5
         const mMatch = month === 'All' || Number(r.Month) === parseInt(month, 10);
         return mMatch && String(r.Platform) === platform;
       });
 
-      // Get OMS data filtered by platform + month + active period
       const omsFiltered = getFilteredData().filter(r => String(r.Platform) === platform);
 
       renderChannelKPIs(filtered, omsFiltered, platform);
@@ -1598,18 +1612,11 @@
       renderChannelSKUTable(filtered);
     }
 
-    // closeChannelView replaced by switchTab
-
-
-
     function renderChannelKPIs(skuRows, omsRows, platform) {
-      // Revenue + Units from OMS (already filtered by period + platform)
       const totalSales  = omsRows.reduce((s, r) => s + (Number(r.Sales)  || 0), 0);
       const totalUnits  = omsRows.reduce((s, r) => s + (Number(r.Units)  || 0), 0);
       const totalSpends = omsRows.reduce((s, r) => s + (Number(r.Spends) || 0), 0);
       const roas = totalSpends > 0 ? (totalSales / totalSpends) : 0;
-
-      // Est Revenue from SKU sheet (always Platform's forecast)
       const totalEstRev = skuRows.reduce((s, r) => s + (Number(r.EstRevenue) || 0), 0);
 
       const cfg = PLATFORM_CONFIG[platform] || { color: '#888' };
@@ -1638,23 +1645,22 @@
           <div class="kpi-sub neutral">${omsRows.length} days of data</div>
         </div>
         <div class="kpi-card" style="--accent:var(--purple)">
-          <div class="kpi-label">Platform Forecast</div>
+          <div class="kpi-label">Est. Revenue</div>
           <div class="kpi-value">${fmt(totalEstRev)}</div>
-          <div class="kpi-sub neutral">Platform's forecast</div>
+          <div class="kpi-sub neutral">Full month projection</div>
         </div>
       `;
     }
 
     function renderChannelDailyChart(omsRows) {
-      // Build date → sales map from OMS rows
       const dateMap = {};
       omsRows.forEach(r => {
-        const d = String(r.Date).split('T')[0].substring(0, 10); // always YYYY-MM-DD
+        const d = String(r.Date).split('T')[0].substring(0, 10);
         dateMap[d] = (dateMap[d] || 0) + (Number(r.Sales) || 0);
       });
-      const sortedDates = Object.keys(dateMap).sort(); // lexicographic sort works on YYYY-MM-DD
+      const sortedDates = Object.keys(dateMap).sort();
       const labels = sortedDates.map(d => {
-        const parts = d.split('-'); // ["2026","05","01"]
+        const parts = d.split('-');
         return parts.length === 3 ? parts[2] + '/' + parts[1] : d;
       });
       const values = sortedDates.map(d => dateMap[d]);
@@ -1759,7 +1765,7 @@
       renderSKUView();
     }
 
-  function getSKUViewData() {
+    function getSKUViewData() {
       const month = activeMonth;
       const platFilter = document.getElementById('skuPlatFilter')?.value || 'All';
       const search = (document.getElementById('skuSearch')?.value || '').toLowerCase();
@@ -1802,8 +1808,6 @@
 
         aggMap[key].mtdRev   += calculatedRev; 
         aggMap[key].mtdUnits += Number(r.MTDUnits) || 0;
-        
-        // --- CRITICAL FIX: Add forecasts together instead of taking the Max ---
         aggMap[key].estRev   += Number(r.EstRevenue) || 0; 
 
         const p = String(r.Platform);
@@ -1823,16 +1827,19 @@
       const totalRev = data.reduce((s, r) => s + r.mtdRev, 0);
       const totalUnits = data.reduce((s, r) => s + r.mtdUnits, 0);
 
+      const pLabels = { t1:'T-1', t2:'T-2', '7d':'7-Day', mtd:'MTD', custom:'Selected' };
+      const revLabel = pLabels[activePeriod] ? pLabels[activePeriod] + ' Revenue' : 'Revenue';
+
       // KPI cards
       const topSKU = data[0] || {};
       document.getElementById('sku-kpi-grid').innerHTML = `
         <div class="kpi-card" style="--accent:var(--orange)">
-          <div class="kpi-label">Total SKU Revenue</div>
+          <div class="kpi-label">${revLabel}</div>
           <div class="kpi-value">${fmt(totalRev)}</div>
           <div class="kpi-sub neutral">${data.length} SKUs</div>
         </div>
         <div class="kpi-card" style="--accent:var(--blue)">
-          <div class="kpi-label">Total Units</div>
+          <div class="kpi-label">Total Units (MTD)</div>
           <div class="kpi-value">${fmt(totalUnits, false)}</div>
           <div class="kpi-sub neutral">ASP ₹${totalUnits > 0 ? (totalRev/totalUnits).toFixed(0) : '--'}</div>
         </div>
@@ -1864,7 +1871,7 @@
         const platBadges = Object.keys(r.platforms).map(p =>
           `<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-family:'DM Mono',monospace;background:rgba(255,255,255,0.05);color:${PLAT_COLORS[p]||'#888'};margin-right:3px">${p}</span>`
         ).join('');
-        return `<tr style="cursor:pointer" onclick="openSKUDetail('${r.sku.replace(/'/g,"\'")}')">
+        return `<tr style="cursor:pointer" onclick="openSKUDetail('${r.sku.replace(/'/g,"\\'")}')">
           <td style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:11px">${i+1}</td>
           <td class="sku-name-cell">${r.sku}</td>
           <td><span class="cat-badge" style="background:${catStyle.bg};color:${catStyle.text}">${r.category}</span></td>
@@ -1891,7 +1898,6 @@
     }
 
     function openSKUDetail(skuName) {
-      // Find all rows for this SKU across platforms + selected month
       const month = activeMonth;
       const allRows = skuData.filter(r => {
         const mMatch = month === 'All' || Number(r.Month) === parseInt(month, 10);
@@ -1902,7 +1908,6 @@
       const category = allRows[0].Category;
       const catStyle = CAT_COLORS[category] || { bg:'rgba(255,255,255,0.05)', text:'#888' };
 
-      // Show detail panel
       document.getElementById('sku-leaderboard-wrap').style.display = 'none';
       document.getElementById('sku-detail-panel').style.display = 'block';
       document.getElementById('sku-detail-name').textContent = skuName;
@@ -1911,19 +1916,37 @@
       catBadge.style.background = catStyle.bg;
       catBadge.style.color = catStyle.text;
 
-      // Per-platform breakdown
+      const bounds = getDateBoundaries();
+
       const platData = {};
       allRows.forEach(r => {
         const p = String(r.Platform);
         if (!platData[p]) platData[p] = { mtdRev: 0, mtdUnits: 0, days: Array(31).fill(0) };
-        platData[p].mtdRev   += Number(r.MTDRevenue) || 0;
-        platData[p].mtdUnits += Number(r.MTDUnits)   || 0;
-        for (let d = 0; d < 31; d++) {
-          platData[p].days[d] += Number(r['Day' + (d+1)]) || 0;
+
+        let calculatedRev = 0;
+        const rowMonth = parseInt(r.Month, 10);
+        for (let d = 1; d <= 31; d++) {
+            const val = Number(r['Day' + d]) || 0;
+            if (val > 0) {
+                platData[p].days[d-1] += val; 
+                
+                const cellDate = new Date(2026, rowMonth - 1, d);
+                cellDate.setHours(0,0,0,0);
+                let dateMatch = false;
+                if (activePeriod === 'mtd') dateMatch = true;
+                else if (activePeriod === 't1') dateMatch = cellDate.getTime() === bounds.t1.getTime();
+                else if (activePeriod === 't2') dateMatch = cellDate.getTime() === bounds.t2.getTime();
+                else if (activePeriod === '7d') dateMatch = cellDate > bounds.cutoff7d && cellDate <= bounds.latestDate;
+                else if (activePeriod === 'custom') dateMatch = cellDate >= bounds.customSd && cellDate <= bounds.customEd;
+
+                if (dateMatch) calculatedRev += val;
+            }
         }
+
+        platData[p].mtdRev   += calculatedRev;
+        platData[p].mtdUnits += Number(r.MTDUnits)   || 0;
       });
 
-      // Platform KPI cards
       const platCards = Object.keys(platData).map(p => {
         const d = platData[p];
         const asp = d.mtdUnits > 0 ? (d.mtdRev / d.mtdUnits).toFixed(0) : '--';
@@ -1935,14 +1958,13 @@
       }).join('');
       document.getElementById('sku-platform-cards').innerHTML = platCards;
 
-      // Bar chart: revenue by platform
       const platNames = Object.keys(platData);
       const platRevs  = platNames.map(p => platData[p].mtdRev);
       const platCols  = platNames.map(p => PLAT_COLORS[p] || '#888');
 
       if (skuDetailChart1) skuDetailChart1.destroy();
       skuDetailChart1 = new ApexCharts(document.querySelector('#sku-chart-platform'), {
-        series: [{ name: 'MTD Revenue', data: platRevs }],
+        series: [{ name: 'Revenue', data: platRevs }],
         chart: { type: 'bar', height: 240, toolbar: { show: false }, background: 'transparent', fontFamily: 'DM Sans, sans-serif' },
         theme: { mode: 'dark' },
         colors: platCols,
@@ -1956,7 +1978,6 @@
       });
       skuDetailChart1.render();
 
-      // Line chart: daily trend per platform
       const dayLabels = Array.from({length:31}, (_,i) => 'D'+(i+1));
       const series = Object.keys(platData).map(p => ({
         name: p,
