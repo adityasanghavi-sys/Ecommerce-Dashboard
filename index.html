@@ -693,6 +693,7 @@
         <button class="tab-btn" onclick="switchTab('instamart')" id="tab-instamart">Instamart</button>
         <button class="tab-btn" onclick="switchTab('bigbasket')" id="tab-bigbasket">Big Basket</button>
         <button class="tab-btn" onclick="switchTab('skus')" id="tab-skus">SKU View</button>
+        <button class="tab-btn" onclick="switchTab('skucompare')" id="tab-skucompare">SKU Compare</button>
       </div>
 
       <div id="view-overview">
@@ -977,6 +978,117 @@
             <tbody id="detail-sku-tbody"></tbody>
           </table>
         </div>
+  <!-- SKU COMPARE TAB -->
+      <div id="view-skucompare" style="display:none">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+          <!-- Slot A -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-top:2px solid #F97316;border-radius:12px;padding:18px;">
+            <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#F97316;margin-bottom:12px;">Side A</div>
+            <div style="margin-bottom:10px;">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">SKU</div>
+              <input type="text" id="skucmp-a-search" placeholder="Search SKU..." oninput="filterSKUDropdown('a')" onfocus="showSKUDropdown('a')" onblur="setTimeout(()=>hideSKUDropdown('a'),200)"
+                style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'DM Sans',sans-serif;padding:7px 10px;outline:none;">
+              <div id="skucmp-a-dropdown" style="display:none;position:relative;z-index:50;">
+                <div id="skucmp-a-list" style="background:#1a1a1a;border:1px solid var(--border);border-radius:6px;margin-top:4px;max-height:180px;overflow-y:auto;"></div>
+              </div>
+              <input type="hidden" id="skucmp-a-value">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+              <div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Start Date</div>
+                <input type="date" id="skucmp-a-start" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'DM Sans',sans-serif;padding:6px 8px;outline:none;">
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">End Date</div>
+                <input type="date" id="skucmp-a-end" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'DM Sans',sans-serif;padding:6px 8px;outline:none;">
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Platform</div>
+              <select id="skucmp-a-platform" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'DM Sans',sans-serif;padding:6px 8px;outline:none;">
+                <option value="All">All Platforms</option>
+                <option value="Blinkit">Blinkit</option>
+                <option value="Zepto">Zepto</option>
+                <option value="Instamart">Instamart</option>
+                <option value="Big Basket">Big Basket</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Slot B -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-top:2px solid #3B82F6;border-radius:12px;padding:18px;">
+            <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#3B82F6;margin-bottom:12px;">Side B</div>
+            <div style="margin-bottom:10px;">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">SKU</div>
+              <input type="text" id="skucmp-b-search" placeholder="Search SKU..." oninput="filterSKUDropdown('b')" onfocus="showSKUDropdown('b')" onblur="setTimeout(()=>hideSKUDropdown('b'),200)"
+                style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'DM Sans',sans-serif;padding:7px 10px;outline:none;">
+              <div id="skucmp-b-dropdown" style="display:none;position:relative;z-index:50;">
+                <div id="skucmp-b-list" style="background:#1a1a1a;border:1px solid var(--border);border-radius:6px;margin-top:4px;max-height:180px;overflow-y:auto;"></div>
+              </div>
+              <input type="hidden" id="skucmp-b-value">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+              <div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Start Date</div>
+                <input type="date" id="skucmp-b-start" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'DM Sans',sans-serif;padding:6px 8px;outline:none;">
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">End Date</div>
+                <input type="date" id="skucmp-b-end" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'DM Sans',sans-serif;padding:6px 8px;outline:none;">
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Platform</div>
+              <select id="skucmp-b-platform" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'DM Sans',sans-serif;padding:6px 8px;outline:none;">
+                <option value="All">All Platforms</option>
+                <option value="Blinkit">Blinkit</option>
+                <option value="Zepto">Zepto</option>
+                <option value="Instamart">Instamart</option>
+                <option value="Big Basket">Big Basket</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align:center;margin-bottom:24px;">
+          <button onclick="runSKUCompare()" style="background:#F97316;color:#fff;border:none;border-radius:8px;padding:10px 32px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Compare →</button>
+        </div>
+
+        <!-- Results -->
+        <div id="skucmp-results" style="display:none;">
+
+          <!-- KPI cards -->
+          <div class="section-label">Head-to-head</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;" id="skucmp-kpi-grid"></div>
+
+          <!-- Charts -->
+          <div class="section-label">Platform Breakdown</div>
+          <div class="mom-grid" style="margin-bottom:24px;">
+            <div class="chart-section">
+              <div class="chart-title">Revenue by Platform (₹)</div>
+              <div id="skucmp-chart-platform" style="height:260px"></div>
+            </div>
+            <div class="chart-section">
+              <div class="chart-title">Units by Platform</div>
+              <div id="skucmp-chart-units" style="height:260px"></div>
+            </div>
+          </div>
+
+          <div class="section-label">Daily Trend</div>
+          <div class="chart-section">
+            <div class="chart-title">Daily Revenue — normalized to Day 1 → Day N</div>
+            <div id="skucmp-chart-trend" style="height:300px"></div>
+          </div>
+
+        </div>
+
+        <div id="skucmp-no-data" style="text-align:center;color:var(--text-muted);padding:60px 20px;font-size:13px;background:var(--surface);border:1px dashed var(--border);border-radius:12px;">
+          Fill in both sides and hit <strong>Compare →</strong>
+        </div>
+
+      </div>
+
     </div>
   </div>
 
@@ -1356,7 +1468,7 @@
 
     // ─── TAB SWITCHING ─────────────────────────────────────────────────────────
     let activeTab = 'overview';
-    const ALL_TABS = ['overview','compare','blinkit','zepto','instamart','bigbasket','skus'];
+    const ALL_TABS = ['overview','compare','blinkit','zepto','instamart','bigbasket','skus','skucompare'];
     const PLATFORM_TAB_MAP = { 'blinkit':'Blinkit', 'zepto':'Zepto', 'instamart':'Instamart', 'bigbasket':'Big Basket' };
 
     function switchTab(tab) {
@@ -1368,12 +1480,14 @@
       document.getElementById('view-overview').style.display = tab === 'overview' ? 'block' : 'none';
       document.getElementById('view-compare').style.display  = tab === 'compare'  ? 'block' : 'none';
       document.getElementById('view-channel').style.display  = PLATFORM_TAB_MAP[tab] ? 'block' : 'none';
-      document.getElementById('view-skus').style.display     = tab === 'skus'     ? 'block' : 'none';
+      document.getElementById('view-skus').style.display       = tab === 'skus'       ? 'block' : 'none';
+      document.getElementById('view-skucompare').style.display = tab === 'skucompare' ? 'block' : 'none';
       const kg = document.getElementById('kpi-grid');
       const dc = document.getElementById('dashboard-content');
       if (kg) kg.style.display = tab === 'overview' ? 'grid' : 'none';
       if (dc) dc.style.display = tab === 'overview' ? 'flex'  : 'none';
       if (tab === 'skus') { loadSKUData().then(() => renderSKUView()); }
+      if (tab === 'skucompare') { loadSKUData().then(() => initSKUCompare()); }
       if (tab === 'compare') {
         const hasSummary = document.getElementById('cmp-summary').style.display !== 'none';
         if (!hasSummary) document.getElementById('cmp-no-data').style.display = 'block';
@@ -2243,6 +2357,198 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
       document.getElementById('sku-detail-panel').style.display = 'none';
       if (skuDetailChart1) { skuDetailChart1.destroy(); skuDetailChart1 = null; }
       if (skuDetailChart2) { skuDetailChart2.destroy(); skuDetailChart2 = null; }
+    }
+
+    // ─── SKU COMPARE ENGINE ────────────────────────────────────────────────────
+    let skucmpChartPlatform = null, skucmpChartUnits = null, skucmpChartTrend = null;
+
+    function initSKUCompare() {
+      ['a','b'].forEach(side => {
+        const list = document.getElementById('skucmp-' + side + '-list');
+        const skuNames = [...new Set(skuData.map(r => String(r.SKU)))].sort();
+        list.innerHTML = skuNames.map(s =>
+          `<div onclick="selectSKU('${side}','${s.replace(/'/g,"\\'")}')"
+            style="padding:8px 12px;font-size:12px;color:var(--text-secondary);cursor:pointer;border-bottom:1px solid var(--border);"
+            onmouseover="this.style.background='rgba(255,255,255,0.04)'"
+            onmouseout="this.style.background='transparent'">${s}</div>`
+        ).join('');
+      });
+    }
+
+    function selectSKU(side, name) {
+      document.getElementById('skucmp-' + side + '-search').value = name;
+      document.getElementById('skucmp-' + side + '-value').value  = name;
+      hideSKUDropdown(side);
+    }
+
+    function showSKUDropdown(side) {
+      document.getElementById('skucmp-' + side + '-dropdown').style.display = 'block';
+    }
+    function hideSKUDropdown(side) {
+      document.getElementById('skucmp-' + side + '-dropdown').style.display = 'none';
+    }
+    function filterSKUDropdown(side) {
+      const q = document.getElementById('skucmp-' + side + '-search').value.toLowerCase();
+      document.getElementById('skucmp-' + side + '-value').value = '';
+      showSKUDropdown(side);
+      const items = document.getElementById('skucmp-' + side + '-list').querySelectorAll('div');
+      items.forEach(el => {
+        el.style.display = el.textContent.toLowerCase().includes(q) ? 'block' : 'none';
+      });
+    }
+
+    function getSKUSlotData(side) {
+      const skuName  = document.getElementById('skucmp-' + side + '-value').value;
+      const platform = document.getElementById('skucmp-' + side + '-platform').value;
+      const startStr = document.getElementById('skucmp-' + side + '-start').value;
+      const endStr   = document.getElementById('skucmp-' + side + '-end').value;
+      if (!skuName || !startStr || !endStr) return null;
+
+      const start = new Date(startStr); start.setHours(0,0,0,0);
+      const end   = new Date(endStr);   end.setHours(0,0,0,0);
+
+      // Determine months covered
+      const months = new Set();
+      const cur = new Date(start);
+      while (cur <= end) { months.add(cur.getMonth() + 1); cur.setDate(cur.getDate() + 1); }
+
+      // Filter skuData rows for this SKU + platform + months
+      const rows = skuData.filter(r => {
+        const mMatch = months.has(Number(r.Month));
+        const pMatch = platform === 'All' || String(r.Platform) === platform;
+        return String(r.SKU) === skuName && mMatch && pMatch;
+      });
+
+      // Aggregate: sum MTDRevenue, MTDUnits, EstRevenue per platform
+      const byPlatform = {};
+      let totalRev = 0, totalUnits = 0, totalEst = 0;
+      rows.forEach(r => {
+        const p    = String(r.Platform);
+        const rev  = Number(r.MTDRevenue)  || 0;
+        const units= Number(r.MTDUnits)    || 0;
+        const est  = Number(r.EstRevenue)  || 0;
+        if (!byPlatform[p]) byPlatform[p] = { rev:0, units:0 };
+        byPlatform[p].rev   += rev;
+        byPlatform[p].units += units;
+        totalRev   += rev;
+        totalUnits += units;
+        totalEst    = Math.max(totalEst, est);
+      });
+
+      // Daily trend: use Day columns, sliced to date range within month
+      const startDay = start.getDate();
+      const endDay   = end.getDate();
+      const days = [];
+      for (let d = startDay; d <= endDay; d++) {
+        let val = 0;
+        rows.forEach(r => { val += Number(r['Day' + d]) || 0; });
+        days.push(val);
+      }
+
+      return { skuName, platform, startStr, endStr, totalRev, totalUnits, totalEst, byPlatform, days };
+    }
+
+    function runSKUCompare() {
+      const a = getSKUSlotData('a');
+      const b = getSKUSlotData('b');
+      if (!a || !b) { alert('Fill in SKU, dates and platform for both sides.'); return; }
+
+      document.getElementById('skucmp-no-data').style.display  = 'none';
+      document.getElementById('skucmp-results').style.display  = 'block';
+
+      // KPI cards
+      const metrics = [
+        { label:'MTD Revenue',  valA: fmt(a.totalRev),          valB: fmt(b.totalRev),          raw: [a.totalRev, b.totalRev] },
+        { label:'Units',        valA: fmt(a.totalUnits,false),   valB: fmt(b.totalUnits,false),   raw: [a.totalUnits, b.totalUnits] },
+        { label:'ASP',          valA: a.totalUnits>0?'₹'+(a.totalRev/a.totalUnits).toFixed(0):'--', valB: b.totalUnits>0?'₹'+(b.totalRev/b.totalUnits).toFixed(0):'--', raw:null },
+        { label:'Platform Forecast', valA: fmt(a.totalEst),     valB: fmt(b.totalEst),           raw: [a.totalEst, b.totalEst] },
+      ];
+
+      document.getElementById('skucmp-kpi-grid').innerHTML = metrics.map(m => {
+        let deltaHtml = '';
+        if (m.raw && m.raw[1] > 0) {
+          const d = ((m.raw[0] - m.raw[1]) / m.raw[1] * 100).toFixed(1);
+          const cls = Number(d) >= 0 ? 'positive' : 'negative';
+          deltaHtml = `<div class="kpi-sub ${cls}">${Number(d)>=0?'▲':'▼'} ${Math.abs(d)}% A vs B</div>`;
+        }
+        return `<div class="kpi-card" style="--accent:var(--orange)">
+          <div class="kpi-label">${m.label}</div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:8px;">
+            <div>
+              <div style="font-size:9px;color:#F97316;font-family:'DM Mono',monospace;margin-bottom:2px;">A · ${a.skuName.split(' ').slice(0,2).join(' ')}</div>
+              <div style="font-size:18px;font-weight:700;letter-spacing:-0.02em;color:#F97316">${m.valA}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:9px;color:#3B82F6;font-family:'DM Mono',monospace;margin-bottom:2px;">B · ${b.skuName.split(' ').slice(0,2).join(' ')}</div>
+              <div style="font-size:18px;font-weight:700;letter-spacing:-0.02em;color:#3B82F6">${m.valB}</div>
+            </div>
+          </div>
+          ${deltaHtml}
+        </div>`;
+      }).join('');
+
+      // Platform breakdown charts
+      const allPlats = [...new Set([...Object.keys(a.byPlatform), ...Object.keys(b.byPlatform)])].sort();
+      const baseBar = {
+        chart: { type:'bar', toolbar:{show:false}, background:'transparent', fontFamily:'DM Sans, sans-serif', height:240 },
+        theme: { mode:'dark' },
+        plotOptions: { bar: { borderRadius:4, columnWidth:'65%', grouped:true } },
+        dataLabels: { enabled:false },
+        grid: { borderColor:'rgba(255,255,255,0.05)', strokeDashArray:4 },
+        xaxis: { categories: allPlats, labels:{style:{colors:'#555',fontSize:'12px'}}, axisBorder:{show:false}, axisTicks:{show:false} },
+        legend: { labels:{colors:'#888'}, position:'top' },
+        tooltip: { theme:'dark' },
+        colors: ['#F97316','#3B82F6'],
+      };
+
+      if (skucmpChartPlatform) skucmpChartPlatform.destroy();
+      skucmpChartPlatform = new ApexCharts(document.querySelector('#skucmp-chart-platform'), {
+        ...baseBar,
+        series: [
+          { name: a.skuName.split(' ').slice(0,2).join(' ') + ' (A)', data: allPlats.map(p => a.byPlatform[p]?.rev || 0) },
+          { name: b.skuName.split(' ').slice(0,2).join(' ') + ' (B)', data: allPlats.map(p => b.byPlatform[p]?.rev || 0) }
+        ],
+        yaxis: { labels:{ formatter: v => fmt(v), style:{colors:'#555'} } },
+        tooltip: { y:{ formatter: v => fmt(v) }, theme:'dark' },
+      });
+      skucmpChartPlatform.render();
+
+      if (skucmpChartUnits) skucmpChartUnits.destroy();
+      skucmpChartUnits = new ApexCharts(document.querySelector('#skucmp-chart-units'), {
+        ...baseBar,
+        series: [
+          { name: a.skuName.split(' ').slice(0,2).join(' ') + ' (A)', data: allPlats.map(p => a.byPlatform[p]?.units || 0) },
+          { name: b.skuName.split(' ').slice(0,2).join(' ') + ' (B)', data: allPlats.map(p => b.byPlatform[p]?.units || 0) }
+        ],
+        yaxis: { labels:{ formatter: v => fmt(v,false), style:{colors:'#555'} } },
+        tooltip: { y:{ formatter: v => fmt(v,false) }, theme:'dark' },
+      });
+      skucmpChartUnits.render();
+
+      // Daily trend
+      const maxLen = Math.max(a.days.length, b.days.length);
+      const dayLabels = Array.from({length:maxLen}, (_,i) => 'Day '+(i+1));
+      const padDays = (arr, len) => [...arr, ...Array(len - arr.length).fill(null)];
+
+      if (skucmpChartTrend) skucmpChartTrend.destroy();
+      skucmpChartTrend = new ApexCharts(document.querySelector('#skucmp-chart-trend'), {
+        series: [
+          { name: `A · ${a.skuName.split(' ').slice(0,2).join(' ')} (${a.startStr}→${a.endStr})`, data: padDays(a.days, maxLen) },
+          { name: `B · ${b.skuName.split(' ').slice(0,2).join(' ')} (${b.startStr}→${b.endStr})`, data: padDays(b.days, maxLen) },
+        ],
+        chart: { type:'line', height:280, toolbar:{show:false}, background:'transparent', fontFamily:'DM Sans, sans-serif' },
+        theme: { mode:'dark' },
+        colors: ['#F97316','#3B82F6'],
+        stroke: { width:2.5, curve:'smooth' },
+        markers: { size:4, strokeWidth:0 },
+        dataLabels: { enabled:false },
+        grid: { borderColor:'rgba(255,255,255,0.05)', strokeDashArray:4 },
+        xaxis: { categories:dayLabels, labels:{style:{colors:'#555'}}, axisBorder:{show:false} },
+        yaxis: { labels:{ formatter: v => v !== null ? fmt(v) : '', style:{colors:'#555'} } },
+        legend: { labels:{colors:'#888'}, position:'top' },
+        tooltip: { y:{ formatter: v => v !== null ? fmt(v) : 'No data' }, theme:'dark' },
+      });
+      skucmpChartTrend.render();
     }
 
     // ─── KICK OFF ──────────────────────────────────────────────────────────────
