@@ -956,16 +956,15 @@
         <div class="sku-table-wrap">
           <div class="sku-table-header" style="display:flex;justify-content:space-between;align-items:center;">
             <span id="detail-table-title">Top SKUs by MTD Revenue</span>
-            <div style="display:inline-flex;background:var(--bg);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
-              <button onclick="setDetailView('sku')" id="detail-view-sku"
-                style="padding:5px 14px;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;border:none;cursor:pointer;background:rgba(255,255,255,0.08);color:var(--text-primary);transition:all 0.15s;">
-                SKU View
-              </button>
-              <button onclick="setDetailView('category')" id="detail-view-category"
-                style="padding:5px 14px;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;border:none;cursor:pointer;background:transparent;color:var(--text-muted);transition:all 0.15s;">
-                Category View
-              </button>
-            </div>
+            <select id="detail-cat-filter" onchange="applyDetailCatFilter()"
+              style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:11px;font-family:'DM Sans',sans-serif;padding:5px 28px 5px 10px;outline:none;cursor:pointer;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 8px center;">
+              <option value="All">All Categories</option>
+              <option value="Ragi Chips">Ragi Chips</option>
+              <option value="Dipsters">Dipsters</option>
+              <option value="Puffs">Puffs</option>
+              <option value="Others">Others</option>
+              <option value="__summary__">Category Totals</option>
+            </select>
           </div>
           <table class="sku-table" id="detail-sku-table">
             <thead id="detail-sku-thead">
@@ -1751,10 +1750,9 @@
     }
 
     async function openChannelView(platform) {
-      detailViewMode = 'sku';
-      if (document.getElementById('detail-view-sku')) {
-        setDetailView('sku');
-      }
+      _lastSkuRows = [];
+      const catFilter = document.getElementById('detail-cat-filter');
+      if (catFilter) catFilter.value = 'All';
       document.getElementById('detail-platform-name').textContent = platform;
       const cfg = PLATFORM_CONFIG[platform] || { color: '#888' };
       document.getElementById('detail-platform-name').style.color = cfg.color;
@@ -1871,35 +1869,29 @@
       detailChartCat.render();
     }
 
-    let detailViewMode = 'sku';
     let _lastSkuRows = [];
 
-    function setDetailView(mode) {
-      detailViewMode = mode;
-      document.getElementById('detail-view-sku').style.background      = mode === 'sku'      ? 'rgba(255,255,255,0.08)' : 'transparent';
-      document.getElementById('detail-view-sku').style.color            = mode === 'sku'      ? 'var(--text-primary)'    : 'var(--text-muted)';
-      document.getElementById('detail-view-category').style.background  = mode === 'category' ? 'rgba(255,255,255,0.08)' : 'transparent';
-      document.getElementById('detail-view-category').style.color       = mode === 'category' ? 'var(--text-primary)'    : 'var(--text-muted)';
-
-      if (mode === 'sku') {
-        document.getElementById('detail-table-title').textContent = 'Top SKUs by MTD Revenue';
-        document.getElementById('detail-sku-thead').innerHTML = `<tr>
-          <th>SKU</th><th>Category</th>
-          <th class="right">Est. Revenue</th><th class="right">MTD Revenue</th>
-          <th class="right">MTD Units</th><th class="right">% of Total</th>
-        </tr>`;
-        renderChannelSKUTable(_lastSkuRows);
-      } else {
-        document.getElementById('detail-table-title').textContent = 'Category Summary';
+    function applyDetailCatFilter() {
+      const val = document.getElementById('detail-cat-filter').value;
+      if (val === '__summary__') {
+        document.getElementById('detail-table-title').textContent = 'Category Totals';
         document.getElementById('detail-sku-thead').innerHTML = `<tr>
           <th>Category</th>
           <th class="right">Est. Revenue</th><th class="right">MTD Revenue</th>
           <th class="right">MTD Units</th><th class="right">% of Total</th>
         </tr>`;
         renderChannelCategoryTable(_lastSkuRows);
+      } else {
+        document.getElementById('detail-table-title').textContent = val === 'All' ? 'Top SKUs by MTD Revenue' : `${val} — SKUs`;
+        document.getElementById('detail-sku-thead').innerHTML = `<tr>
+          <th>SKU</th><th>Category</th>
+          <th class="right">Est. Revenue</th><th class="right">MTD Revenue</th>
+          <th class="right">MTD Units</th><th class="right">% of Total</th>
+        </tr>`;
+        const filtered = val === 'All' ? _lastSkuRows : _lastSkuRows.filter(r => String(r.Category) === val);
+        renderChannelSKUTable(filtered);
       }
     }
-
     function renderChannelCategoryTable(skuRows) {
       const CAT_COLORS = {
         'Ragi Chips': 'background:rgba(249,115,22,0.15);color:#F97316',
