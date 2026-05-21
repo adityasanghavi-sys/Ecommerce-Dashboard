@@ -851,7 +851,7 @@
                   <th>Category</th>
                   <th class="right">MTD Revenue</th>
                   <th class="right">MTD Units</th>
-                  <th class="right">Est. Revenue</th>
+                  <th class="right">Platform Forecast</th>
                   <th class="right">% of Total</th>
                   <th>Platforms</th>
                 </tr>
@@ -912,7 +912,7 @@
               <tr>
                 <th>SKU</th>
                 <th>Category</th>
-                <th class="right">Est. Revenue</th>
+                <th class="right">Platform Forecast</th>
                 <th class="right">MTD Revenue</th>
                 <th class="right">MTD Units</th>
                 <th class="right">% of Total</th>
@@ -1609,7 +1609,7 @@
       const totalSpends = omsRows.reduce((s, r) => s + (Number(r.Spends) || 0), 0);
       const roas = totalSpends > 0 ? (totalSales / totalSpends) : 0;
 
-      // Est Revenue from SKU sheet (always full month projection)
+      // Est Revenue from SKU sheet (always Platform's forecast)
       const totalEstRev = skuRows.reduce((s, r) => s + (Number(r.EstRevenue) || 0), 0);
 
       const cfg = PLATFORM_CONFIG[platform] || { color: '#888' };
@@ -1638,9 +1638,9 @@
           <div class="kpi-sub neutral">${omsRows.length} days of data</div>
         </div>
         <div class="kpi-card" style="--accent:var(--purple)">
-          <div class="kpi-label">Est. Revenue</div>
+          <div class="kpi-label">Platform Forecast</div>
           <div class="kpi-value">${fmt(totalEstRev)}</div>
-          <div class="kpi-sub neutral">Full month projection</div>
+          <div class="kpi-sub neutral">Platform's forecast</div>
         </div>
       `;
     }
