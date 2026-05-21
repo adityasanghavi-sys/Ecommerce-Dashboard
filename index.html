@@ -954,23 +954,30 @@
           </div>
         </div>
         <div class="sku-table-wrap">
-          <div class="sku-table-header">Top SKUs by MTD Revenue</div>
-          <table class="sku-table">
-            <thead>
+          <div class="sku-table-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <span id="detail-table-title">Top SKUs by MTD Revenue</span>
+            <div style="display:inline-flex;background:var(--bg);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+              <button onclick="setDetailView('sku')" id="detail-view-sku"
+                style="padding:5px 14px;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;border:none;cursor:pointer;background:rgba(255,255,255,0.08);color:var(--text-primary);transition:all 0.15s;">
+                SKU View
+              </button>
+              <button onclick="setDetailView('category')" id="detail-view-category"
+                style="padding:5px 14px;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;border:none;cursor:pointer;background:transparent;color:var(--text-muted);transition:all 0.15s;">
+                Category View
+              </button>
+            </div>
+          </div>
+          <table class="sku-table" id="detail-sku-table">
+            <thead id="detail-sku-thead">
               <tr>
-                <th>SKU</th>
-                <th>Category</th>
-                <th class="right">Est. Revenue</th>
-                <th class="right">MTD Revenue</th>
-                <th class="right">MTD Units</th>
-                <th class="right">% of Total</th>
+                <th>SKU</th><th>Category</th>
+                <th class="right">Est. Revenue</th><th class="right">MTD Revenue</th>
+                <th class="right">MTD Units</th><th class="right">% of Total</th>
               </tr>
             </thead>
             <tbody id="detail-sku-tbody"></tbody>
           </table>
         </div>
-      </div>
-
     </div>
   </div>
 
@@ -1744,6 +1751,10 @@
     }
 
     async function openChannelView(platform) {
+      detailViewMode = 'sku';
+      if (document.getElementById('detail-view-sku')) {
+        setDetailView('sku');
+      }
       document.getElementById('detail-platform-name').textContent = platform;
       const cfg = PLATFORM_CONFIG[platform] || { color: '#888' };
       document.getElementById('detail-platform-name').style.color = cfg.color;
@@ -1860,7 +1871,87 @@
       detailChartCat.render();
     }
 
+    let detailViewMode = 'sku';
+    let _lastSkuRows = [];
+
+    function setDetailView(mode) {
+      detailViewMode = mode;
+      document.getElementById('detail-view-sku').style.background      = mode === 'sku'      ? 'rgba(255,255,255,0.08)' : 'transparent';
+      document.getElementById('detail-view-sku').style.color            = mode === 'sku'      ? 'var(--text-primary)'    : 'var(--text-muted)';
+      document.getElementById('detail-view-category').style.background  = mode === 'category' ? 'rgba(255,255,255,0.08)' : 'transparent';
+      document.getElementById('detail-view-category').style.color       = mode === 'category' ? 'var(--text-primary)'    : 'var(--text-muted)';
+
+      if (mode === 'sku') {
+        document.getElementById('detail-table-title').textContent = 'Top SKUs by MTD Revenue';
+        document.getElementById('detail-sku-thead').innerHTML = `<tr>
+          <th>SKU</th><th>Category</th>
+          <th class="right">Est. Revenue</th><th class="right">MTD Revenue</th>
+          <th class="right">MTD Units</th><th class="right">% of Total</th>
+        </tr>`;
+        renderChannelSKUTable(_lastSkuRows);
+      } else {
+        document.getElementById('detail-table-title').textContent = 'Category Summary';
+        document.getElementById('detail-sku-thead').innerHTML = `<tr>
+          <th>Category</th>
+          <th class="right">Est. Revenue</th><th class="right">MTD Revenue</th>
+          <th class="right">MTD Units</th><th class="right">% of Total</th>
+        </tr>`;
+        renderChannelCategoryTable(_lastSkuRows);
+      }
+    }
+
+    function renderChannelCategoryTable(skuRows) {
+      const CAT_COLORS = {
+        'Ragi Chips': 'background:rgba(249,115,22,0.15);color:#F97316',
+        'Dipsters':   'background:rgba(168,85,247,0.15);color:#A855F7',
+        'Puffs':      'background:rgba(34,197,94,0.15);color:#22C55E',
+        'Others':     'background:rgba(59,130,246,0.15);color:#3B82F6'
+      };
+      const catMap = {};
+      skuRows.forEach(r => {
+        const cat = String(r.Category || 'Others');
+        if (!catMap[cat]) catMap[cat] = { rev: 0, units: 0, est: 0 };
+        catMap[cat].rev   += Number(r.MTDRevenue)  || 0;
+        catMap[cat].units += Number(r.MTDUnits)    || 0;
+        catMap[cat].est   += Number(r.EstRevenue)  || 0;
+      });
+      const totalRev = Object.values(catMap).reduce((s, c) => s + c.rev, 0);
+      const sorted = Object.entries(catMap).sort((a, b) => b[1].rev - a[1].rev);
+
+      const rows = sorted.map(([cat, d]) => {
+        const pct = totalRev > 0 ? (d.rev / totalRev * 100) : 0;
+        const catStyle = CAT_COLORS[cat] || 'background:rgba(255,255,255,0.05);color:#888';
+        return `<tr>
+          <td><span class="cat-badge" style="${catStyle}">${cat}</span></td>
+          <td class="right" style="color:var(--text-muted)">${fmt(d.est)}</td>
+          <td class="right" style="color:var(--text-primary);font-weight:600">${fmt(d.rev)}</td>
+          <td class="right">${fmt(d.units, false)}</td>
+          <td class="right">
+            <div class="pct-bar-wrap">
+              <div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${Math.min(100,pct).toFixed(1)}%"></div></div>
+              <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);min-width:36px">${pct.toFixed(1)}%</span>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+
+      // Grand total row
+      const grandEst   = Object.values(catMap).reduce((s, c) => s + c.est,   0);
+      const grandUnits = Object.values(catMap).reduce((s, c) => s + c.units, 0);
+      const totalRow = `<tr style="border-top:1px solid var(--border-hover)">
+        <td style="color:var(--text-muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em">Total</td>
+        <td class="right" style="color:var(--text-muted);font-weight:600">${fmt(grandEst)}</td>
+        <td class="right" style="color:var(--text-primary);font-weight:700">${fmt(totalRev)}</td>
+        <td class="right" style="font-weight:600">${fmt(grandUnits, false)}</td>
+        <td class="right" style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:11px">100%</td>
+      </tr>`;
+
+      document.getElementById('detail-sku-tbody').innerHTML = rows + totalRow ||
+        '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:32px">No data</td></tr>';
+    }
+
     function renderChannelSKUTable(skuRows) {
+      _lastSkuRows = skuRows;
       const sorted = [...skuRows].sort((a, b) => (Number(b.MTDRevenue)||0) - (Number(a.MTDRevenue)||0));
       const totalRev = sorted.reduce((s, r) => s + (Number(r.MTDRevenue)||0), 0);
       const CAT_COLORS = {
