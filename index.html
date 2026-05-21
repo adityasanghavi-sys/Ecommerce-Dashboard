@@ -1572,30 +1572,52 @@
       }
     }
 
-    async function openChannelView(platform) {
-      // Set platform name
-      document.getElementById('detail-platform-name').textContent = platform;
-      const cfg = PLATFORM_CONFIG[platform] || { color: '#888' };
-      document.getElementById('detail-platform-name').style.color = cfg.color;
+    async function loadSKUData() {
+      if (skuData.length > 0) return; 
+      try {
+        const res = await fetch(SKU_URL, { redirect: 'follow' });
+        const text = await res.text();
+        let fetchedData = JSON.parse(text);
 
-      // Load SKU data if not yet loaded
-      await loadSKUData();
+        // Scan actual data to find the last day with sales (dynamic denominator)
+        let daysElapsed = 1;
+        fetchedData.forEach(r => {
+            if (Number(r.Month) === 5) {
+                for (let d = 31; d >= 1; d--) {
+                    if ((Number(r['Day' + d]) || 0) > 0) {
+                        if (d > daysElapsed) daysElapsed = d;
+                        break;
+                    }
+                }
+            }
+        });
 
-      // Filter SKU data for this platform + selected month
-      const month = activeMonth; // "04", "05", or "All"
-      const filtered = skuData.filter(r => {
-        // Month in SKU_Data is integer 4 or 5
-        const mMatch = month === 'All' || Number(r.Month) === parseInt(month, 10);
-        return mMatch && String(r.Platform) === platform;
-      });
+        fetchedData.forEach(r => {
+            // Force re-calculate MTD Revenue from daily columns
+            // This bypasses the sheet's MTDRevenue column which had the data swap
+            let trueMtdRev = 0;
+            for (let d = 1; d <= 31; d++) {
+                trueMtdRev += Number(r['Day' + d]) || 0;
+            }
+            r.MTDRevenue = trueMtdRev; 
 
-      // Get OMS data filtered by platform + month + active period
-      const omsFiltered = getFilteredData().filter(r => String(r.Platform) === platform);
+            // Calculate Forecast based on true MTD
+            const m = Number(r.Month);
+            if (m === 4) {
+                r.EstRevenue = trueMtdRev; 
+            } else if (m === 5) {
+                r.EstRevenue = (trueMtdRev / daysElapsed) * 31; 
+            } else {
+                r.EstRevenue = trueMtdRev;
+            }
+        });
 
-      renderChannelKPIs(filtered, omsFiltered, platform);
-      renderChannelDailyChart(omsFiltered);
-      renderChannelCatDonut(filtered, cfg.color);
-      renderChannelSKUTable(filtered);
+        skuData = fetchedData;
+        console.log('SKU rows loaded:', skuData.length, 'Days elapsed detected:', daysElapsed);
+      } catch(e) {
+        console.error('SKU fetch failed:', e);
+        skuData = [];
+      }
     }
 
     // closeChannelView replaced by switchTab
@@ -1765,8 +1787,19 @@
       const search = (document.getElementById('skuSearch')?.value || '').toLowerCase();
 
       const bounds = getDateBoundaries();
-      // Calculate exact days elapsed for the run-rate forecast (e.g., May 20th = 20)
-      const daysElapsed = (bounds.latestDate.getMonth() === 4 && bounds.latestDate.getDate() > 0) ? bounds.latestDate.getDate() : 20;
+      
+      // Match the foolproof scanning logic here as well
+      let daysElapsed = 1;
+      skuData.forEach(r => {
+          if (Number(r.Month) === 5) {
+              for (let d = 31; d >= 1; d--) {
+                  if ((Number(r['Day' + d]) || 0) > 0) {
+                      if (d > daysElapsed) daysElapsed = d;
+                      break;
+                  }
+              }
+          }
+      });
 
       let rows = skuData.filter(r => {
         const mMatch = month === 'All' || Number(r.Month) === parseInt(month, 10);
