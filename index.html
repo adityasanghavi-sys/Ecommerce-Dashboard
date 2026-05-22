@@ -1197,6 +1197,8 @@ const SKU_DAILY_URL = API_URL + "?type=skudaily";
           const ed = e ? parseLocalDate(e) : new Date('2999-01-01');
           sd.setHours(0,0,0,0); ed.setHours(0,0,0,0);
           dateMatch = rowDate >= sd && rowDate <= ed;
+          // Custom range overrides month filter — date range is the source of truth
+          return platMatch && dateMatch;
         }
 
         return monthMatch && platMatch && dateMatch;
