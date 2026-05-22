@@ -1096,9 +1096,10 @@
   </div>
 
   <script>
-    // ─── CONFIG ────────────────────────────────────────────────────────────────
-    const API_URL = "https://script.google.com/macros/s/AKfycbwjmrasY2jMol0y3FHJ_vs2nVAGQgZ50yQIASQUWRQKXBRvhufqf9zlm5PNRetGM_fF/exec";
-    const SKU_URL = API_URL + "?type=sku";
+// ─── CONFIG ────────────────────────────────────────────────────────────────
+const API_URL = "https://script.google.com/macros/s/AKfycbwjmrasY2jMol0y3FHJ_vs2nVAGQgZ50yQIASQUWRQKXBRvhufqf9zlm5PNRetGM_fF/exec";
+const SKU_URL = API_URL + "?type=sku";
+const SKU_DAILY_URL = API_URL + "?type=skudaily";
 
     const PLATFORM_CONFIG = {
       'Zepto':      { color: '#3B82F6', budget: { '04': 1500000, '05': 2070000 } },
@@ -1490,7 +1491,9 @@
       if (kg) kg.style.display = tab === 'overview' ? 'grid' : 'none';
       if (dc) dc.style.display = tab === 'overview' ? 'flex'  : 'none';
       if (tab === 'skus') { loadSKUData().then(() => renderSKUView()); }
-      if (tab === 'skucompare') { loadSKUData().then(() => initSKUCompare()); }
+      if (tab === 'skucompare') { 
+  Promise.all([loadSKUData(), loadSKUDailyData()]).then(() => initSKUCompare()); 
+}
       if (tab === 'compare') {
         const hasSummary = document.getElementById('cmp-summary').style.display !== 'none';
         if (!hasSummary) document.getElementById('cmp-no-data').style.display = 'block';
@@ -1865,6 +1868,23 @@
         skuData = [];
       }
     }
+    async function loadSKUDailyData() {
+  if (skuDailyData.length > 0) return; 
+  try {
+    const res = await fetch(SKU_DAILY_URL, { redirect: 'follow' });
+    const text = await res.text();
+    if (!text || text.trim() === '') {
+      console.warn('⚠️ Empty response for SKU Daily Data.');
+      skuDailyData = [];
+      return;
+    }
+    skuDailyData = JSON.parse(text);
+    console.log('SKU Daily rows loaded:', skuDailyData.length);
+  } catch(e) {
+    console.error('SKU Daily fetch failed:', e);
+    skuDailyData = [];
+  }
+}
 
     async function openChannelView(platform) {
       _lastSkuRows = [];
@@ -2401,56 +2421,65 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
     }
 
     function getSKUSlotData(side) {
-      const skuName  = document.getElementById('skucmp-' + side + '-value').value;
-      const platform = document.getElementById('skucmp-' + side + '-platform').value;
-      const startStr = document.getElementById('skucmp-' + side + '-start').value;
-      const endStr   = document.getElementById('skucmp-' + side + '-end').value;
-      if (!skuName || !startStr || !endStr) return null;
+  const skuName  = document.getElementById('skucmp-' + side + '-value').value;
+  const platform = document.getElementById('skucmp-' + side + '-platform').value;
+  const startStr = document.getElementById('skucmp-' + side + '-start').value;
+  const endStr   = document.getElementById('skucmp-' + side + '-end').value;
+  
+  if (!skuName || !startStr || !endStr) return null;
 
-      const start = new Date(startStr); start.setHours(0,0,0,0);
-      const end   = new Date(endStr);   end.setHours(0,0,0,0);
+  const start = parseLocalDate(startStr); start.setHours(0,0,0,0);
+  const end   = parseLocalDate(endStr);   end.setHours(0,0,0,0);
 
-      // Determine months covered
-      const months = new Set();
-      const cur = new Date(start);
-      while (cur <= end) { months.add(cur.getMonth() + 1); cur.setDate(cur.getDate() + 1); }
+  // 1. Filter the NEW unpivoted daily dataset
+  const rows = skuDailyData.filter(r => {
+    const rowDate = parseLocalDate(r.Date); rowDate.setHours(0,0,0,0);
+    const pMatch = platform === 'All' || String(r.Platform) === platform;
+    return String(r.SKU) === skuName && pMatch && rowDate >= start && rowDate <= end;
+  });
 
-      // Filter skuData rows for this SKU + platform + months
-      const rows = skuData.filter(r => {
-        const mMatch = months.has(Number(r.Month));
-        const pMatch = platform === 'All' || String(r.Platform) === platform;
-        return String(r.SKU) === skuName && mMatch && pMatch;
-      });
+  // 2. Aggregate Totals & Platform splits
+  const byPlatform = {};
+  let totalRev = 0, totalUnits = 0;
+  
+  rows.forEach(r => {
+    const p = String(r.Platform);
+    const rev = Number(r.GMV) || 0;     // Assuming your AppScript unpivot outputs 'GMV'
+    const units = Number(r.Units) || 0; // Assuming your AppScript outputs 'Units'
+    
+    if (!byPlatform[p]) byPlatform[p] = { rev: 0, units: 0 };
+    byPlatform[p].rev += rev;
+    byPlatform[p].units += units;
+    totalRev += rev;
+    totalUnits += units;
+  });
 
-      // Aggregate: sum MTDRevenue, MTDUnits, EstRevenue per platform
-      const byPlatform = {};
-      let totalRev = 0, totalUnits = 0, totalEst = 0;
-      rows.forEach(r => {
-        const p    = String(r.Platform);
-        const rev  = Number(r.MTDRevenue)  || 0;
-        const units= Number(r.MTDUnits)    || 0;
-        const est  = Number(r.EstRevenue)  || 0;
-        if (!byPlatform[p]) byPlatform[p] = { rev:0, units:0 };
-        byPlatform[p].rev   += rev;
-        byPlatform[p].units += units;
-        totalRev   += rev;
-        totalUnits += units;
-        totalEst    = Math.max(totalEst, est);
-      });
+  // Calculate run-rate forecast based on selected date range
+  const daysInRange = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+  const totalEst = daysInRange > 0 ? (totalRev / daysInRange) * 30 : 0; // 30-day run rate
 
-      // Daily trend: use Day columns, sliced to date range within month
-      const startDay = start.getDate();
-      const endDay   = end.getDate();
-      const days = [];
-      for (let d = startDay; d <= endDay; d++) {
-        let val = 0;
-        rows.forEach(r => { val += Number(r['Day' + d]) || 0; });
-        days.push(val);
-      }
+  // 3. Build precise Daily Trend Array (filling in 0 for days with no sales)
+  const daysArray = [];
+  const currentDate = new Date(start);
+  
+  while (currentDate <= end) {
+    const dateKey = currentDate.getTime();
+    
+    // Sum revenue for this specific exact day across filtered platforms
+    const dayRev = rows
+      .filter(r => parseLocalDate(r.Date).setHours(0,0,0,0) === dateKey)
+      .reduce((sum, r) => sum + (Number(r.GMV) || 0), 0);
+      
+    daysArray.push(dayRev);
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
 
-      return { skuName, platform, startStr, endStr, totalRev, totalUnits, totalEst, byPlatform, days };
-    }
-
+  return { 
+    skuName, platform, startStr, endStr, 
+    totalRev, totalUnits, totalEst, 
+    byPlatform, days: daysArray 
+  };
+}
     function runSKUCompare() {
       const a = getSKUSlotData('a');
       const b = getSKUSlotData('b');
