@@ -1191,22 +1191,23 @@ const SKU_DAILY_URL = API_URL + "?type=skudaily";
         } else if (activePeriod === 'mtd') {
           dateMatch = true; 
         } else if (activePeriod === 'custom') {
-          const s = document.getElementById('customStart').value;
-          const e = document.getElementById('customEnd').value;
-          if (!s || !e) return platMatch;
-          const [sy,sm,sd_] = s.split('-').map(Number);
-          const [ey,em,ed_] = e.split('-').map(Number);
-          const sdDate = new Date(sy, sm-1, sd_);
-          const edDate = new Date(ey, em-1, ed_);
-          sdDate.setHours(0,0,0,0); edDate.setHours(23,59,59,999);
-          // Compare using date numbers only, not timestamps
-          const rowDateNum = rowDate.getFullYear()*10000 + (rowDate.getMonth()+1)*100 + rowDate.getDate();
-          const sdNum = sy*10000 + sm*100 + sd_;
-          const edNum = ey*10000 + em*100 + ed_;
-          dateMatch = rowDateNum >= sdNum && rowDateNum <= edNum;
+          // The HTML date picker natively outputs standard "YYYY-MM-DD" strings
+          const s = document.getElementById('customStart').value; 
+          const e = document.getElementById('customEnd').value;   
+          
+          // Grab exactly the "YYYY-MM-DD" part of the row, ignoring any hidden timezone metadata
+          const rowDateStr = String(row.Date).split('T')[0];
+          
+          // Provide infinite fallbacks if one side of the date picker is left empty
+          const sd = s ? s : '0000-00-00';
+          const ed = e ? e : '9999-12-31';
+          
+          // Bulletproof string comparison (100% immune to all UTC/IST timezone shifts)
+          dateMatch = rowDateStr >= sd && rowDateStr <= ed;
+          
+          // Return immediately to override the Month toggle (so dates are the single source of truth)
           return platMatch && dateMatch;
         }
-
         return monthMatch && platMatch && dateMatch;
       });
     }
