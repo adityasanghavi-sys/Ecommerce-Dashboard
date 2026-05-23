@@ -1194,13 +1194,16 @@ const SKU_DAILY_URL = API_URL + "?type=skudaily";
           const s = document.getElementById('customStart').value;
           const e = document.getElementById('customEnd').value;
           if (!s || !e) return platMatch;
-          // Force local date parsing by splitting on '-' to avoid UTC timezone shift
           const [sy,sm,sd_] = s.split('-').map(Number);
           const [ey,em,ed_] = e.split('-').map(Number);
           const sdDate = new Date(sy, sm-1, sd_);
           const edDate = new Date(ey, em-1, ed_);
           sdDate.setHours(0,0,0,0); edDate.setHours(23,59,59,999);
-          dateMatch = rowDate >= sdDate && rowDate <= edDate;
+          // Compare using date numbers only, not timestamps
+          const rowDateNum = rowDate.getFullYear()*10000 + (rowDate.getMonth()+1)*100 + rowDate.getDate();
+          const sdNum = sy*10000 + sm*100 + sd_;
+          const edNum = ey*10000 + em*100 + ed_;
+          dateMatch = rowDateNum >= sdNum && rowDateNum <= edNum;
           return platMatch && dateMatch;
         }
 
