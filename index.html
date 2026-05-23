@@ -1193,11 +1193,14 @@ const SKU_DAILY_URL = API_URL + "?type=skudaily";
         } else if (activePeriod === 'custom') {
           const s = document.getElementById('customStart').value;
           const e = document.getElementById('customEnd').value;
-          const sd = s ? parseLocalDate(s) : new Date(0);
-          const ed = e ? parseLocalDate(e) : new Date('2999-01-01');
-          sd.setHours(0,0,0,0); ed.setHours(0,0,0,0);
-          dateMatch = rowDate >= sd && rowDate <= ed;
-          // Custom range overrides month filter — date range is the source of truth
+          if (!s || !e) return platMatch;
+          // Force local date parsing by splitting on '-' to avoid UTC timezone shift
+          const [sy,sm,sd_] = s.split('-').map(Number);
+          const [ey,em,ed_] = e.split('-').map(Number);
+          const sdDate = new Date(sy, sm-1, sd_);
+          const edDate = new Date(ey, em-1, ed_);
+          sdDate.setHours(0,0,0,0); edDate.setHours(23,59,59,999);
+          dateMatch = rowDate >= sdDate && rowDate <= edDate;
           return platMatch && dateMatch;
         }
 
