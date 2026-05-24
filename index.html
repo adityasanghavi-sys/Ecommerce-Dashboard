@@ -2426,64 +2426,79 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
       });
     }
 
-    function getSKUSlotData(side) {
+   function getSKUSlotData(side) {
   const skuName  = document.getElementById('skucmp-' + side + '-value').value;
   const platform = document.getElementById('skucmp-' + side + '-platform').value;
   const startStr = document.getElementById('skucmp-' + side + '-start').value;
   const endStr   = document.getElementById('skucmp-' + side + '-end').value;
-  
+
   if (!skuName || !startStr || !endStr) return null;
 
+  // 1. Setup exact start and end boundaries (Midnight to Midnight)
   const start = parseLocalDate(startStr); start.setHours(0,0,0,0);
-  const end   = parseLocalDate(endStr);   end.setHours(0,0,0,0);
+  const end   = parseLocalDate(endStr);   end.setHours(23,59,59,999);
 
-  // 1. Filter the NEW unpivoted daily dataset
-  const rows = skuDailyData.filter(r => {
-    const rowDate = parseLocalDate(r.Date); rowDate.setHours(0,0,0,0);
-    const pMatch = platform === 'All' || String(r.Platform) === platform;
-    return String(r.SKU) === skuName && pMatch && rowDate >= start && rowDate <= end;
-  });
-
-  // 2. Aggregate Totals & Platform splits
+  // 2. Filter data & Aggregate using a Dictionary (Map)
   const byPlatform = {};
   let totalRev = 0, totalUnits = 0;
-  
-  rows.forEach(r => {
-    const p = String(r.Platform);
-    const rev = Number(r.GMV) || 0;     // Assuming your AppScript unpivot outputs 'GMV'
-    const units = Number(r.Units) || 0; // Assuming your AppScript outputs 'Units'
-    
-    if (!byPlatform[p]) byPlatform[p] = { rev: 0, units: 0 };
-    byPlatform[p].rev += rev;
-    byPlatform[p].units += units;
-    totalRev += rev;
-    totalUnits += units;
+  const daysMap = {}; // Safely store daily totals by text string
+
+  skuDailyData.forEach(r => {
+    const rowDate = parseLocalDate(r.Date);
+    const isMatch = rowDate >= start && rowDate <= end;
+    const pMatch = platform === 'All' || String(r.Platform) === platform;
+    const skuMatch = String(r.SKU) === skuName;
+
+    if (isMatch && pMatch && skuMatch) {
+      const p = String(r.Platform);
+      const rev = Number(r.GMV) || 0;
+      const units = Number(r.Units) || 0;
+
+      // Platform splits
+      if (!byPlatform[p]) byPlatform[p] = { rev: 0, units: 0 };
+      byPlatform[p].rev += rev;
+      byPlatform[p].units += units;
+
+      // Totals
+      totalRev += rev;
+      totalUnits += units;
+
+      // Build a safe local "YYYY-MM-DD" key to prevent timezone millisecond drift
+      const y = rowDate.getFullYear();
+      const m = String(rowDate.getMonth() + 1).padStart(2, '0');
+      const d = String(rowDate.getDate()).padStart(2, '0');
+      const dateKey = `${y}-${m}-${d}`;
+
+      if (!daysMap[dateKey]) daysMap[dateKey] = 0;
+      daysMap[dateKey] += rev;
+    }
   });
 
-  // Calculate run-rate forecast based on selected date range
-  const daysInRange = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
-  const totalEst = daysInRange > 0 ? (totalRev / daysInRange) * 30 : 0; // 30-day run rate
-
-  // 3. Build precise Daily Trend Array (filling in 0 for days with no sales)
+  // 3. Build precise Daily Trend Array safely
   const daysArray = [];
   const currentDate = new Date(start);
-  
+  currentDate.setHours(12,0,0,0); // Safely map middle of the day to avoid midnight jumps
+
   while (currentDate <= end) {
-    const dateKey = currentDate.getTime();
+    const y = currentDate.getFullYear();
+    const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const d = String(currentDate.getDate()).padStart(2, '0');
+    const dateKey = `${y}-${m}-${d}`;
+
+    // Look up the exact text key, default to 0 if no sales that day
+    daysArray.push(daysMap[dateKey] || 0);
     
-    // Sum revenue for this specific exact day across filtered platforms
-    const dayRev = rows
-      .filter(r => parseLocalDate(r.Date).setHours(0,0,0,0) === dateKey)
-      .reduce((sum, r) => sum + (Number(r.GMV) || 0), 0);
-      
-    daysArray.push(dayRev);
+    // Step forward one day
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
-  return { 
-    skuName, platform, startStr, endStr, 
-    totalRev, totalUnits, totalEst, 
-    byPlatform, days: daysArray 
+  const daysInRange = daysArray.length;
+  const totalEst = daysInRange > 0 ? (totalRev / daysInRange) * 30 : 0;
+
+  return {
+    skuName, platform, startStr, endStr,
+    totalRev, totalUnits, totalEst,
+    byPlatform, days: daysArray
   };
 }
     function runSKUCompare() {
