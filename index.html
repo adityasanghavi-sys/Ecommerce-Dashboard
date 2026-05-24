@@ -1102,10 +1102,10 @@ const SKU_URL = API_URL + "?type=sku";
 const SKU_DAILY_URL = API_URL + "?type=skudaily";
 
     const PLATFORM_CONFIG = {
-      'Zepto':      { color: '#3B82F6', budget: { '04': 1500000, '05': 2070000 } },
+      'Zepto':      { color: '#665FEC', budget: { '04': 1500000, '05': 2070000 } },
       'Blinkit':    { color: '#EAB308', budget: { '04': 0,       '05': 0 } },
-      'Instamart':  { color: '#22C55E', budget: { '04': 1000000, '05': 1275000 } },
-      'Big Basket': { color: '#EF4444', budget: { '04': 0,       '05': 0 } },
+      'Instamart':  { color: '#0050ff', budget: { '04': 1000000, '05': 1275000 } },
+      'Big Basket': { color: '#A0CD4A', budget: { '04': 0,       '05': 0 } },
       'Amazon':     { color: '#F97316', budget: { '04': 0,       '05': 0 } },
       'First Club': { color: '#A855F7', budget: { '04': 0,       '05': 0 } },
     };
@@ -2131,7 +2131,7 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
       'Puffs':      { bg:'rgba(34,197,94,0.15)',  text:'#22C55E' },
       'Others':     { bg:'rgba(59,130,246,0.15)', text:'#3B82F6' },
     };
-    const PLAT_COLORS = { 'Blinkit':'#EAB308', 'Zepto':'#3B82F6', 'Instamart':'#22C55E', 'Big Basket':'#EF4444' };
+    const PLAT_COLORS = { 'Blinkit':'#EAB308', 'Zepto':'#665FEC', 'Instamart':'#0050ff', 'Big Basket':'#A0CD4A' };
 
     function setSKUCat(cat) {
       activeSKUCat = cat;
