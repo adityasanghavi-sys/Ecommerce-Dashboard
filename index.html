@@ -1171,10 +1171,10 @@
 
   <script>
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-    const API_URL = "https://script.google.com/macros/s/AKfycbxM2JHOpEzxrUOKpc0fFfrbX0go3L7lVBWxAY8tERN1FYbOIBzfNjs4h7UsVpi9y-0i/exec";
-const SKU_URL = API_URL + "?type=sku";
-const SKU_DAILY_URL = API_URL + "?type=skudaily";
-
+    const TOKEN = "sk_snk_a7Xq2mP9vL4nR8tK"; // must match Apps Script EXPECTED_TOKEN
+const API_URL = "https://script.google.com/macros/s/AKfycbxM2JHOpEzxrUOKpc0fFfrbX0go3L7lVBWxAY8tERN1FYbOIBzfNjs4h7UsVpi9y-0i/exec?token=" + TOKEN;
+const SKU_URL = API_URL + "&type=sku";
+const SKU_DAILY_URL = API_URL + "&type=skudaily";
     const PLATFORM_CONFIG = {
       'Zepto':      { color: '#665FEC', budget: { '04': 1500000, '05': 2070000 } },
       'Blinkit':    { color: '#EAB308', budget: { '04': 0,       '05': 0 } },
