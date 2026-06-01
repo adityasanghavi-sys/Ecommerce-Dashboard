@@ -2812,19 +2812,18 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
         summaryNote.style.display = 'none';
 
         const rows = shopifyRawData;
-        const totalSales  = rows.reduce((s, r) => s + (Number(r['Total Sales Shopify']) || Number(r['Shopify_Sales']) || Number(r['Sales']) || 0), 0);
-        const totalOrders = rows.reduce((s, r) => s + (Number(r['Orders Shopify'] || r['Orders']) || 0), 0);
-        const totalGT     = rows.reduce((s, r) => s + (Number(r['GT Totals'] || r['GT']) || 0), 0);
+        const totalSales  = rows.reduce((s, r) => s + (Number(r['TOTAL SALES Shopify']) || Number(r['TOTAL SALES\nShopify']) || 0), 0);
+        const totalOrders = rows.reduce((s, r) => s + (Number(r['ORDERS SHOPIFY']) || 0), 0);
+        const totalGT     = rows.reduce((s, r) => s + (Number(r['GT TOTALS']) || 0), 0);
         const avgROI      = (() => {
           const validRows = rows.filter(r => Number(r['ROI']) > 0);
           return validRows.length > 0 ? validRows.reduce((s,r) => s + Number(r['ROI']), 0) / validRows.length : 0;
         })();
         const avgAOV      = totalOrders > 0 ? totalSales / totalOrders : 0;
         const avgRepeat   = (() => {
-          const validRows = rows.filter(r => Number(r['Repeat % Shopify'] || r['Repeat']) > 0);
-          return validRows.length > 0 ? validRows.reduce((s,r) => s + Number(r['Repeat % Shopify'] || r['Repeat']), 0) / validRows.length : 0;
+          const validRows = rows.filter(r => Number(r['REPEAT % Shopify']) > 0);
+          return validRows.length > 0 ? validRows.reduce((s,r) => s + Number(r['REPEAT % Shopify']), 0) / validRows.length : 0;
         })();
-
         subtitle.textContent = `March 2026 · ${rows.length} days of data`;
 
         kpiGrid.innerHTML = [
@@ -2847,12 +2846,12 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
 
         document.getElementById('shopify-daily-body').innerHTML = sorted.map(r => {
           const date    = r.Date || r.date || '';
-          const sales   = Number(r['Total Sales Shopify'] || r['Shopify_Sales'] || r['Sales']) || 0;
-          const gt      = Number(r['GT Totals'] || r['GT']) || 0;
-          const orders  = Number(r['Orders Shopify'] || r['Orders']) || 0;
+     const sales   = Number(r['TOTAL SALES Shopify']) || Number(r['TOTAL SALES\nShopify']) || 0;
+          const gt      = Number(r['GT TOTALS']) || 0;
+          const orders  = Number(r['ORDERS SHOPIFY']) || 0;
           const aov     = orders > 0 ? (sales / orders).toFixed(0) : '--';
           const roi     = Number(r['ROI']) || 0;
-          const repeat  = Number(r['Repeat % Shopify'] || r['Repeat']) || 0;
+          const repeat  = Number(r['REPEAT % Shopify']) || 0;
 
           // Format date nicely
           let dateLabel = date;
