@@ -647,6 +647,8 @@
     .ai-footer { display: flex; align-items: center; justify-content: space-between; font-size: 12px; opacity: 0.45; padding-top: 4px; }
     .ai-regenerate-link { background: none; border: none; color: #6c47ff; font-size: 12px; cursor: pointer; padding: 0; }
     .ai-regenerate-link:hover { text-decoration: underline; }
+    #shopify-kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 700px) { #shopify-kpi-grid { grid-template-columns: 1fr 1fr; } }
     /* Responsive nav */
     @media (max-width: 600px) {
       .wrapper { padding: 0 16px 40px; }
@@ -736,6 +738,7 @@
         <button class="tab-btn" onclick="switchTab('bigbasket')" id="tab-bigbasket">Big Basket</button>
         <button class="tab-btn" onclick="switchTab('skus')" id="tab-skus">SKU View</button>
         <button class="tab-btn" onclick="switchTab('skucompare')" id="tab-skucompare">SKU Compare</button>
+        <button class="tab-btn" onclick="switchTab('shopify')" id="tab-shopify">Shopify</button>
         <button class="tab-btn" onclick="switchTab('ai-insights')" id="tab-ai-insights">✦ AI Insights</button>
       </div>
 
@@ -1135,6 +1138,64 @@
 
       </div>
 
+    <!-- SHOPIFY TAB -->
+    <div id="view-shopify" style="display:none;">
+      <div style="max-width:960px;margin:0 auto;padding:24px 0 48px;">
+
+        <!-- Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px;">
+          <div>
+            <div style="font-size:20px;font-weight:700;letter-spacing:-0.02em;">Shopify</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;" id="shopify-subtitle">Direct-to-consumer channel</div>
+          </div>
+          <!-- Month toggle -->
+          <div class="control-group">
+            <button class="control-btn active" onclick="setShopifyMonth('03')" id="shopify-btn-03">Mar 26</button>
+            <div class="control-divider"></div>
+            <button class="control-btn" onclick="setShopifyMonth('04')" id="shopify-btn-04">Apr 26</button>
+            <div class="control-divider"></div>
+            <button class="control-btn" onclick="setShopifyMonth('05')" id="shopify-btn-05">May 26</button>
+          </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="section-label">Summary</div>
+        <div class="kpi-grid" id="shopify-kpi-grid" style="margin-bottom:32px;"></div>
+
+        <!-- Daily table (March only) -->
+        <div id="shopify-daily-wrap" style="display:none;">
+          <div class="section-label">Daily Breakdown</div>
+          <div class="sku-table-wrap">
+            <div class="sku-table-header" style="display:flex;justify-content:space-between;align-items:center;">
+              <span>Day-by-Day — March 2026</span>
+              <span id="shopify-row-count" style="font-size:11px;color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0;"></span>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="sku-table" style="min-width:600px;">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th class="right">Shopify Sales</th>
+                    <th class="right">GT Totals</th>
+                    <th class="right">Orders</th>
+                    <th class="right">AOV</th>
+                    <th class="right">ROI</th>
+                    <th class="right">Repeat %</th>
+                  </tr>
+                </thead>
+                <tbody id="shopify-daily-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary note for Apr/May -->
+        <div id="shopify-summary-note" style="display:none;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:20px 24px;color:var(--text-muted);font-size:13px;line-height:1.7;">
+          <strong style="color:var(--text-secondary);">Note:</strong> Day-by-day data is only available for March 2026. April and May figures are monthly totals from the OMS summary sheet.
+        </div>
+
+      </div>
+    </div>
     <!-- AI INSIGHTS TAB -->
     <div id="view-ai-insights" style="display:none;">
       <div class="ai-insights-wrapper">
@@ -1175,6 +1236,7 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbxM2JHOpEzxrUOKpc0fFfrbX0go3L7lVBWxAY8tERN1FYbOIBzfNjs4h7UsVpi9y-0i/exec?token=" + TOKEN;
 const SKU_URL = API_URL + "&type=sku";
 const SKU_DAILY_URL = API_URL + "&type=skudaily";
+const SHOPIFY_URL = API_URL + "&type=shopify";
     const PLATFORM_CONFIG = {
       'Zepto':      { color: '#665FEC', budget: { '04': 1500000, '05': 2070000 } },
       'Blinkit':    { color: '#EAB308', budget: { '04': 0,       '05': 0 } },
@@ -1552,7 +1614,7 @@ function getFilteredData() {
 
     // ─── TAB SWITCHING ─────────────────────────────────────────────────────────
     let activeTab = 'overview';
-    const ALL_TABS = ['overview','compare','blinkit','zepto','instamart','bigbasket','skus','skucompare','ai-insights'];
+    const ALL_TABS = ['overview','compare','blinkit','zepto','instamart','bigbasket','skus','skucompare','shopify','ai-insights'];
     const PLATFORM_TAB_MAP = { 'blinkit':'Blinkit', 'zepto':'Zepto', 'instamart':'Instamart', 'bigbasket':'Big Basket' };
 
     function switchTab(tab) {
@@ -1567,6 +1629,8 @@ function getFilteredData() {
       document.getElementById('view-skus').style.display       = tab === 'skus'       ? 'block' : 'none';
       document.getElementById('view-skucompare').style.display = tab === 'skucompare' ? 'block' : 'none';
       document.getElementById('view-ai-insights').style.display = tab === 'ai-insights' ? 'block' : 'none';
+      document.getElementById('view-shopify').style.display = tab === 'shopify' ? 'block' : 'none';
+      if (tab === 'shopify') { loadShopifyData(); }
       const kg = document.getElementById('kpi-grid');
       const dc = document.getElementById('dashboard-content');
       if (kg) kg.style.display = tab === 'overview' ? 'grid' : 'none';
@@ -2678,6 +2742,162 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
       });
       skucmpChartTrend.render();
     }
+    // ─── SHOPIFY ENGINE ────────────────────────────────────────────────────────
+    let shopifyRawData = [];
+    let activeShopifyMonth = '03';
+
+    // Monthly summary data (Apr & May hardcoded from OMS summary sheet)
+    const SHOPIFY_MONTHLY = {
+      '04': {
+        sales: 2074804,
+        spends: 509016,
+        roi: 4.08,
+        orders: null,
+        aov: null,
+        repeatPct: null,
+        label: 'April 2026'
+      },
+      '05': {
+        sales: 2275835,
+        spends: 0,
+        roi: null,
+        orders: null,
+        aov: null,
+        repeatPct: null,
+        label: 'May 2026'
+      }
+    };
+
+    async function loadShopifyData() {
+      if (shopifyRawData.length > 0) {
+        renderShopifyTab();
+        return;
+      }
+      try {
+        const res = await fetch(SHOPIFY_URL, { redirect: 'follow' });
+        const text = await res.text();
+        if (!text || text.trim() === '') {
+          console.warn('Empty Shopify data');
+          shopifyRawData = [];
+          renderShopifyTab();
+          return;
+        }
+        shopifyRawData = JSON.parse(text);
+        console.log('Shopify rows loaded:', shopifyRawData.length);
+      } catch(e) {
+        console.error('Shopify fetch failed:', e);
+        shopifyRawData = [];
+      }
+      renderShopifyTab();
+    }
+
+    function setShopifyMonth(m) {
+      activeShopifyMonth = m;
+      ['03','04','05'].forEach(k => {
+        const btn = document.getElementById('shopify-btn-' + k);
+        if (btn) btn.classList.toggle('active', k === m);
+      });
+      renderShopifyTab();
+    }
+
+    function renderShopifyTab() {
+      const kpiGrid  = document.getElementById('shopify-kpi-grid');
+      const dailyWrap = document.getElementById('shopify-daily-wrap');
+      const summaryNote = document.getElementById('shopify-summary-note');
+      const subtitle = document.getElementById('shopify-subtitle');
+
+      if (activeShopifyMonth === '03') {
+        // March — use day-by-day data
+        dailyWrap.style.display = 'block';
+        summaryNote.style.display = 'none';
+
+        const rows = shopifyRawData;
+        const totalSales  = rows.reduce((s, r) => s + (Number(r['Total Sales Shopify']) || Number(r['Shopify_Sales']) || Number(r['Sales']) || 0), 0);
+        const totalOrders = rows.reduce((s, r) => s + (Number(r['Orders Shopify'] || r['Orders']) || 0), 0);
+        const totalGT     = rows.reduce((s, r) => s + (Number(r['GT Totals'] || r['GT']) || 0), 0);
+        const avgROI      = (() => {
+          const validRows = rows.filter(r => Number(r['ROI']) > 0);
+          return validRows.length > 0 ? validRows.reduce((s,r) => s + Number(r['ROI']), 0) / validRows.length : 0;
+        })();
+        const avgAOV      = totalOrders > 0 ? totalSales / totalOrders : 0;
+        const avgRepeat   = (() => {
+          const validRows = rows.filter(r => Number(r['Repeat % Shopify'] || r['Repeat']) > 0);
+          return validRows.length > 0 ? validRows.reduce((s,r) => s + Number(r['Repeat % Shopify'] || r['Repeat']), 0) / validRows.length : 0;
+        })();
+
+        subtitle.textContent = `March 2026 · ${rows.length} days of data`;
+
+        kpiGrid.innerHTML = [
+          { label: 'Shopify GMV', value: fmt(totalSales), sub: `${rows.length} days`, accent: '#96bf48' },
+          { label: 'GT Channel Totals', value: fmt(totalGT), sub: 'Gross merchandise', accent: 'var(--blue)' },
+          { label: 'ROI', value: avgROI > 0 ? avgROI.toFixed(2) + 'x' : '--', sub: avgROI >= 3 ? '▲ Healthy' : avgROI > 0 ? '△ Monitor' : 'No spends tracked', accent: avgROI >= 3 ? 'var(--green)' : 'var(--yellow)' },
+          { label: 'Total Orders', value: totalOrders > 0 ? totalOrders.toLocaleString('en-IN') : '--', sub: 'MTD', accent: 'var(--orange)' },
+          { label: 'AOV', value: avgAOV > 0 ? '₹' + avgAOV.toFixed(0) : '--', sub: 'Avg order value', accent: 'var(--purple)' },
+          { label: 'Repeat %', value: avgRepeat > 0 ? avgRepeat.toFixed(1) + '%' : '--', sub: 'Returning customers', accent: 'var(--yellow)' },
+        ].map(c => `
+          <div class="kpi-card" style="--accent:${c.accent}">
+            <div class="kpi-label">${c.label}</div>
+            <div class="kpi-value">${c.value}</div>
+            <div class="kpi-sub neutral">${c.sub}</div>
+          </div>`).join('');
+
+        // Daily table
+        const sorted = [...rows].sort((a,b) => new Date(a.Date||a.date) - new Date(b.Date||b.date));
+        document.getElementById('shopify-row-count').textContent = sorted.length + ' days';
+
+        document.getElementById('shopify-daily-body').innerHTML = sorted.map(r => {
+          const date    = r.Date || r.date || '';
+          const sales   = Number(r['Total Sales Shopify'] || r['Shopify_Sales'] || r['Sales']) || 0;
+          const gt      = Number(r['GT Totals'] || r['GT']) || 0;
+          const orders  = Number(r['Orders Shopify'] || r['Orders']) || 0;
+          const aov     = orders > 0 ? (sales / orders).toFixed(0) : '--';
+          const roi     = Number(r['ROI']) || 0;
+          const repeat  = Number(r['Repeat % Shopify'] || r['Repeat']) || 0;
+
+          // Format date nicely
+          let dateLabel = date;
+          try {
+            const d = new Date(date);
+            dateLabel = d.toLocaleDateString('en-IN', { day:'numeric', month:'short', weekday:'short' });
+          } catch(e) {}
+
+          return `<tr>
+            <td style="color:var(--text-primary);font-weight:500;">${dateLabel}</td>
+            <td class="right" style="color:var(--text-primary);font-weight:600;">${fmt(sales)}</td>
+            <td class="right">${fmt(gt)}</td>
+            <td class="right">${orders > 0 ? orders : '--'}</td>
+            <td class="right">${aov !== '--' ? '₹'+aov : '--'}</td>
+            <td class="right" style="color:${roi >= 3 ? 'var(--green)' : roi > 0 ? 'var(--yellow)' : 'var(--text-muted)'}">
+              ${roi > 0 ? roi.toFixed(2)+'x' : '--'}
+            </td>
+            <td class="right">${repeat > 0 ? repeat.toFixed(1)+'%' : '--'}</td>
+          </tr>`;
+        }).join('') || '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);">No data found. Check sheet column names in Apps Script.</td></tr>';
+
+      } else {
+        // April or May — hardcoded monthly totals
+        dailyWrap.style.display = 'none';
+        summaryNote.style.display = 'block';
+
+        const m = SHOPIFY_MONTHLY[activeShopifyMonth];
+        subtitle.textContent = `${m.label} · Monthly summary`;
+
+        kpiGrid.innerHTML = [
+          { label: 'Shopify GMV', value: fmt(m.sales), sub: m.label, accent: '#96bf48' },
+          { label: 'Ad Spends', value: m.spends > 0 ? fmt(m.spends) : '--', sub: m.spends > 0 ? 'Tracked' : 'Not tracked', accent: 'var(--purple)' },
+          { label: 'ROI', value: m.roi ? m.roi.toFixed(2)+'x' : '--', sub: m.roi >= 3 ? '▲ Healthy' : m.roi ? '△ Monitor' : 'Spends not tracked', accent: m.roi >= 3 ? 'var(--green)' : m.roi ? 'var(--yellow)' : 'var(--text-muted)' },
+          { label: 'Orders', value: m.orders ? m.orders.toLocaleString('en-IN') : 'Data not available', sub: 'Monthly total', accent: 'var(--orange)' },
+          { label: 'AOV', value: m.aov ? '₹'+m.aov : 'Data not available', sub: 'Avg order value', accent: 'var(--blue)' },
+          { label: 'Repeat %', value: m.repeatPct ? m.repeatPct+'%' : 'Data not available', sub: 'Returning customers', accent: 'var(--yellow)' },
+        ].map(c => `
+          <div class="kpi-card" style="--accent:${c.accent}">
+            <div class="kpi-label">${c.label}</div>
+            <div class="kpi-value" style="${c.value.length > 8 ? 'font-size:16px;' : ''}">${c.value}</div>
+            <div class="kpi-sub neutral">${c.sub}</div>
+          </div>`).join('');
+      }
+    }
+    // ─── END SHOPIFY ENGINE ────────────────────────────────────────────────────
 // ─── AI INSIGHTS ENGINE ────────────────────────────────────────────────────
     async function generateAIInsights() {
       const btn = document.getElementById('ai-generate-btn');
