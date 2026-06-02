@@ -1157,6 +1157,8 @@
             <button class="control-btn" onclick="setShopifyMonth('04')" id="shopify-btn-04">Apr 26</button>
             <div class="control-divider"></div>
             <button class="control-btn" onclick="setShopifyMonth('05')" id="shopify-btn-05">May 26</button>
+            <div class="control-divider"></div>
+            <button class="control-btn" onclick="setShopifyMonth('06')" id="shopify-btn-06">Jun 26</button>
           </div>
         </div>
 
@@ -2776,7 +2778,7 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
         return;
       }
       try {
-        const res = await fetch(SHOPIFY_URL, { redirect: 'follow' });
+         const res = await fetch(SHOPIFY_URL + '&month=' + activeShopifyMonth, { redirect: 'follow' });
         const text = await res.text();
         if (!text || text.trim() === '') {
           console.warn('Empty Shopify data');
@@ -2795,7 +2797,8 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
 
     function setShopifyMonth(m) {
       activeShopifyMonth = m;
-      ['03','04','05'].forEach(k => {
+      shopifyRawData = [];
+      ['03','04','05','06'].forEach(k => {
         const btn = document.getElementById('shopify-btn-' + k);
         if (btn) btn.classList.toggle('active', k === m);
       });
@@ -2808,7 +2811,7 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
       const summaryNote = document.getElementById('shopify-summary-note');
       const subtitle = document.getElementById('shopify-subtitle');
 
-      if (activeShopifyMonth === '03') {
+      if (activeShopifyMonth === '03' || activeShopifyMonth === '04' || activeShopifyMonth === '05' || activeShopifyMonth === '06') {
         // March — use day-by-day data
         dailyWrap.style.display = 'block';
         summaryNote.style.display = 'none';
@@ -2826,7 +2829,8 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
           const validRows = rows.filter(r => Number(r['REPEAT % Shopify']) > 0);
           return validRows.length > 0 ? validRows.reduce((s,r) => s + Number(r['REPEAT % Shopify']), 0) / validRows.length : 0;
         })();
-        subtitle.textContent = `March 2026 · ${rows.length} days of data`;
+        const shopifyMonthNames = { '03':'March', '04':'April', '05':'May', '06':'June' };
+        subtitle.textContent = `${shopifyMonthNames[activeShopifyMonth] || ''} 2026 · ${rows.length} days of data`;
 
         kpiGrid.innerHTML = [
           { label: 'Shopify GMV', value: fmt(totalSales), sub: `${rows.length} days`, accent: '#96bf48' },
