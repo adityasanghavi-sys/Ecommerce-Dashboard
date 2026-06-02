@@ -2772,32 +2772,26 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
       }
     };
 
-    async function loadShopifyData() {
-      if (shopifyRawData.length > 0) {
-        renderShopifyTab();
-        return;
-      }
-      try {
-         const res = await fetch(SHOPIFY_URL + '&month=' + activeShopifyMonth, { redirect: 'follow' });
-        const text = await res.text();
-        if (!text || text.trim() === '') {
-          console.warn('Empty Shopify data');
-          shopifyRawData = [];
-          renderShopifyTab();
-          return;
-        }
-        shopifyRawData = JSON.parse(text);
-        console.log('Shopify rows loaded:', shopifyRawData.length);
-      } catch(e) {
-        console.error('Shopify fetch failed:', e);
-        shopifyRawData = [];
-      }
+   function loadShopifyData() {
+      const monthCode = parseInt(activeShopifyMonth, 10);
+      shopifyRawData = rawData.filter(r =>
+        String(r.Platform) === 'Shopify' &&
+        (activeShopifyMonth === 'All' || Number(r.Month) === monthCode)
+      ).map(r => ({
+        'Date': r.Date,
+        'TOTAL SALES Shopify': Number(r.Sales) || 0,
+        'GT TOTALS': Number(r.Spends) || 0,
+        'ROI': Number(r.ROAS) || 0,
+        'ORDERS SHOPIFY': Number(r.Units) || 0,
+        'REPEAT % Shopify': 0,
+        'AOV': Number(r.Units) > 0 ? (Number(r.Sales) / Number(r.Units)) : 0
+      }));
+      console.log('Shopify rows from rawData:', shopifyRawData.length);
       renderShopifyTab();
-    }
+    } 
 
     function setShopifyMonth(m) {
       activeShopifyMonth = m;
-      shopifyRawData = [];
       ['03','04','05','06'].forEach(k => {
         const btn = document.getElementById('shopify-btn-' + k);
         if (btn) btn.classList.toggle('active', k === m);
@@ -2879,28 +2873,7 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
           </tr>`;
         }).join('') || '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);">No data found. Check sheet column names in Apps Script.</td></tr>';
 
-      } else {
-        // April or May — hardcoded monthly totals
-        dailyWrap.style.display = 'none';
-        summaryNote.style.display = 'block';
-
-        const m = SHOPIFY_MONTHLY[activeShopifyMonth];
-        subtitle.textContent = `${m.label} · Monthly summary`;
-
-        kpiGrid.innerHTML = [
-          { label: 'Shopify GMV', value: fmt(m.sales), sub: m.label, accent: '#96bf48' },
-          { label: 'Ad Spends', value: m.spends > 0 ? fmt(m.spends) : '--', sub: m.spends > 0 ? 'Tracked' : 'Not tracked', accent: 'var(--purple)' },
-          { label: 'ROI', value: m.roi ? m.roi.toFixed(2)+'x' : '--', sub: m.roi >= 3 ? '▲ Healthy' : m.roi ? '△ Monitor' : 'Spends not tracked', accent: m.roi >= 3 ? 'var(--green)' : m.roi ? 'var(--yellow)' : 'var(--text-muted)' },
-          { label: 'Orders', value: m.orders ? m.orders.toLocaleString('en-IN') : 'Data not available', sub: 'Monthly total', accent: 'var(--orange)' },
-          { label: 'AOV', value: m.aov ? '₹'+m.aov : 'Data not available', sub: 'Avg order value', accent: 'var(--blue)' },
-          { label: 'Repeat %', value: m.repeatPct ? m.repeatPct+'%' : 'Data not available', sub: 'Returning customers', accent: 'var(--yellow)' },
-        ].map(c => `
-          <div class="kpi-card" style="--accent:${c.accent}">
-            <div class="kpi-label">${c.label}</div>
-            <div class="kpi-value" style="${c.value.length > 8 ? 'font-size:16px;' : ''}">${c.value}</div>
-            <div class="kpi-sub neutral">${c.sub}</div>
-          </div>`).join('');
-      }
+    }
     }
     // ─── END SHOPIFY ENGINE ────────────────────────────────────────────────────
 // ─── AI INSIGHTS ENGINE ────────────────────────────────────────────────────
