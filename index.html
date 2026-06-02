@@ -707,6 +707,8 @@
           <div class="control-divider"></div>
           <button class="control-btn active" onclick="setMonth('05')" id="btn-05">May 26</button>
           <div class="control-divider"></div>
+          <button class="control-btn" onclick="setMonth('06')" id="btn-06">Jun 26</button>
+          <div class="control-divider"></div>
           <button class="control-btn" onclick="setMonth('All')" id="btn-All">All</button>
         </div>
 
@@ -1287,7 +1289,7 @@ const SHOPIFY_URL = API_URL + "&type=shopify";
     // ─── FILTERS ───────────────────────────────────────────────────────────────
     function setMonth(m) {
       activeMonth = m;
-      ['04','05','All'].forEach(k => {
+      ['04','05','06','All'].forEach(k => {
         document.getElementById('btn-' + k).classList.toggle('active', k === m);
       });
       if (m !== '05' && (activePeriod === 't1' || activePeriod === 't2')) {
