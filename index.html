@@ -6,17 +6,18 @@
   <title>Snackible — Executive Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #080808;
-      --surface: #111111;
-      --surface-2: #181818;
-      --border: rgba(255,255,255,0.06);
-      --border-hover: rgba(255,255,255,0.12);
+      --bg: #090A0F;
+      --surface: rgba(17, 19, 28, 0.55);
+      --surface-2: rgba(24, 26, 36, 0.7);
+      --border: rgba(255,255,255,0.08);
+      --border-hover: rgba(255,255,255,0.18);
       --text-primary: #f0f0f0;
-      --text-secondary: #888;
-      --text-muted: #555;
+      --text-secondary: #9ca3b3;
+      --text-muted: #6b7280;
       --orange: #F97316;
       --blue: #3B82F6;
       --green: #22C55E;
@@ -26,11 +27,39 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: var(--bg);
+      background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 70%);
       color: var(--text-primary);
       font-family: 'DM Sans', sans-serif;
       min-height: 100vh;
+      overflow-x: hidden;
     }
+
+    /* ─── PARALLAX STARS ─────────────────────────────────────────────── */
+    .stars-layer {
+      position: fixed;
+      left: 0;
+      top: 0;
+      background: transparent;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .stars-layer::after {
+      content: '';
+      position: absolute;
+      top: 2000px;
+      left: 0;
+      width: inherit;
+      height: inherit;
+      background: transparent;
+      box-shadow: inherit;
+    }
+    @keyframes animStar {
+      from { transform: translateY(0); }
+      to { transform: translateY(-2000px); }
+    }
+    .stars-small  { width: 1px; height: 1px; animation: animStar 120s linear infinite; }
+    .stars-medium { width: 2px; height: 2px; animation: animStar 200s linear infinite; }
+    .stars-big    { width: 3px; height: 3px; animation: animStar 320s linear infinite; }
     .mono { font-family: 'DM Mono', monospace; }
 
     /* Scrollbar */
@@ -38,15 +67,13 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
 
-    /* Noise texture overlay */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 0;
-      opacity: 0.4;
+   /* Glass card effect — applied across all surfaces */
+    .kpi-card, .platform-card, .chart-section, .sku-table-wrap,
+    .compare-picker-card, .compare-stat-card, .control-group,
+    select.ctrl-select, .ai-card, .ai-narrative-block, .ai-strip-chip,
+    .ai-idle-state {
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
     }
 
     /* Nav */
@@ -54,8 +81,9 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(8,8,8,0.85);
-      backdrop-filter: blur(16px);
+      background: rgba(9, 10, 15, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
       height: 56px;
       display: flex;
@@ -128,7 +156,7 @@
       margin: 0 auto;
       padding: 0 32px 48px;
       position: relative;
-      z-index: 1;
+      z-index: 2;
     }
 
     /* Page header */
@@ -659,9 +687,18 @@
 <body>
 
   <div id="loading-state">
-    <div class="spinner"></div>
-    <p class="loading-text">PULLING DATA</p>
+    <div id="loading-shader-container" style="position:absolute;inset:0;z-index:0;"></div>
+    <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:20px;">
+      <p class="loading-text" style="font-size:14px;letter-spacing:0.15em;color:#fff;text-shadow:0 0 20px rgba(0,0,0,0.8);font-weight:600;">PULLING DATA</p>
+      <div style="width:40px;height:1px;background:rgba(255,255,255,0.4);"></div>
+      <p style="font-size:11px;letter-spacing:0.2em;color:rgba(255,255,255,0.6);text-shadow:0 0 12px rgba(0,0,0,0.8);">SNACKIBLE EXECUTIVE</p>
+    </div>
   </div>
+
+  <!-- Parallax star layers (z-index 0, always on) -->
+  <div id="stars-small" class="stars-layer stars-small"></div>
+  <div id="stars-medium" class="stars-layer stars-medium"></div>
+  <div id="stars-big" class="stars-layer stars-big"></div>
 
   <nav>
     <div class="nav-logo">
@@ -1288,8 +1325,9 @@
       </div>
     </div>
     <!-- AI INSIGHTS TAB -->
-    <div id="view-ai-insights" style="display:none;">
-      <div class="ai-insights-wrapper">
+    <div id="view-ai-insights" style="display:none;position:relative;">
+      <div id="ai-shader-container" style="position:absolute;inset:-40px;z-index:0;opacity:0.18;pointer-events:none;border-radius:24px;overflow:hidden;filter:blur(2px);"></div>
+      <div class="ai-insights-wrapper" style="position:relative;z-index:1;">
         <div class="ai-header-row">
           <div>
             <div class="ai-title">✦ AI Insights</div>
@@ -1322,9 +1360,134 @@
   </div>
 
   <script>
+// ─── STARFIELD GENERATOR (runs once on load) ──────────────────────────────
+    (function initStars() {
+      const genShadows = (n) => {
+        const parts = [];
+        for (let i = 0; i < n; i++) {
+          parts.push(`${Math.floor(Math.random() * 2400)}px ${Math.floor(Math.random() * 2400)}px #FFF`);
+        }
+        return parts.join(', ');
+      };
+      const apply = (id, shadows) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.style.boxShadow = shadows;
+          // Apply to ::after pseudo-element by injecting a style rule
+          const style = document.createElement('style');
+          style.textContent = `#${id}::after { box-shadow: ${shadows}; }`;
+          document.head.appendChild(style);
+        }
+      };
+      apply('stars-small',  genShadows(700));
+      apply('stars-medium', genShadows(200));
+      apply('stars-big',    genShadows(100));
+    })();
+
+    // ─── SHADER ENGINE (Three.js neon spiral) ─────────────────────────────────
+    const ShaderManager = {
+      instances: {},
+
+      mount(containerId, opts = {}) {
+        if (this.instances[containerId]) return; // already mounted
+        const container = document.getElementById(containerId);
+        if (!container || typeof THREE === 'undefined') return;
+
+        const vertexShader = `void main() { gl_Position = vec4(position, 1.0); }`;
+        const fragmentShader = `
+          precision highp float;
+          uniform vec2 resolution;
+          uniform float time;
+          vec3 getColor(float intensity) {
+            vec3 c1 = vec3(1.0, 0.05, 0.25);
+            vec3 c2 = vec3(1.0, 0.4, 0.0);
+            vec3 c3 = vec3(1.0, 1.0, 0.0);
+            vec3 c4 = vec3(0.1, 1.0, 0.1);
+            vec3 c5 = vec3(0.2, 0.5, 1.0);
+            vec3 c6 = vec3(0.7, 0.0, 1.0);
+            vec3 c7 = vec3(1.0, 0.0, 0.7);
+            vec3 fc = c1;
+            fc = mix(fc, c2, smoothstep(0.0, 0.17, intensity));
+            fc = mix(fc, c3, smoothstep(0.17, 0.34, intensity));
+            fc = mix(fc, c4, smoothstep(0.34, 0.51, intensity));
+            fc = mix(fc, c5, smoothstep(0.51, 0.68, intensity));
+            fc = mix(fc, c6, smoothstep(0.68, 0.85, intensity));
+            fc = mix(fc, c7, smoothstep(0.85, 1.0, intensity));
+            return fc;
+          }
+          void main(void) {
+            vec2 uv = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
+            float t = time * 0.05;
+            float lineWidth = 0.003;
+            float radius = length(uv);
+            float angle = atan(uv.y, uv.x);
+            float total = 0.0;
+            for (int i = 0; i < 5; i++) {
+              float sp = radius * 2.0 + angle * 0.5;
+              total += lineWidth * float(i*i) / abs(fract(t + float(i)*0.02)*5.0 - sp + mod(uv.x+uv.y, 0.2));
+            }
+            vec3 fc = getColor(fract(total * 0.25 + t * 0.1));
+            gl_FragColor = vec4(fc * total, 1.0);
+          }
+        `;
+
+        const camera = new THREE.Camera(); camera.position.z = 1;
+        const scene = new THREE.Scene();
+        const geometry = new THREE.PlaneGeometry(2, 2);
+        const uniforms = {
+          time: { value: 1.0 },
+          resolution: { value: new THREE.Vector2() }
+        };
+        const material = new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader });
+        scene.add(new THREE.Mesh(geometry, material));
+
+        const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+        container.appendChild(renderer.domElement);
+
+        const resize = () => {
+          const w = container.clientWidth, h = container.clientHeight;
+          renderer.setSize(w, h);
+          uniforms.resolution.value.set(renderer.domElement.width, renderer.domElement.height);
+        };
+        resize();
+        window.addEventListener('resize', resize);
+
+        let animId;
+        const animate = () => {
+          animId = requestAnimationFrame(animate);
+          uniforms.time.value += 0.05;
+          renderer.render(scene, camera);
+        };
+        animate();
+
+        this.instances[containerId] = { renderer, geometry, material, resize, getAnimId: () => animId };
+      },
+
+      unmount(containerId) {
+        const inst = this.instances[containerId];
+        if (!inst) return;
+        cancelAnimationFrame(inst.getAnimId());
+        window.removeEventListener('resize', inst.resize);
+        const container = document.getElementById(containerId);
+        if (container && inst.renderer.domElement && inst.renderer.domElement.parentNode === container) {
+          container.removeChild(inst.renderer.domElement);
+        }
+        inst.renderer.dispose();
+        inst.geometry.dispose();
+        inst.material.dispose();
+        delete this.instances[containerId];
+      }
+    };
+
+    // Mount loading shader immediately
+    if (typeof THREE !== 'undefined') {
+      ShaderManager.mount('loading-shader-container');
+    }
+
 // ─── CONFIG ────────────────────────────────────────────────────────────────
     const TOKEN = "sk_snk_a7Xq2mP9vL4nR8tK"; // must match Apps Script EXPECTED_TOKEN
-const API_URL = "https://script.google.com/macros/s/AKfycbxM2JHOpEzxrUOKpc0fFfrbX0go3L7lVBWxAY8tERN1FYbOIBzfNjs4h7UsVpi9y-0i/exec?token=" + TOKEN;
+    const API_URL = "https://script.google.com/macros/s/AKfycbxM2JHOpEzxrUOKpc0fFfrbX0go3L7lVBWxAY8tERN1FYbOIBzfNjs4h7UsVpi9y-0i/exec?token=" + TOKEN;
 const SKU_URL = API_URL + "&type=sku";
 const SKU_DAILY_URL = API_URL + "&type=skudaily";
 const SHOPIFY_URL = API_URL + "&type=shopify";
@@ -1358,10 +1521,13 @@ const SHOPIFY_URL = API_URL + "&type=shopify";
         document.getElementById('main-content').style.display = 'block';
         document.getElementById('freshness-badge').style.display = 'inline-flex';
         document.getElementById('freshness-text').textContent = `${rawData.length} rows`;
+        // Free GPU after loading screen fades out
+        setTimeout(() => ShaderManager.unmount('loading-shader-container'), 500);
 
         render();
       } catch (err) {
         document.getElementById('loading-state').classList.add('hidden');
+        setTimeout(() => ShaderManager.unmount('loading-shader-container'), 500);
         const es = document.getElementById('error-state');
         es.classList.add('visible');
         document.getElementById('error-msg').textContent = err.message || 'Could not load data.';
@@ -1721,6 +1887,12 @@ function getFilteredData() {
       document.getElementById('view-skucompare').style.display = tab === 'skucompare' ? 'block' : 'none';
       document.getElementById('view-ai-insights').style.display = tab === 'ai-insights' ? 'block' : 'none';
       document.getElementById('view-shopify').style.display = tab === 'shopify' ? 'block' : 'none';
+      // Mount shader only when AI Insights is visible
+      if (tab === 'ai-insights') {
+        setTimeout(() => ShaderManager.mount('ai-shader-container'), 100);
+      } else {
+        ShaderManager.unmount('ai-shader-container');
+      }
       if (tab === 'shopify') { activeShopifyMonth = '04'; ['04','05','06'].forEach(k => { const b = document.getElementById('shopify-btn-'+k); if(b) b.classList.toggle('active', k==='04'); }); loadShopifyData(); }
       const kg = document.getElementById('kpi-grid');
       const dc = document.getElementById('dashboard-content');
