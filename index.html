@@ -771,6 +771,8 @@
 <button class="cmode-btn active" onclick="setCmpMode('day')" id="cmode-day">Day vs Day</button>
             <button class="cmode-btn" onclick="setCmpMode('week')" id="cmode-week">Week vs Week</button>
             <button class="cmode-btn" onclick="setCmpMode('month')" id="cmode-month">Month vs Month</button>
+            <button class="cmode-btn" onclick="setCmpMode('mom')" id="cmode-mom">MoM</button>
+            <button class="cmode-btn" onclick="setCmpMode('wow')" id="cmode-wow">WoW</button>
             <button class="cmode-btn" onclick="setCmpMode('custom')" id="cmode-custom">Custom Range</button>
           </div>
           <button onclick="runCompare()" style="background:var(--orange);color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Compare →</button>
@@ -828,12 +830,47 @@
           </div>
         </div>
 
+<!-- MoM pickers -->
+        <div class="compare-pickers" id="mom-pickers" style="display:none">
+          <div class="compare-picker-card period-a">
+            <div class="picker-label a">Start Month</div>
+            <div class="picker-row">
+              <select id="cmp-mom-start" class="cpicker"><option value="">Select month</option></select>
+            </div>
+          </div>
+          <div class="compare-picker-card period-b">
+            <div class="picker-label b">End Month</div>
+            <div class="picker-row">
+              <select id="cmp-mom-end" class="cpicker"><option value="">Select month</option></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- WoW pickers -->
+        <div class="compare-pickers" id="wow-pickers" style="display:none">
+          <div class="compare-picker-card period-a">
+            <div class="picker-label a">Start Date</div>
+            <div class="picker-row">
+              <input type="date" id="cmp-wow-start" class="cpicker">
+              <span style="color:var(--text-muted);font-size:11px;">Week 1 begins here</span>
+            </div>
+          </div>
+          <div class="compare-picker-card period-b">
+            <div class="picker-label b">End Date</div>
+            <div class="picker-row">
+              <input type="date" id="cmp-wow-end" class="cpicker">
+              <span style="color:var(--text-muted);font-size:11px;">Auto-splits into 7-day weeks</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Custom range pickers -->
         <div id="custom-range-pickers" style="display:none">
           <!-- Mode toggle: date range vs days count -->
           <div style="display:flex;gap:8px;margin-bottom:16px;">
-            <button class="cmode-btn active" onclick="setCustomMode('daterange')" id="ccmode-daterange" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-size:12px;">Date Range</button>
+          <button class="cmode-btn active" onclick="setCustomMode('daterange')" id="ccmode-daterange" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-size:12px;">Date Range</button>
             <button class="cmode-btn" onclick="setCustomMode('daycount')" id="ccmode-daycount" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-size:12px;">Start + No. of Days</button>
+            <button class="cmode-btn" onclick="setCustomMode('singledaily')" id="ccmode-singledaily" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-size:12px;">Single Range + Daily Breakdown</button>  
           </div>
           <!-- Date range mode -->
           <div class="compare-pickers" id="custom-daterange-pickers">
@@ -854,6 +891,18 @@
               </div>
             </div>
           </div>
+          <!-- Single range + daily breakdown -->
+          <div class="compare-pickers" id="custom-singledaily-pickers" style="display:none">
+            <div class="compare-picker-card period-a" style="grid-column:1/-1">
+              <div class="picker-label a">Pick a date range to see daily breakdown</div>
+              <div class="picker-row">
+                <input type="date" id="cmp-custom-sd-start" class="cpicker">
+                <span style="color:var(--text-muted);font-size:12px;">→</span>
+                <input type="date" id="cmp-custom-sd-end" class="cpicker">
+              </div>
+            </div>
+          </div>
+
           <!-- Day count mode -->
           <div class="compare-pickers" id="custom-daycount-pickers" style="display:none">
             <div class="compare-picker-card period-a">
@@ -899,6 +948,47 @@
           <div class="chart-section">
             <div class="chart-title">Week A vs Week B — Daily Sales (₹)</div>
             <div id="cmp-chart-trend" style="height:300px"></div>
+          </div>
+        </div>
+
+        <!-- Multi-period summary (MoM/WoW) -->
+        <div id="cmp-multi-summary" style="display:none; margin-bottom:24px;"></div>
+
+        <div id="cmp-multi-chart-wrap" style="display:none">
+          <div class="section-label" id="cmp-multi-bar-label">Growth Trajectory</div>
+          <div class="chart-section">
+            <div class="chart-title" id="cmp-multi-chart-title">Period over Period</div>
+            <div id="cmp-multi-chart" style="height:320px"></div>
+          </div>
+        </div>
+
+        <!-- Daily breakdown (single range) -->
+        <div id="cmp-daily-wrap" style="display:none">
+          <div class="section-label">Daily Breakdown</div>
+          <div class="chart-section" style="margin-bottom:16px">
+            <div class="chart-title" id="cmp-daily-title">Daily Sales Trend (₹)</div>
+            <div id="cmp-daily-chart" style="height:280px"></div>
+          </div>
+          <div class="sku-table-wrap">
+            <div class="sku-table-header" style="display:flex;justify-content:space-between;align-items:center;">
+              <span>Day-by-day</span>
+              <span id="cmp-daily-count" style="font-size:11px;color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0;"></span>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="sku-table" style="min-width:720px">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th class="right">Sales</th>
+                    <th class="right">Ad Spends</th>
+                    <th class="right">ROAS</th>
+                    <th class="right">Units</th>
+                    <th class="right">DoD %</th>
+                  </tr>
+                </thead>
+                <tbody id="cmp-daily-tbody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -1655,29 +1745,33 @@ function getFilteredData() {
 
  function setCmpMode(m) {
       cmpMode = m;
-      ['day','week','month','custom'].forEach(k => {
+      ['day','week','month','mom','wow','custom'].forEach(k => {
         const btn = document.getElementById('cmode-' + k);
         if (btn) btn.classList.toggle('active', k === m);
       });
       document.getElementById('day-pickers').style.display        = m === 'day'    ? 'grid' : 'none';
       document.getElementById('week-pickers').style.display       = m === 'week'   ? 'grid' : 'none';
       document.getElementById('month-pickers').style.display      = m === 'month'  ? 'grid' : 'none';
+      document.getElementById('mom-pickers').style.display        = m === 'mom'    ? 'grid' : 'none';
+      document.getElementById('wow-pickers').style.display        = m === 'wow'    ? 'grid' : 'none';
       document.getElementById('custom-range-pickers').style.display = m === 'custom' ? 'block' : 'none';
-      ['cmp-summary','cmp-bar-wrap','cmp-line-wrap','cmp-no-data'].forEach(id => {
-        document.getElementById(id).style.display = 'none';
+      ['cmp-summary','cmp-bar-wrap','cmp-line-wrap','cmp-no-data','cmp-multi-summary','cmp-multi-chart-wrap','cmp-daily-wrap'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
       });
       if (m === 'month') populateMonthDropdowns();
+      if (m === 'mom') populateMomDropdowns();
     }
-
     let customSubMode = 'daterange';
     function setCustomMode(cm) {
       customSubMode = cm;
-      ['daterange','daycount'].forEach(k => {
+      ['daterange','daycount','singledaily'].forEach(k => {
         const btn = document.getElementById('ccmode-' + k);
         if (btn) btn.classList.toggle('active', k === cm);
       });
-      document.getElementById('custom-daterange-pickers').style.display = cm === 'daterange' ? 'grid' : 'none';
-      document.getElementById('custom-daycount-pickers').style.display  = cm === 'daycount'  ? 'grid' : 'none';
+      document.getElementById('custom-daterange-pickers').style.display   = cm === 'daterange'   ? 'grid' : 'none';
+      document.getElementById('custom-daycount-pickers').style.display    = cm === 'daycount'    ? 'grid' : 'none';
+      document.getElementById('custom-singledaily-pickers').style.display = cm === 'singledaily' ? 'grid' : 'none';
     }
 
     function populateMonthDropdowns() {
@@ -1697,6 +1791,27 @@ function getFilteredData() {
         return `<option value="${m}">${labels[mo]} ${yr}</option>`;
       }).join('');
       ['cmp-month-a','cmp-month-b'].forEach(id => {
+        const el = document.getElementById(id);
+        el.innerHTML = '<option value="">Select month</option>' + opts;
+      });
+    }
+
+    function populateMomDropdowns() {
+      const monthSet = new Set();
+      rawData.forEach(r => {
+        const d = new Date(r.Date);
+        if (!isNaN(d)) {
+          const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+          monthSet.add(key);
+        }
+      });
+      const months = [...monthSet].sort();
+      const labels = { '01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'May','06':'Jun','07':'Jul','08':'Aug','09':'Sep','10':'Oct','11':'Nov','12':'Dec' };
+      const opts = months.map(m => {
+        const [yr, mo] = m.split('-');
+        return `<option value="${m}">${labels[mo]} ${yr}</option>`;
+      }).join('');
+      ['cmp-mom-start','cmp-mom-end'].forEach(id => {
         const el = document.getElementById(id);
         el.innerHTML = '<option value="">Select month</option>' + opts;
       });
@@ -1760,6 +1875,78 @@ function getFilteredData() {
 
     function runCompare() {
       document.getElementById('cmp-no-data').style.display = 'none';
+      // Hide multi/daily panels by default (they get re-shown by their respective renderers)
+      ['cmp-summary','cmp-bar-wrap','cmp-line-wrap','cmp-multi-summary','cmp-multi-chart-wrap','cmp-daily-wrap'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+
+      // ─── MoM: multi-month with growth % ────────────────────────────────────
+      if (cmpMode === 'mom') {
+        const startKey = document.getElementById('cmp-mom-start').value;
+        const endKey   = document.getElementById('cmp-mom-end').value;
+        if (!startKey || !endKey) { alert('Select both start and end months.'); return; }
+        if (startKey > endKey) { alert('Start month must be before end month.'); return; }
+
+        const months = [];
+        let [sy, sm] = startKey.split('-').map(Number);
+        const [ey, em] = endKey.split('-').map(Number);
+        while (sy < ey || (sy === ey && sm <= em)) {
+          months.push({ year: sy, month: sm });
+          sm++; if (sm > 12) { sm = 1; sy++; }
+        }
+
+        const mNames = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const periods = months.map(({year, month}) => {
+          const start = new Date(year, month-1, 1); start.setHours(0,0,0,0);
+          const end   = new Date(year, month, 0);   end.setHours(23,59,59,999);
+          const rows  = filterByDateRange(start, end);
+          return { label: `${mNames[month]} ${year}`, agg: aggregatePeriod(rows) };
+        });
+        renderMultiPeriod(periods, 'MoM');
+        return;
+      }
+
+      // ─── WoW: multi-week with growth % ─────────────────────────────────────
+      if (cmpMode === 'wow') {
+        const startStr = document.getElementById('cmp-wow-start').value;
+        const endStr   = document.getElementById('cmp-wow-end').value;
+        if (!startStr || !endStr) { alert('Select both start and end dates.'); return; }
+
+        const startD = parseLocalDate(startStr); startD.setHours(0,0,0,0);
+        const endD   = parseLocalDate(endStr);   endD.setHours(23,59,59,999);
+        if (startD > endD) { alert('Start date must be before end date.'); return; }
+
+        const periods = [];
+        let cursor = new Date(startD);
+        let idx = 1;
+        while (cursor <= endD) {
+          const weekStart = new Date(cursor); weekStart.setHours(0,0,0,0);
+          const weekEnd   = new Date(cursor); weekEnd.setDate(weekEnd.getDate()+6); weekEnd.setHours(23,59,59,999);
+          const actualEnd = weekEnd > endD ? endD : weekEnd;
+          const rows = filterByDateRange(weekStart, actualEnd);
+          const fmtD = d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+          periods.push({ label: `W${idx} (${fmtD(weekStart)}→${fmtD(actualEnd)})`, agg: aggregatePeriod(rows) });
+          cursor.setDate(cursor.getDate() + 7);
+          idx++;
+        }
+        renderMultiPeriod(periods, 'WoW');
+        return;
+      }
+
+      // ─── Custom: Single Range + Daily breakdown ────────────────────────────
+      if (cmpMode === 'custom' && customSubMode === 'singledaily') {
+        const sd = document.getElementById('cmp-custom-sd-start').value;
+        const ed = document.getElementById('cmp-custom-sd-end').value;
+        if (!sd || !ed) { alert('Fill in both dates.'); return; }
+        const start = parseLocalDate(sd); start.setHours(0,0,0,0);
+        const end   = parseLocalDate(ed); end.setHours(23,59,59,999);
+        if (start > end) { alert('Start date must be before end date.'); return; }
+        const rows = filterByDateRange(start, end);
+        renderDailyBreakdown(rows, start, end);
+        return;
+      }
+
       let rowsA, rowsB, labelA, labelB, datesA, datesB;
 
       if (cmpMode === 'month') {
@@ -1943,6 +2130,166 @@ function getFilteredData() {
       }
     }
 
+
+    // ─── MULTI-PERIOD (MoM / WoW) RENDERER ─────────────────────────────────────
+    let cmpMultiChart = null, cmpDailyChart = null;
+
+    function renderMultiPeriod(periods, modeLabel) {
+      if (periods.length === 0) { alert('No periods to compare.'); return; }
+
+      // Summary cards row
+      const cols = Math.min(periods.length, 4);
+      const html = periods.map((p, i) => {
+        const sales = p.agg.total.sales;
+        const spends = p.agg.total.spends;
+        const roas = p.agg.total.roas;
+        const units = p.agg.total.units;
+
+        let growthHtml = '';
+        if (i === 0) {
+          growthHtml = `<div class="compare-delta neu" style="margin-top:8px">Baseline</div>`;
+        } else {
+          const prev = periods[i-1].agg.total.sales;
+          const d = delta(sales, prev);
+          const cls = d === null ? 'neu' : Number(d) >= 0 ? 'pos' : 'neg';
+          const txt = d === null ? '--' : (Number(d) >= 0 ? '▲ ' : '▼ ') + Math.abs(d) + '%';
+          growthHtml = `<div class="compare-delta ${cls}" style="margin-top:8px">${txt} ${modeLabel}</div>`;
+        }
+
+        const borderColor = i === 0 ? '#666' : '#F97316';
+        return `<div class="compare-stat-card" style="border-top:2px solid ${borderColor}">
+          <div class="compare-stat-label">${p.label}</div>
+          <div style="margin-top:10px">
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px;">Sales</div>
+            <div style="font-size:18px;font-weight:700;letter-spacing:-0.02em;color:var(--text-primary)">${fmt(sales)}</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace">
+            <span>ROAS ${roas > 0 ? roas.toFixed(2)+'x' : '--'}</span>
+            <span>${fmt(units, false)} units</span>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace;margin-top:4px">
+            Spends ${spends > 0 ? fmt(spends) : '--'}
+          </div>
+          ${growthHtml}
+        </div>`;
+      }).join('');
+
+      const wrap = document.getElementById('cmp-multi-summary');
+      wrap.innerHTML = `<div style="display:grid;grid-template-columns:repeat(${cols}, 1fr);gap:10px;">${html}</div>`;
+      wrap.style.display = 'block';
+
+      // Combo chart: bar (sales) + line (growth %)
+      const labels = periods.map(p => p.label);
+      const salesData = periods.map(p => Math.round(p.agg.total.sales));
+      const growthData = periods.map((p, i) => {
+        if (i === 0) return 0;
+        const prev = periods[i-1].agg.total.sales;
+        return prev > 0 ? parseFloat(((p.agg.total.sales - prev) / prev * 100).toFixed(1)) : 0;
+      });
+
+      if (cmpMultiChart) cmpMultiChart.destroy();
+      cmpMultiChart = new ApexCharts(document.querySelector('#cmp-multi-chart'), {
+        series: [
+          { name: 'Sales', type: 'column', data: salesData },
+          { name: modeLabel + ' Growth %', type: 'line', data: growthData }
+        ],
+        chart: { height: 320, toolbar: { show: false }, background: 'transparent', fontFamily: 'DM Sans, sans-serif' },
+        theme: { mode: 'dark' },
+        colors: ['#F97316', '#3B82F6'],
+        stroke: { width: [0, 3], curve: 'smooth' },
+        markers: { size: [0, 5] },
+        plotOptions: { bar: { borderRadius: 4, columnWidth: '50%' } },
+        dataLabels: { enabled: false },
+        grid: { borderColor: 'rgba(255,255,255,0.05)', strokeDashArray: 4 },
+        xaxis: { categories: labels, labels: { style: { colors: '#555', fontSize: '11px' } }, axisBorder: { show: false }, axisTicks: { show: false } },
+        yaxis: [
+          { labels: { formatter: v => fmt(v), style: { colors: '#555' } }, title: { text: 'Sales (₹)', style: { color: '#555', fontSize: '11px' } } },
+          { opposite: true, labels: { formatter: v => v.toFixed(0)+'%', style: { colors: '#3B82F6' } }, title: { text: 'Growth %', style: { color: '#3B82F6', fontSize: '11px' } } }
+        ],
+        legend: { labels: { colors: '#888' }, position: 'top' },
+        tooltip: { theme: 'dark', shared: true, y: [{ formatter: v => fmt(v) }, { formatter: v => v.toFixed(1)+'%' }] },
+      });
+      cmpMultiChart.render();
+
+      document.getElementById('cmp-multi-chart-title').textContent = `${labels[0]} → ${labels[labels.length-1]} · ${modeLabel} trajectory`;
+      document.getElementById('cmp-multi-chart-wrap').style.display = 'block';
+    }
+
+    // ─── DAILY BREAKDOWN RENDERER ──────────────────────────────────────────────
+    function renderDailyBreakdown(rows, start, end) {
+      // Group by date
+      const byDate = {};
+      rows.forEach(r => {
+        const d = String(r.Date).split('T')[0].substring(0,10);
+        if (!byDate[d]) byDate[d] = { sales: 0, spends: 0, units: 0, roasSum: 0, roasCount: 0 };
+        byDate[d].sales  += Number(r.Sales)  || 0;
+        byDate[d].spends += Number(r.Spends) || 0;
+        byDate[d].units  += Number(r.Units)  || 0;
+        const ro = Number(r.ROAS) || 0;
+        if (ro > 0) { byDate[d].roasSum += ro; byDate[d].roasCount++; }
+      });
+
+      // Build full day array (includes 0-sales days)
+      const days = [];
+      const cursor = new Date(start);
+      cursor.setHours(12,0,0,0);
+      while (cursor <= end) {
+        const y = cursor.getFullYear();
+        const m = String(cursor.getMonth()+1).padStart(2,'0');
+        const d = String(cursor.getDate()).padStart(2,'0');
+        const key = `${y}-${m}-${d}`;
+        const data = byDate[key] || { sales: 0, spends: 0, units: 0, roasSum: 0, roasCount: 0 };
+        const roas = data.spends > 0 ? (data.sales / data.spends) : (data.roasCount > 0 ? data.roasSum / data.roasCount : 0);
+        days.push({ date: key, sales: data.sales, spends: data.spends, units: data.units, roas });
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      // Chart
+      const labels = days.map(d => { const p = d.date.split('-'); return p[2]+'/'+p[1]; });
+      const sales = days.map(d => d.sales);
+
+      if (cmpDailyChart) cmpDailyChart.destroy();
+      cmpDailyChart = new ApexCharts(document.querySelector('#cmp-daily-chart'), {
+        series: [{ name: 'Daily Sales', data: sales }],
+        chart: { type: 'line', height: 280, toolbar: { show: false }, background: 'transparent', fontFamily: 'DM Sans, sans-serif' },
+        theme: { mode: 'dark' },
+        colors: ['#F97316'],
+        stroke: { width: 2.5, curve: 'smooth' },
+        markers: { size: 4, strokeWidth: 0 },
+        dataLabels: { enabled: false },
+        grid: { borderColor: 'rgba(255,255,255,0.05)', strokeDashArray: 4 },
+        xaxis: { categories: labels, tickAmount: Math.min(15, labels.length), labels: { style: { colors: '#555', fontSize: '11px' }, rotate: -45, rotateAlways: true }, axisBorder: { show: false } },
+        yaxis: { labels: { formatter: v => fmt(v), style: { colors: '#555' } } },
+        tooltip: { y: { formatter: v => fmt(v) }, theme: 'dark' },
+      });
+      cmpDailyChart.render();
+
+      // Table with DoD %
+      const tbody = days.map((d, i) => {
+        const prev = i > 0 ? days[i-1].sales : 0;
+        const dod = i > 0 && prev > 0 ? ((d.sales - prev) / prev * 100) : null;
+        const dodColor = dod === null ? 'var(--text-muted)' : dod >= 0 ? 'var(--green)' : 'var(--red)';
+        const dodTxt = dod === null ? '--' : (dod >= 0 ? '▲ ' : '▼ ') + Math.abs(dod).toFixed(1) + '%';
+        let dateLabel = d.date;
+        try {
+          const dt = new Date(d.date + 'T12:00:00');
+          dateLabel = dt.toLocaleDateString('en-IN', { day:'numeric', month:'short', weekday:'short' });
+        } catch(e) {}
+        return `<tr>
+          <td style="color:var(--text-primary);font-weight:500;">${dateLabel}</td>
+          <td class="right" style="color:var(--text-primary);font-weight:600;">${fmt(d.sales)}</td>
+          <td class="right">${d.spends > 0 ? fmt(d.spends) : '--'}</td>
+          <td class="right">${d.roas > 0 ? d.roas.toFixed(2)+'x' : '--'}</td>
+          <td class="right">${fmt(d.units, false)}</td>
+          <td class="right" style="color:${dodColor};font-family:'DM Mono',monospace;font-size:12px;">${dodTxt}</td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('cmp-daily-tbody').innerHTML = tbody || '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted)">No data in this range</td></tr>';
+      document.getElementById('cmp-daily-count').textContent = days.length + ' days';
+      document.getElementById('cmp-daily-title').textContent = `Daily Sales · ${days[0].date} → ${days[days.length-1].date}`;
+      document.getElementById('cmp-daily-wrap').style.display = 'block';
+    }
 
     // ─── CHANNEL DETAIL ENGINE ─────────────────────────────────────────────────
     let skuData = [];
