@@ -102,9 +102,10 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: -0.02em;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
     }
     .nav-logo-icon {
       width: 28px;
@@ -180,7 +181,7 @@
       gap: 16px;
       margin-bottom: 16px;
     }
-    .page-title { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; }
+    .page-title { font-size: 28px; font-weight: 500; letter-spacing: -0.04em; }
     .page-subtitle { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
 
     /* Controls */
@@ -258,18 +259,20 @@
     }
     .kpi-label {
       font-size: 10px;
-      font-weight: 600;
+      font-weight: 500;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.18em;
       color: var(--text-muted);
-      margin-bottom: 10px;
+      margin-bottom: 12px;
+      font-family: 'Geist Mono', monospace;
     }
     .kpi-value {
-      font-size: 28px;
-      font-weight: 700;
-      letter-spacing: -0.03em;
+      font-size: 32px;
+      font-weight: 500;
+      letter-spacing: -0.04em;
       color: var(--text-primary);
       line-height: 1;
+      font-feature-settings: 'ss01', 'tnum';
     }
     .kpi-value.large { font-size: 32px; }
     .kpi-sub {
