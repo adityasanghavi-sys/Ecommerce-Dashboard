@@ -1993,44 +1993,54 @@ function getFilteredData() {
       chartSales = new ApexCharts(document.querySelector('#chart-sales'), {
         ...baseOpts,
         series: [{ name: 'Sales', data: salesVals }],
-        chart: { ...baseOpts.chart, type: 'bar', height: 240 },
+        chart: { ...baseOpts.chart, type: 'bar', height: 260 },
         colors: colors,
         fill: {
           type: 'gradient',
           gradient: {
-            shade: 'dark',
+            shade: 'light',
             type: 'vertical',
-            shadeIntensity: 0.5,
+            shadeIntensity: 0.15,
+            gradientToColors: colors.map(c => gradTo(c)),
+            inverseColors: false,
             opacityFrom: 1,
-            opacityTo: 0.6,
+            opacityTo: 0.95,
             stops: [0, 100]
           }
         },
-        plotOptions: { bar: { borderRadius: 6, columnWidth: '50%', distributed: true } },
-        yaxis: { labels: { formatter: v => fmt(v), style: { colors: '#555', fontSize: '11px' } } },
+        states: {
+          hover: { filter: { type: 'lighten', value: 0.15 } }
+        },
+        plotOptions: { bar: { borderRadius: 6, columnWidth: '45%', distributed: true } },
+        yaxis: { labels: { formatter: v => fmt(v), style: { colors: '#9ca3b3', fontSize: '11px' } } },
         tooltip: { y: { formatter: v => fmt(v) }, theme: 'dark' }
       });
       chartSales.render();
 
-      if (chartRoas) chartRoas.destroy();
+     if (chartRoas) chartRoas.destroy();
       chartRoas = new ApexCharts(document.querySelector('#chart-roas'), {
         ...baseOpts,
         series: [{ name: 'ROAS', data: roasVals }],
-        chart: { ...baseOpts.chart, type: 'bar', height: 240 },
+        chart: { ...baseOpts.chart, type: 'bar', height: 260 },
         colors: colors,
         fill: {
           type: 'gradient',
           gradient: {
-            shade: 'dark',
+            shade: 'light',
             type: 'vertical',
-            shadeIntensity: 0.5,
+            shadeIntensity: 0.15,
+            gradientToColors: colors.map(c => gradTo(c)),
+            inverseColors: false,
             opacityFrom: 1,
-            opacityTo: 0.6,
+            opacityTo: 0.95,
             stops: [0, 100]
           }
         },
-        plotOptions: { bar: { borderRadius: 6, columnWidth: '50%', distributed: true } },
-        yaxis: { labels: { formatter: v => v > 0 ? v.toFixed(1)+'x' : '--', style: { colors: '#555', fontSize: '11px' } } },
+        states: {
+          hover: { filter: { type: 'lighten', value: 0.15 } }
+        },
+        plotOptions: { bar: { borderRadius: 6, columnWidth: '45%', distributed: true } },
+        yaxis: { labels: { formatter: v => v > 0 ? v.toFixed(1)+'x' : '--', style: { colors: '#9ca3b3', fontSize: '11px' } } },
         tooltip: { y: { formatter: v => fmtRoas(v) }, theme: 'dark' },
         annotations: {
           yaxis: roasVals.some(v => v > 0) ? [{
