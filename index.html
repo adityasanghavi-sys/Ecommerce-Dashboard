@@ -169,20 +169,61 @@
 
     /* Page header */
     .page-header {
-      padding: 28px 0 16px;
+      padding: 40px 0 24px;
       border-bottom: 1px solid var(--border);
-      margin-bottom: 24px;
+      margin-bottom: 32px;
     }
-    .page-header-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 16px;
-      margin-bottom: 16px;
+    .hero-block { max-width: 760px; margin-bottom: 28px; }
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 12px 5px 10px;
+      border-radius: 999px;
+      background: rgba(168, 85, 247, 0.1);
+      border: 1px solid rgba(168, 85, 247, 0.25);
+      font-family: 'Geist Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: #c084fc;
+      margin-bottom: 18px;
     }
-    .page-title { font-size: 28px; font-weight: 500; letter-spacing: -0.04em; }
-    .page-subtitle { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
+    .hero-pill-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #c084fc;
+      box-shadow: 0 0 8px #c084fc;
+      animation: pulse 2s infinite;
+    }
+    .hero-title {
+      font-size: clamp(40px, 6vw, 64px);
+      font-weight: 500;
+      letter-spacing: -0.045em;
+      line-height: 1.02;
+      color: #fff;
+      margin-bottom: 18px;
+    }
+    .hero-title-grad {
+      background: linear-gradient(135deg, #fff 0%, #6b7280 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-tagline {
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      max-width: 620px;
+      margin-bottom: 20px;
+    }
+    .page-subtitle {
+      color: var(--text-muted);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      font-family: 'Geist Mono', monospace;
+      margin-top: 0;
+    }
 
     /* Controls */
     .controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -243,19 +284,45 @@
     .kpi-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px 22px;
+      border-radius: 14px;
+      padding: 22px 24px 16px;
       position: relative;
       overflow: hidden;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, transform 0.15s;
+      min-height: 158px;
+      display: flex;
+      flex-direction: column;
     }
-    .kpi-card:hover { border-color: var(--border-hover); }
+    .kpi-card:hover { border-color: var(--border-hover); transform: translateY(-1px); }
     .kpi-card::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 2px;
       background: var(--accent, var(--orange));
+      opacity: 0.9;
+    }
+    .kpi-card-top { flex: 1; }
+    .kpi-spark {
+      margin: 8px -8px -8px -8px;
+      height: 44px;
+      opacity: 0.85;
+    }
+    .kpi-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 500;
+      font-family: 'Geist Mono', monospace;
+      letter-spacing: 0.02em;
+      margin-top: 8px;
+    }
+    .kpi-pill.positive { background: rgba(34,197,94,0.12); color: #4ade80; border: 1px solid rgba(34,197,94,0.2); }
+    .kpi-pill.negative { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+    .kpi-pill.neutral  { background: rgba(255,255,255,0.05); color: var(--text-secondary); border: 1px solid var(--border); }
     }
     .kpi-label {
       font-size: 10px;
@@ -373,21 +440,26 @@
 
     /* Divider */
     .section-label {
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--text-muted);
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      text-transform: none;
     }
-    .section-label::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
+    .section-label::after { display: none; }
+    .section-label + .kpi-grid,
+    .section-label + .mom-grid,
+    .section-label + .platform-grid,
+    .section-label + .sku-table-wrap,
+    .section-label + .chart-section { margin-top: 18px; }
+    .section-caption {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: 'Geist Mono', monospace;
+      letter-spacing: 0.02em;
+      margin-bottom: 20px;
+      display: block;
     }
 
     /* Data freshness badge */
@@ -724,11 +796,15 @@
   <div class="wrapper">
 
     <div class="page-header">
-      <div class="page-header-top">
-        <div>
-          <h1 class="page-title">Executive Overview</h1>
-          <p class="page-subtitle" id="data-subtitle">Loading...</p>
+      <div class="hero-block">
+        <div class="hero-pill">
+          <span class="hero-pill-dot"></span> Live Q-Commerce OS
         </div>
+        <h1 class="hero-title">
+          Executive <span class="hero-title-grad">Overview</span>
+        </h1>
+        <p class="hero-tagline">Daily pulse across Blinkit, Zepto, Instamart, Big Basket, Amazon, First Club, and Shopify — fused into one operating surface.</p>
+        <p class="page-subtitle" id="data-subtitle">Loading...</p>
       </div>
       <div class="controls">
         <div class="control-group">
@@ -792,10 +868,12 @@
       </div>
 
       <div id="view-overview">
-        <div class="section-label">Summary</div>
+        <div class="section-label">Performance snapshot</div>
+        <div class="section-caption">Six metrics · live from OMS Tracker</div>
         <div class="kpi-grid" id="kpi-grid"></div>
 
-        <div class="section-label">Platform Breakdown</div>
+        <div class="section-label">Platform breakdown</div>
+        <div class="section-caption">Sales mix and ROAS efficiency</div>
         <div class="mom-grid">
           <div class="chart-section">
             <div class="chart-title">Sales by Platform (₹)</div>
@@ -807,7 +885,8 @@
           </div>
         </div>
 
-        <div class="section-label">Per Platform</div>
+        <div class="section-label">Channel scorecards</div>
+        <div class="section-caption">Drill down to platform-level metrics</div>
         <div class="platform-grid" id="platform-grid"></div>
       </div>
 
@@ -1711,58 +1790,106 @@ function getFilteredData() {
 
       const platformCount = Object.keys(agg).length;
 
+      // Build daily series for sparklines
+      const dailySales = {}, dailySpends = {}, dailyUnits = {}, dailyRoas = {};
+      data.forEach(r => {
+        const d = String(r.Date).split('T')[0].substring(0,10);
+        dailySales[d]  = (dailySales[d]  || 0) + (Number(r.Sales)  || 0);
+        dailySpends[d] = (dailySpends[d] || 0) + (Number(r.Spends) || 0);
+        dailyUnits[d]  = (dailyUnits[d]  || 0) + (Number(r.Units)  || 0);
+      });
+      const sortedDays = Object.keys(dailySales).sort();
+      const salesSpark  = sortedDays.map(d => Math.round(dailySales[d]));
+      const spendsSpark = sortedDays.map(d => Math.round(dailySpends[d]));
+      const unitsSpark  = sortedDays.map(d => Math.round(dailyUnits[d]));
+      const roasSpark   = sortedDays.map(d => {
+        const s = dailySales[d] || 0;
+        const sp = dailySpends[d] || 0;
+        return sp > 0 ? parseFloat((s/sp).toFixed(2)) : 0;
+      });
+
       const cards = [
         {
           label: 'Total Sales',
           value: fmt(totalSales),
           sub: `${platformCount} platform${platformCount !== 1 ? 's' : ''}`,
           accent: 'var(--orange)',
-          subClass: 'neutral'
+          subClass: 'neutral',
+          spark: true, sparkData: salesSpark
         },
         {
           label: 'Total Ad Spends',
           value: fmt(totalSpends),
           sub: totalSpends > 0 ? 'Tracked budget' : 'No tracked spends',
           accent: 'var(--purple)',
-          subClass: 'neutral'
+          subClass: 'neutral',
+          spark: true, sparkData: spendsSpark
         },
         {
           label: 'Blended ROAS',
           value: blendedRoas > 0 ? fmtRoas(blendedRoas) : '--',
           sub: blendedRoas >= 2 ? '▲ Healthy' : blendedRoas > 0 ? '△ Monitor' : 'Spends not tracked',
           accent: blendedRoas >= 2 ? 'var(--green)' : blendedRoas > 0 ? 'var(--yellow)' : 'var(--text-muted)',
-          subClass: blendedRoas >= 2 ? 'positive' : blendedRoas > 0 ? 'neutral' : 'neutral'
+          subClass: blendedRoas >= 2 ? 'positive' : blendedRoas > 0 ? 'neutral' : 'neutral',
+          spark: true, sparkData: roasSpark
         },
         {
           label: 'Total Units',
           value: fmt(totalUnits, false),
           sub: totalSales > 0 && totalUnits > 0 ? `ASP ₹${(totalSales/totalUnits).toFixed(0)}` : '',
           accent: 'var(--blue)',
-          subClass: 'neutral'
+          subClass: 'neutral',
+          spark: true, sparkData: unitsSpark
         },
         {
           label: 'Best ROAS Platform',
           value: bestPlatform,
           sub: bestRoas > 0 ? fmtRoas(bestRoas) : '--',
           accent: bestPlatform !== '--' ? (PLATFORM_CONFIG[bestPlatform]?.color || 'var(--green)') : 'var(--text-muted)',
-          subClass: 'positive'
+          subClass: 'positive',
+          spark: false
         },
         {
           label: 'Active Platforms',
           value: platformCount,
           sub: `of ${Object.keys(PLATFORM_CONFIG).length} tracked`,
           accent: 'var(--yellow)',
-          subClass: 'neutral'
+          subClass: 'neutral',
+          spark: false
         },
       ];
 
-      document.getElementById('kpi-grid').innerHTML = cards.map(c => `
+      document.getElementById('kpi-grid').innerHTML = cards.map((c, i) => {
+        const pillClass = c.subClass === 'positive' ? 'positive' : c.subClass === 'negative' ? 'negative' : 'neutral';
+        const sparkId = `kpi-spark-${i}`;
+        return `
         <div class="kpi-card" style="--accent:${c.accent}">
-          <div class="kpi-label">${c.label}</div>
-          <div class="kpi-value">${c.value}</div>
-          <div class="kpi-sub ${c.subClass}">${c.sub || ''}</div>
-        </div>
-      `).join('');
+          <div class="kpi-card-top">
+            <div class="kpi-label">${c.label}</div>
+            <div class="kpi-value">${c.value}</div>
+            ${c.sub ? `<div class="kpi-pill ${pillClass}">${c.sub}</div>` : ''}
+          </div>
+          ${c.spark ? `<div class="kpi-spark" id="${sparkId}"></div>` : ''}
+        </div>`;
+      }).join('');
+
+      // Mount sparklines
+      cards.forEach((c, i) => {
+        if (!c.spark || !c.sparkData || c.sparkData.length < 2) return;
+        const el = document.querySelector(`#kpi-spark-${i}`);
+        if (!el) return;
+        new ApexCharts(el, {
+          series: [{ data: c.sparkData }],
+          chart: { type: 'area', height: 44, sparkline: { enabled: true }, animations: { enabled: false } },
+          stroke: { curve: 'smooth', width: 2 },
+          fill: {
+            type: 'gradient',
+            gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0, stops: [0, 100] }
+          },
+          colors: [c.accent.replace('var(--orange)','#F97316').replace('var(--purple)','#A855F7').replace('var(--green)','#22C55E').replace('var(--blue)','#3B82F6').replace('var(--yellow)','#EAB308').replace('var(--text-muted)','#6b7280')],
+          tooltip: { enabled: false }
+        }).render();
+      });
     }
 
     // ─── PLATFORM CARDS ────────────────────────────────────────────────────────
