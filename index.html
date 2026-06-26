@@ -7,7 +7,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #090A0F;
@@ -29,10 +31,15 @@
     body {
       background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 70%);
       color: var(--text-primary);
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'Space Grotesk', sans-serif;
+      font-feature-settings: 'ss01', 'ss02';
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      letter-spacing: -0.01em;
       min-height: 100vh;
       overflow-x: hidden;
     }
+    .mono, [class*="mono"] { font-family: 'Geist Mono', monospace !important; font-feature-settings: 'ss01', 'ss02', 'zero'; }
 
     /* ─── PARALLAX STARS ─────────────────────────────────────────────── */
     .stars-layer {
@@ -60,7 +67,7 @@
     .stars-small  { width: 1px; height: 1px; animation: animStar 120s linear infinite; }
     .stars-medium { width: 2px; height: 2px; animation: animStar 200s linear infinite; }
     .stars-big    { width: 3px; height: 3px; animation: animStar 320s linear infinite; }
-    .mono { font-family: 'DM Mono', monospace; }
+    .mono { font-family: 'Geist Mono', monospace; }
 
     /* Scrollbar */
     ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -195,7 +202,7 @@
       border: none;
       background: transparent;
       transition: all 0.15s;
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'Space Grotesk', sans-serif;
       white-space: nowrap;
     }
     .control-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.04); }
@@ -209,7 +216,7 @@
       color: var(--text-primary);
       font-size: 12px;
       font-weight: 500;
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'Space Grotesk', sans-serif;
       padding: 7px 32px 7px 12px;
       cursor: pointer;
       appearance: none;
@@ -269,7 +276,7 @@
       font-size: 11px;
       color: var(--text-muted);
       margin-top: 8px;
-      font-family: 'DM Mono', monospace;
+      font-family: 'Geist Mono', monospace;
     }
     .kpi-sub.positive { color: var(--green); }
     .kpi-sub.negative { color: var(--red); }
@@ -311,7 +318,7 @@
     }
     .platform-roas-badge {
       font-size: 11px;
-      font-family: 'DM Mono', monospace;
+      font-family: 'Geist Mono', monospace;
       font-weight: 500;
       padding: 3px 8px;
       border-radius: 6px;
@@ -387,7 +394,7 @@
       gap: 6px;
       font-size: 11px;
       color: var(--text-muted);
-      font-family: 'DM Mono', monospace;
+      font-family: 'Geist Mono', monospace;
     }
     .freshness-dot {
       width: 6px; height: 6px;
@@ -420,7 +427,7 @@
       background: transparent;
       border: none;
       cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'Space Grotesk', sans-serif;
       padding: 0;
       margin-bottom: 20px;
       transition: color 0.15s;
@@ -492,14 +499,14 @@
     .sku-table tr:last-child td { border-bottom: none; }
     .sku-table tr:hover td { background: rgba(255,255,255,0.02); }
     .sku-name-cell { color: var(--text-primary); font-weight: 500; }
-    .sku-rank { color: var(--text-muted); font-size: 11px; margin-right: 8px; font-family: 'DM Mono', monospace; }
+    .sku-rank { color: var(--text-muted); font-size: 11px; margin-right: 8px; font-family: 'Geist Mono', monospace; }
     .cat-badge {
       display: inline-block;
       padding: 2px 8px;
       border-radius: 4px;
       font-size: 10px;
       font-weight: 600;
-      font-family: 'DM Mono', monospace;
+      font-family: 'Geist Mono', monospace;
     }
     .pct-bar-wrap { display: flex; align-items: center; gap: 8px; }
     .pct-bar-bg { flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; }
@@ -525,7 +532,7 @@
       border: none;
       border-bottom: 2px solid transparent;
       cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'Space Grotesk', sans-serif;
       transition: all 0.15s;
       margin-bottom: -1px;
       white-space: nowrap;
@@ -550,7 +557,7 @@
       background: transparent;
       border: none;
       cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'Space Grotesk', sans-serif;
       transition: all 0.15s;
     }
     .cmode-btn.active { color: var(--text-primary); background: rgba(255,255,255,0.08); }
@@ -588,7 +595,7 @@
       border-radius: 6px;
       color: var(--text-primary);
       font-size: 12px;
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'Space Grotesk', sans-serif;
       padding: 6px 10px;
       outline: none;
       cursor: pointer;
@@ -617,7 +624,7 @@
     .compare-stat-val.b { color: #3B82F6; }
     .compare-delta {
       font-size: 11px;
-      font-family: 'DM Mono', monospace;
+      font-family: 'Geist Mono', monospace;
       margin-top: 6px;
     }
     .compare-delta.pos { color: var(--green); }
@@ -734,9 +741,9 @@
         </div>
 
         <div id="custom-date-range" style="display:none; align-items:center; gap:6px;">
-          <input type="date" id="customStart" onchange="render()" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;padding:6px 8px;outline:none;font-family:'DM Sans',sans-serif;">
+          <input type="date" id="customStart" onchange="render()" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;padding:6px 8px;outline:none;font-family:'Space Grotesk',sans-serif;">
           <span style="color:var(--text-muted);font-size:12px;">→</span>
-          <input type="date" id="customEnd" onchange="render()" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;padding:6px 8px;outline:none;font-family:'DM Sans',sans-serif;">
+          <input type="date" id="customEnd" onchange="render()" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;padding:6px 8px;outline:none;font-family:'Space Grotesk',sans-serif;">
         </div>
 
         <div class="control-group">
@@ -812,7 +819,7 @@
             <button class="cmode-btn" onclick="setCmpMode('wow')" id="cmode-wow">WoW</button>
             <button class="cmode-btn" onclick="setCmpMode('custom')" id="cmode-custom">Custom Range</button>
           </div>
-          <button onclick="runCompare()" style="background:var(--orange);color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Compare →</button>
+          <button onclick="runCompare()" style="background:var(--orange);color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;">Compare →</button>
         </div>
 
         <div class="compare-pickers" id="day-pickers">
@@ -1058,7 +1065,7 @@
           </select>
           <div style="margin-left:auto;position:relative;">
             <input type="text" id="skuSearch" oninput="renderSKUView()" placeholder="Search SKU..." 
-              style="background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:'DM Sans',sans-serif;padding:7px 12px 7px 32px;outline:none;width:220px;">
+              style="background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:'Space Grotesk',sans-serif;padding:7px 12px 7px 32px;outline:none;width:220px;">
             <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:13px;">⌕</span>
           </div>
         </div>
@@ -1091,7 +1098,7 @@
 
         <div id="sku-detail-panel" style="display:none;margin-top:24px;">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-            <button onclick="closeSKUDetail()" style="background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;">← Back to leaderboard</button>
+            <button onclick="closeSKUDetail()" style="background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;font-family:'Space Grotesk',sans-serif;">← Back to leaderboard</button>
             <span id="sku-detail-name" style="font-size:20px;font-weight:700;letter-spacing:-0.02em;color:var(--text-primary)"></span>
             <span id="sku-detail-cat" class="cat-badge" style="font-size:11px"></span>
           </div>
@@ -1133,7 +1140,7 @@
           <div class="sku-table-header" style="display:flex;justify-content:space-between;align-items:center;">
             <span id="detail-table-title">Top SKUs by MTD Revenue</span>
             <select id="detail-cat-filter" onchange="applyDetailCatFilter()"
-              style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:11px;font-family:'DM Sans',sans-serif;padding:5px 28px 5px 10px;outline:none;cursor:pointer;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 8px center;">
+              style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:11px;font-family:'Space Grotesk',sans-serif;padding:5px 28px 5px 10px;outline:none;cursor:pointer;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 8px center;">
               <option value="All">All Categories</option>
               <option value="Ragi Chips">Ragi Chips</option>
               <option value="Dipsters">Dipsters</option>
@@ -1166,7 +1173,7 @@
             <div style="margin-bottom:10px;">
               <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">SKU</div>
               <input type="text" id="skucmp-a-search" placeholder="Search SKU..." oninput="filterSKUDropdown('a')" onfocus="showSKUDropdown('a')" onblur="setTimeout(()=>hideSKUDropdown('a'),200)"
-                style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'DM Sans',sans-serif;padding:7px 10px;outline:none;">
+                style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'Space Grotesk',sans-serif;padding:7px 10px;outline:none;">
               <div id="skucmp-a-dropdown" style="display:none;position:relative;z-index:50;">
                 <div id="skucmp-a-list" style="background:#1a1a1a;border:1px solid var(--border);border-radius:6px;margin-top:4px;max-height:180px;overflow-y:auto;"></div>
               </div>
@@ -1175,16 +1182,16 @@
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
               <div>
                 <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Start Date</div>
-                <input type="date" id="skucmp-a-start" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'DM Sans',sans-serif;padding:6px 8px;outline:none;">
+                <input type="date" id="skucmp-a-start" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'Space Grotesk',sans-serif;padding:6px 8px;outline:none;">
               </div>
               <div>
                 <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">End Date</div>
-                <input type="date" id="skucmp-a-end" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'DM Sans',sans-serif;padding:6px 8px;outline:none;">
+                <input type="date" id="skucmp-a-end" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'Space Grotesk',sans-serif;padding:6px 8px;outline:none;">
               </div>
             </div>
             <div>
               <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Platform</div>
-              <select id="skucmp-a-platform" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'DM Sans',sans-serif;padding:6px 8px;outline:none;">
+              <select id="skucmp-a-platform" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'Space Grotesk',sans-serif;padding:6px 8px;outline:none;">
                 <option value="All">All Platforms</option>
                 <option value="Blinkit">Blinkit</option>
                 <option value="Zepto">Zepto</option>
@@ -1200,7 +1207,7 @@
             <div style="margin-bottom:10px;">
               <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">SKU</div>
               <input type="text" id="skucmp-b-search" placeholder="Search SKU..." oninput="filterSKUDropdown('b')" onfocus="showSKUDropdown('b')" onblur="setTimeout(()=>hideSKUDropdown('b'),200)"
-                style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'DM Sans',sans-serif;padding:7px 10px;outline:none;">
+                style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'Space Grotesk',sans-serif;padding:7px 10px;outline:none;">
               <div id="skucmp-b-dropdown" style="display:none;position:relative;z-index:50;">
                 <div id="skucmp-b-list" style="background:#1a1a1a;border:1px solid var(--border);border-radius:6px;margin-top:4px;max-height:180px;overflow-y:auto;"></div>
               </div>
@@ -1209,16 +1216,16 @@
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
               <div>
                 <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Start Date</div>
-                <input type="date" id="skucmp-b-start" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'DM Sans',sans-serif;padding:6px 8px;outline:none;">
+                <input type="date" id="skucmp-b-start" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'Space Grotesk',sans-serif;padding:6px 8px;outline:none;">
               </div>
               <div>
                 <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">End Date</div>
-                <input type="date" id="skucmp-b-end" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'DM Sans',sans-serif;padding:6px 8px;outline:none;">
+                <input type="date" id="skucmp-b-end" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'Space Grotesk',sans-serif;padding:6px 8px;outline:none;">
               </div>
             </div>
             <div>
               <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Platform</div>
-              <select id="skucmp-b-platform" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'DM Sans',sans-serif;padding:6px 8px;outline:none;">
+              <select id="skucmp-b-platform" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'Space Grotesk',sans-serif;padding:6px 8px;outline:none;">
                 <option value="All">All Platforms</option>
                 <option value="Blinkit">Blinkit</option>
                 <option value="Zepto">Zepto</option>
@@ -1230,7 +1237,7 @@
         </div>
 
         <div style="text-align:center;margin-bottom:24px;">
-          <button onclick="runSKUCompare()" style="background:#F97316;color:#fff;border:none;border-radius:8px;padding:10px 32px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Compare →</button>
+          <button onclick="runSKUCompare()" style="background:#F97316;color:#fff;border:none;border-radius:8px;padding:10px 32px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;">Compare →</button>
         </div>
 
         <!-- Results -->
@@ -2207,11 +2214,11 @@ function getFilteredData() {
             <div class="compare-stat-label">${m.label}</div>
             <div class="compare-stat-row">
               <div>
-                <div style="font-size:10px;color:#F97316;margin-bottom:3px;font-family:'DM Mono',monospace">${labelA}</div>
+                <div style="font-size:10px;color:#F97316;margin-bottom:3px;font-family:'Geist Mono',monospace">${labelA}</div>
                 <div class="compare-stat-val a">${m.fmt(m.valA)}</div>
               </div>
               <div style="text-align:right">
-                <div style="font-size:10px;color:#3B82F6;margin-bottom:3px;font-family:'DM Mono',monospace">${labelB}</div>
+                <div style="font-size:10px;color:#3B82F6;margin-bottom:3px;font-family:'Geist Mono',monospace">${labelB}</div>
                 <div class="compare-stat-val b">${m.fmt(m.valB)}</div>
               </div>
             </div>
@@ -2335,11 +2342,11 @@ function getFilteredData() {
             <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px;">Sales</div>
             <div style="font-size:18px;font-weight:700;letter-spacing:-0.02em;color:var(--text-primary)">${fmt(sales)}</div>
           </div>
-          <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace">
+          <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:11px;color:var(--text-muted);font-family:'Geist Mono',monospace">
             <span>ROAS ${roas > 0 ? roas.toFixed(2)+'x' : '--'}</span>
             <span>${fmt(units, false)} units</span>
           </div>
-          <div style="font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace;margin-top:4px">
+          <div style="font-size:11px;color:var(--text-muted);font-family:'Geist Mono',monospace;margin-top:4px">
             Spends ${spends > 0 ? fmt(spends) : '--'}
           </div>
           ${growthHtml}
@@ -2453,7 +2460,7 @@ function getFilteredData() {
           <td class="right">${d.spends > 0 ? fmt(d.spends) : '--'}</td>
           <td class="right">${d.roas > 0 ? d.roas.toFixed(2)+'x' : '--'}</td>
           <td class="right">${fmt(d.units, false)}</td>
-          <td class="right" style="color:${dodColor};font-family:'DM Mono',monospace;font-size:12px;">${dodTxt}</td>
+          <td class="right" style="color:${dodColor};font-family:'Geist Mono',monospace;font-size:12px;">${dodTxt}</td>
         </tr>`;
       }).join('');
 
@@ -2723,7 +2730,7 @@ function getFilteredData() {
           <td class="right">
             <div class="pct-bar-wrap">
               <div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${Math.min(100,pct).toFixed(1)}%"></div></div>
-              <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);min-width:36px">${pct.toFixed(1)}%</span>
+              <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--text-muted);min-width:36px">${pct.toFixed(1)}%</span>
             </div>
           </td>
         </tr>`;
@@ -2737,7 +2744,7 @@ function getFilteredData() {
         <td class="right" style="color:var(--text-muted);font-weight:600">${fmt(grandEst)}</td>
         <td class="right" style="color:var(--text-primary);font-weight:700">${fmt(totalRev)}</td>
         <td class="right" style="font-weight:600">${fmt(grandUnits, false)}</td>
-        <td class="right" style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:11px">100%</td>
+        <td class="right" style="color:var(--text-muted);font-family:'Geist Mono',monospace;font-size:11px">100%</td>
       </tr>`;
 
       document.getElementById('detail-sku-tbody').innerHTML = rows + totalRow ||
@@ -2771,7 +2778,7 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
           <td class="right">
             <div class="pct-bar-wrap">
               <div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${Math.min(100,pct).toFixed(1)}%"></div></div>
-              <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);min-width:36px">${pct.toFixed(1)}%</span>
+              <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--text-muted);min-width:36px">${pct.toFixed(1)}%</span>
             </div>
           </td>
         </tr>`;
@@ -2906,10 +2913,10 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
         const pct = totalRev > 0 ? (r.mtdRev / totalRev * 100) : 0;
         const catStyle = CAT_COLORS[r.category] || { bg:'rgba(255,255,255,0.05)', text:'#888' };
         const platBadges = Object.keys(r.platforms).map(p =>
-          `<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-family:'DM Mono',monospace;background:rgba(255,255,255,0.05);color:${PLAT_COLORS[p]||'#888'};margin-right:3px">${p}</span>`
+          `<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-family:'Geist Mono',monospace;background:rgba(255,255,255,0.05);color:${PLAT_COLORS[p]||'#888'};margin-right:3px">${p}</span>`
         ).join('');
         return `<tr style="cursor:pointer" onclick="openSKUDetail('${r.sku.replace(/'/g,"\\'")}')">
-          <td style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:11px">${i+1}</td>
+          <td style="color:var(--text-muted);font-family:'Geist Mono',monospace;font-size:11px">${i+1}</td>
           <td class="sku-name-cell">${r.sku}</td>
           <td><span class="cat-badge" style="background:${catStyle.bg};color:${catStyle.text}">${r.category}</span></td>
           <td class="right" style="color:var(--text-primary);font-weight:600">${fmt(r.mtdRev)}</td>
@@ -2918,7 +2925,7 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
           <td class="right">
             <div class="pct-bar-wrap">
               <div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${Math.min(100,pct).toFixed(1)}%;background:${catStyle.text}"></div></div>
-              <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);min-width:36px">${pct.toFixed(1)}%</span>
+              <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--text-muted);min-width:36px">${pct.toFixed(1)}%</span>
             </div>
           </td>
           <td>${platBadges}</td>
@@ -3187,11 +3194,11 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
           <div class="kpi-label">${m.label}</div>
           <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:8px;">
             <div>
-              <div style="font-size:9px;color:#F97316;font-family:'DM Mono',monospace;margin-bottom:2px;">A · ${a.skuName.split(' ').slice(0,2).join(' ')}</div>
+              <div style="font-size:9px;color:#F97316;font-family:'Geist Mono',monospace;margin-bottom:2px;">A · ${a.skuName.split(' ').slice(0,2).join(' ')}</div>
               <div style="font-size:18px;font-weight:700;letter-spacing:-0.02em;color:#F97316">${m.valA}</div>
             </div>
             <div style="text-align:right">
-              <div style="font-size:9px;color:#3B82F6;font-family:'DM Mono',monospace;margin-bottom:2px;">B · ${b.skuName.split(' ').slice(0,2).join(' ')}</div>
+              <div style="font-size:9px;color:#3B82F6;font-family:'Geist Mono',monospace;margin-bottom:2px;">B · ${b.skuName.split(' ').slice(0,2).join(' ')}</div>
               <div style="font-size:18px;font-weight:700;letter-spacing:-0.02em;color:#3B82F6">${m.valB}</div>
             </div>
           </div>
