@@ -1580,6 +1580,21 @@
 const SKU_URL = API_URL + "&type=sku";
 const SKU_DAILY_URL = API_URL + "&type=skudaily";
 const SHOPIFY_URL = API_URL + "&type=shopify";
+    // Cooler "gradient-to" shade for each base color — fades darker bar bottom → lighter top
+    const GRAD_PAIRS = {
+      '#F97316': '#FDBA74', // orange → peach
+      '#A855F7': '#E879F9', // purple → magenta
+      '#22C55E': '#4ADE80', // green → mint
+      '#3B82F6': '#60A5FA', // blue → sky
+      '#EAB308': '#FCD34D', // yellow → amber-light
+      '#EF4444': '#FCA5A5', // red → coral
+      '#665FEC': '#A78BFA', // zepto purple → lavender
+      '#0050ff': '#60A5FA', // instamart blue → sky
+      '#A0CD4A': '#BEF264', // big basket green → lime
+      '#96bf48': '#BEF264'  // shopify green → lime
+    };
+    function gradTo(c) { return GRAD_PAIRS[c] || c; }
+
     const PLATFORM_CONFIG = {
       'Zepto':      { color: '#665FEC', budget: { '04': 1500000, '05': 2070000 } },
       'Blinkit':    { color: '#EAB308', budget: { '04': 0,       '05': 0 } },
@@ -2792,10 +2807,23 @@ function getFilteredData() {
       if (detailChartDaily) detailChartDaily.destroy();
       detailChartDaily = new ApexCharts(document.querySelector('#detail-chart-daily'), {
         series: [{ name: 'Sales', data: values }],
-        chart: { type: 'bar', height: 260, toolbar: { show: false }, background: 'transparent', fontFamily: 'DM Sans, sans-serif' },
+        chart: { type: 'bar', height: 260, toolbar: { show: false }, background: 'transparent', fontFamily: 'Space Grotesk, sans-serif' },
         theme: { mode: 'dark' },
         colors: ['#F97316'],
-        plotOptions: { bar: { borderRadius: 3, columnWidth: '60%' } },
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shade: 'dark',
+            type: 'vertical',
+            shadeIntensity: 0.4,
+            gradientToColors: ['#FDBA74'],
+            inverseColors: false,
+            opacityFrom: 1,
+            opacityTo: 0.75,
+            stops: [0, 100]
+          }
+        },
+        plotOptions: { bar: { borderRadius: 5, columnWidth: '55%' } },
         dataLabels: { enabled: false },
         grid: { borderColor: 'rgba(255,255,255,0.05)', strokeDashArray: 4 },
         xaxis: { categories: labels, tickAmount: 10, labels: { style: { colors: '#555', fontSize: '11px' }, rotate: -45, rotateAlways: true }, axisBorder: { show: false }, axisTicks: { show: false } },
@@ -2820,14 +2848,51 @@ function getFilteredData() {
       detailChartCat = new ApexCharts(document.querySelector('#detail-chart-cat'), {
         series: values,
         labels: labels,
-        chart: { type: 'donut', height: 260, background: 'transparent', fontFamily: 'DM Sans, sans-serif' },
+        chart: { type: 'donut', height: 260, background: 'transparent', fontFamily: 'Space Grotesk, sans-serif' },
         theme: { mode: 'dark' },
         colors: colors,
-        stroke: { show: true, colors: ['#111'], width: 2 },
-        dataLabels: { enabled: true, style: { fontSize: '11px' }, formatter: (val) => val.toFixed(1) + '%' },
-        legend: { position: 'bottom', labels: { colors: '#888' }, fontSize: '12px' },
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shade: 'dark',
+            type: 'diagonal2',
+            shadeIntensity: 0.6,
+            gradientToColors: colors.map(c => gradTo(c)),
+            inverseColors: false,
+            opacityFrom: 1,
+            opacityTo: 0.85,
+            stops: [0, 100]
+          }
+        },
+        stroke: { show: true, colors: ['#0a0e1a'], width: 3 },
+        dataLabels: {
+          enabled: true,
+          style: { fontSize: '12px', fontWeight: 600, fontFamily: 'Space Grotesk' },
+          dropShadow: { enabled: false },
+          formatter: (val) => val.toFixed(1) + '%'
+        },
+        legend: {
+          position: 'bottom',
+          labels: { colors: '#9ca3b3' },
+          fontSize: '12px',
+          fontFamily: 'Space Grotesk',
+          markers: { width: 8, height: 8, radius: 8 },
+          itemMargin: { horizontal: 10, vertical: 4 }
+        },
         tooltip: { y: { formatter: v => fmt(v) }, theme: 'dark' },
-        plotOptions: { pie: { donut: { size: '60%' } } },
+        plotOptions: {
+          pie: {
+            donut: {
+              size: '68%',
+              labels: {
+                show: true,
+                name: { show: true, fontSize: '11px', color: '#6b7280', offsetY: -4, fontFamily: 'Geist Mono' },
+                value: { show: true, fontSize: '20px', color: '#fff', fontWeight: 500, offsetY: 6, fontFamily: 'Space Grotesk', formatter: v => fmt(parseFloat(v)) },
+                total: { show: true, label: 'Total', color: '#6b7280', fontSize: '11px', fontFamily: 'Geist Mono', formatter: (w) => fmt(w.globals.seriesTotals.reduce((a,b)=>a+b,0)) }
+              }
+            }
+          }
+        }
       });
       detailChartCat.render();
     }
