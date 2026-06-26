@@ -1980,6 +1980,18 @@ function getFilteredData() {
         series: [{ name: 'Sales', data: salesVals }],
         chart: { ...baseOpts.chart, type: 'bar', height: 240 },
         colors: colors,
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shade: 'dark',
+            type: 'vertical',
+            shadeIntensity: 0.5,
+            opacityFrom: 1,
+            opacityTo: 0.6,
+            stops: [0, 100]
+          }
+        },
+        plotOptions: { bar: { borderRadius: 6, columnWidth: '50%', distributed: true } },
         yaxis: { labels: { formatter: v => fmt(v), style: { colors: '#555', fontSize: '11px' } } },
         tooltip: { y: { formatter: v => fmt(v) }, theme: 'dark' }
       });
@@ -1991,6 +2003,18 @@ function getFilteredData() {
         series: [{ name: 'ROAS', data: roasVals }],
         chart: { ...baseOpts.chart, type: 'bar', height: 240 },
         colors: colors,
+        fill: {
+          type: 'gradient',
+          gradient: {
+            shade: 'dark',
+            type: 'vertical',
+            shadeIntensity: 0.5,
+            opacityFrom: 1,
+            opacityTo: 0.6,
+            stops: [0, 100]
+          }
+        },
+        plotOptions: { bar: { borderRadius: 6, columnWidth: '50%', distributed: true } },
         yaxis: { labels: { formatter: v => v > 0 ? v.toFixed(1)+'x' : '--', style: { colors: '#555', fontSize: '11px' } } },
         tooltip: { y: { formatter: v => fmtRoas(v) }, theme: 'dark' },
         annotations: {
