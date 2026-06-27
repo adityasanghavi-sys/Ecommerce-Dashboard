@@ -615,6 +615,64 @@
     .tab-btn:hover { color: var(--text-primary); }
     .tab-btn.active { color: var(--text-primary); border-bottom-color: var(--orange); }
 
+    /* Channel filter chips */
+    .cmp-channel-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 12px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 24px;
+    }
+    .cmp-channel-label {
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--text-muted);
+      font-family: 'Geist Mono', monospace;
+    }
+    .cmp-channel-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+    .cmp-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 500;
+      font-family: 'Space Grotesk', sans-serif;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .cmp-chip:hover { border-color: var(--border-hover); color: var(--text-primary); }
+    .cmp-chip.active {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.25);
+      color: var(--text-primary);
+    }
+    .cmp-chip-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      display: inline-block;
+    }
+    .cmp-channel-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'Geist Mono', monospace;
+      margin-left: auto;
+    }
+
     /* Compare tab */
     .compare-mode-toggle {
       display: inline-flex;
@@ -892,9 +950,9 @@
 
       <div id="view-compare" style="display:none">
 
-        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
           <div class="compare-mode-toggle">
-<button class="cmode-btn active" onclick="setCmpMode('day')" id="cmode-day">Day vs Day</button>
+            <button class="cmode-btn active" onclick="setCmpMode('day')" id="cmode-day">Day vs Day</button>
             <button class="cmode-btn" onclick="setCmpMode('week')" id="cmode-week">Week vs Week</button>
             <button class="cmode-btn" onclick="setCmpMode('month')" id="cmode-month">Month vs Month</button>
             <button class="cmode-btn" onclick="setCmpMode('mom')" id="cmode-mom">MoM</button>
@@ -902,6 +960,22 @@
             <button class="cmode-btn" onclick="setCmpMode('custom')" id="cmode-custom">Custom Range</button>
           </div>
           <button onclick="runCompare()" style="background:var(--orange);color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;">Compare →</button>
+        </div>
+
+        <!-- Channel filter -->
+        <div class="cmp-channel-bar">
+          <span class="cmp-channel-label">Channels</span>
+          <div class="cmp-channel-pills" id="cmp-channel-pills">
+            <button class="cmp-chip active" data-platform="__ALL__" onclick="toggleCmpChannel('__ALL__')">All</button>
+            <button class="cmp-chip" data-platform="Blinkit" onclick="toggleCmpChannel('Blinkit')"><span class="cmp-chip-dot" style="background:#EAB308"></span>Blinkit</button>
+            <button class="cmp-chip" data-platform="Zepto" onclick="toggleCmpChannel('Zepto')"><span class="cmp-chip-dot" style="background:#665FEC"></span>Zepto</button>
+            <button class="cmp-chip" data-platform="Instamart" onclick="toggleCmpChannel('Instamart')"><span class="cmp-chip-dot" style="background:#0050ff"></span>Instamart</button>
+            <button class="cmp-chip" data-platform="Big Basket" onclick="toggleCmpChannel('Big Basket')"><span class="cmp-chip-dot" style="background:#A0CD4A"></span>Big Basket</button>
+            <button class="cmp-chip" data-platform="Amazon" onclick="toggleCmpChannel('Amazon')"><span class="cmp-chip-dot" style="background:#F97316"></span>Amazon</button>
+            <button class="cmp-chip" data-platform="First Club" onclick="toggleCmpChannel('First Club')"><span class="cmp-chip-dot" style="background:#A855F7"></span>First Club</button>
+            <button class="cmp-chip" data-platform="Shopify" onclick="toggleCmpChannel('Shopify')"><span class="cmp-chip-dot" style="background:#96bf48"></span>Shopify</button>
+          </div>
+          <span class="cmp-channel-hint" id="cmp-channel-hint">Showing all platforms</span>
         </div>
 
         <div class="compare-pickers" id="day-pickers">
@@ -2100,6 +2174,42 @@ function getFilteredData() {
     // ─── COMPARE ENGINE ────────────────────────────────────────────────────────
     let cmpMode = 'day';
     let cmpChartSales = null, cmpChartRoas = null, cmpChartTrend = null;
+    let cmpSelectedChannels = new Set(); // empty = ALL
+
+    function toggleCmpChannel(platform) {
+      const isAll = platform === '__ALL__';
+      if (isAll) {
+        cmpSelectedChannels.clear();
+      } else {
+        if (cmpSelectedChannels.has(platform)) {
+          cmpSelectedChannels.delete(platform);
+        } else {
+          cmpSelectedChannels.add(platform);
+        }
+      }
+      // Update pill UI
+      document.querySelectorAll('.cmp-chip').forEach(btn => {
+        const p = btn.getAttribute('data-platform');
+        if (p === '__ALL__') {
+          btn.classList.toggle('active', cmpSelectedChannels.size === 0);
+        } else {
+          btn.classList.toggle('active', cmpSelectedChannels.has(p));
+        }
+      });
+      // Update hint
+      const hint = document.getElementById('cmp-channel-hint');
+      if (cmpSelectedChannels.size === 0) {
+        hint.textContent = 'Showing all platforms';
+      } else {
+        const list = [...cmpSelectedChannels];
+        hint.textContent = list.length <= 3 ? list.join(' + ') : `${list.length} channels selected`;
+      }
+    }
+
+    function applyCmpChannelFilter(rows) {
+      if (cmpSelectedChannels.size === 0) return rows;
+      return rows.filter(r => cmpSelectedChannels.has(String(r.Platform)));
+    }
 
  function setCmpMode(m) {
       cmpMode = m;
@@ -2258,7 +2368,7 @@ function getFilteredData() {
         const periods = months.map(({year, month}) => {
           const start = new Date(year, month-1, 1); start.setHours(0,0,0,0);
           const end   = new Date(year, month, 0);   end.setHours(23,59,59,999);
-          const rows  = filterByDateRange(start, end);
+          const rows  = applyCmpChannelFilter(filterByDateRange(start, end));
           return { label: `${mNames[month]} ${year}`, agg: aggregatePeriod(rows) };
         });
         renderMultiPeriod(periods, 'MoM');
@@ -2282,7 +2392,7 @@ function getFilteredData() {
           const weekStart = new Date(cursor); weekStart.setHours(0,0,0,0);
           const weekEnd   = new Date(cursor); weekEnd.setDate(weekEnd.getDate()+6); weekEnd.setHours(23,59,59,999);
           const actualEnd = weekEnd > endD ? endD : weekEnd;
-          const rows = filterByDateRange(weekStart, actualEnd);
+          const rows = applyCmpChannelFilter(filterByDateRange(weekStart, actualEnd));
           const fmtD = d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
           periods.push({ label: `W${idx} (${fmtD(weekStart)}→${fmtD(actualEnd)})`, agg: aggregatePeriod(rows) });
           cursor.setDate(cursor.getDate() + 7);
@@ -2300,7 +2410,7 @@ function getFilteredData() {
         const start = parseLocalDate(sd); start.setHours(0,0,0,0);
         const end   = parseLocalDate(ed); end.setHours(23,59,59,999);
         if (start > end) { alert('Start date must be before end date.'); return; }
-        const rows = filterByDateRange(start, end);
+        const rows = applyCmpChannelFilter(filterByDateRange(start, end));
         renderDailyBreakdown(rows, start, end);
         return;
       }
@@ -2317,8 +2427,8 @@ function getFilteredData() {
         const endA   = new Date(yrA, moA, 0);   endA.setHours(0,0,0,0);
         const startB = new Date(yrB, moB-1, 1); startB.setHours(0,0,0,0);
         const endB   = new Date(yrB, moB, 0);   endB.setHours(0,0,0,0);
-        rowsA = filterByDateRange(startA, endA);
-        rowsB = filterByDateRange(startB, endB);
+        rowsA = applyCmpChannelFilter(filterByDateRange(startA, endA));
+        rowsB = applyCmpChannelFilter(filterByDateRange(startB, endB));
         const mNames = { 1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'May',6:'Jun',7:'Jul',8:'Aug',9:'Sep',10:'Oct',11:'Nov',12:'Dec' };
         labelA = `${mNames[moA]} ${yrA}`; labelB = `${mNames[moB]} ${yrB}`;
         datesA = null; datesB = null;
@@ -2333,8 +2443,8 @@ function getFilteredData() {
           const rB = { start: new Date(bsStart), end: new Date(bsEnd) };
           rA.start.setHours(0,0,0,0); rA.end.setHours(0,0,0,0);
           rB.start.setHours(0,0,0,0); rB.end.setHours(0,0,0,0);
-          rowsA = filterByDateRange(rA.start, rA.end);
-          rowsB = filterByDateRange(rB.start, rB.end);
+          rowsA = applyCmpChannelFilter(filterByDateRange(rA.start, rA.end));
+          rowsB = applyCmpChannelFilter(filterByDateRange(rB.start, rB.end));
           labelA = `${asStart} → ${asEnd}`; labelB = `${bsStart} → ${bsEnd}`;
         } else {
           const adcS = document.getElementById('cmp-custom-a-dcstart').value;
@@ -2344,8 +2454,8 @@ function getFilteredData() {
           if (!adcS || !adcD || !bdcS || !bdcD) { alert('Fill all fields.'); return; }
           const rA = getDateRange(adcS, adcD);
           const rB = getDateRange(bdcS, bdcD);
-          rowsA = filterByDateRange(rA.start, rA.end);
-          rowsB = filterByDateRange(rB.start, rB.end);
+          rowsA = applyCmpChannelFilter(filterByDateRange(rA.start, rA.end));
+          rowsB = applyCmpChannelFilter(filterByDateRange(rB.start, rB.end));
           labelA = `${adcS} (${adcD}d)`; labelB = `${bdcS} (${bdcD}d)`;
         }
         datesA = null; datesB = null;
@@ -2354,8 +2464,8 @@ function getFilteredData() {
         const dayB = document.getElementById('cmp-day-b').value;
         if (!dayA || !dayB) { alert('Pick both dates.'); return; }
         const rA = getDateRange(dayA, 1), rB = getDateRange(dayB, 1);
-        rowsA = filterByDateRange(rA.start, rA.end);
-        rowsB = filterByDateRange(rB.start, rB.end);
+        rowsA = applyCmpChannelFilter(filterByDateRange(rA.start, rA.end));
+        rowsB = applyCmpChannelFilter(filterByDateRange(rB.start, rB.end));
         labelA = dayA; labelB = dayB;
         datesA = null; datesB = null;
       } else {
@@ -2363,8 +2473,8 @@ function getFilteredData() {
         const wB = document.getElementById('cmp-week-b-start').value;
         if (!wA || !wB) { alert('Pick both week start dates.'); return; }
         const rA = getDateRange(wA, 7), rB = getDateRange(wB, 7);
-        rowsA = filterByDateRange(rA.start, rA.end);
-        rowsB = filterByDateRange(rB.start, rB.end);
+        rowsA = applyCmpChannelFilter(filterByDateRange(rA.start, rA.end));
+        rowsB = applyCmpChannelFilter(filterByDateRange(rB.start, rB.end));
         labelA = wA + ' (7d)'; labelB = wB + ' (7d)';
         datesA = rA; datesB = rB;
       }
