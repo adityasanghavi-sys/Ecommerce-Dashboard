@@ -890,6 +890,8 @@
           <div class="control-divider"></div>
           <button class="control-btn" onclick="setMonth('06')" id="btn-06">Jun 26</button>
           <div class="control-divider"></div>
+          <button class="control-btn" onclick="setMonth('07')" id="btn-07">Jul 26</button>
+          <div class="control-divider"></div>
           <button class="control-btn" onclick="setMonth('All')" id="btn-All">All</button>
         </div>
 
@@ -1445,8 +1447,9 @@
             <button class="control-btn" onclick="setShopifyMonth('05')" id="shopify-btn-05">May 26</button>
             <div class="control-divider"></div>
             <button class="control-btn" onclick="setShopifyMonth('06')" id="shopify-btn-06">Jun 26</button>
+            <div class="control-divider"></div>
+            <button class="control-btn" onclick="setShopifyMonth('07')" id="shopify-btn-07">Jul 26</button>
           </div>
-        </div>
 
         <div class="section-label">Summary</div>
         <div class="kpi-grid" id="shopify-kpi-grid" style="margin-bottom:28px;"></div>
@@ -1722,7 +1725,7 @@ const SHOPIFY_URL = API_URL + "&type=shopify";
     // ─── FILTERS ───────────────────────────────────────────────────────────────
     function setMonth(m) {
       activeMonth = m;
-      ['04','05','06','All'].forEach(k => {
+      ['04','05','06','07','All'].forEach(k => {
         document.getElementById('btn-' + k).classList.toggle('active', k === m);
       });
       if (m !== '05' && (activePeriod === 't1' || activePeriod === 't2')) {
@@ -1812,7 +1815,7 @@ function getFilteredData() {
     }
 
     function monthLabel(m) {
-      return m === '04' ? 'April 2026' : m === '05' ? 'May 2026' : 'All Time';
+      return m === '04' ? 'April 2026' : m === '05' ? 'May 2026' : m === '06' ? 'June 2026' : m === '07' ? 'July 2026' : 'All Time';
     }
 
     // ─── AGGREGATE ─────────────────────────────────────────────────────────────
@@ -2153,7 +2156,7 @@ function getFilteredData() {
       } else {
         ShaderManager.unmount('ai-shader-container');
       }
-      if (tab === 'shopify') { activeShopifyMonth = '04'; ['04','05','06'].forEach(k => { const b = document.getElementById('shopify-btn-'+k); if(b) b.classList.toggle('active', k==='04'); }); loadShopifyData(); }
+     if (tab === 'shopify') { activeShopifyMonth = '04'; ['04','05','06','07'].forEach(k => { const b = document.getElementById('shopify-btn-'+k); if(b) b.classList.toggle('active', k==='04'); }); loadShopifyData(); }
       const kg = document.getElementById('kpi-grid');
       const dc = document.getElementById('dashboard-content');
       if (kg) kg.style.display = tab === 'overview' ? 'grid' : 'none';
@@ -3632,7 +3635,7 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
 
     function setShopifyMonth(m) {
       activeShopifyMonth = m;
-      ['04','05','06'].forEach(k => {
+      ['04','05','06','07'].forEach(k => {
         const btn = document.getElementById('shopify-btn-' + k);
         if (btn) btn.classList.toggle('active', k === m);
       });
@@ -3641,7 +3644,7 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
 
     function renderShopifyTab() {
       const rows = shopifyRawData;
-      const monthNames = { '04':'April', '05':'May', '06':'June' };
+      const monthNames = { '04':'April', '05':'May', '06':'June', '07':'July' };
       const monthName = monthNames[activeShopifyMonth] || '';
 
       document.getElementById('shopify-subtitle').textContent =
@@ -3792,7 +3795,7 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
         : document.getElementById('period-t2').classList.contains('active') ? 'T-2'
         : document.getElementById('period-7d').classList.contains('active') ? '7 Days'
         : 'Custom';
-      const monthLabel = activeMonth === '04' ? 'April 2026' : activeMonth === '05' ? 'May 2026' : 'All Time';
+      const monthLabel = activeMonth === '04' ? 'April 2026' : activeMonth === '05' ? 'May 2026' : activeMonth === '06' ? 'June 2026' : activeMonth === '07' ? 'July 2026' : 'All Time';
 
       const filtered = getFilteredData();
       const agg = aggregateByPlatform(filtered);
