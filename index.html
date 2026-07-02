@@ -2812,19 +2812,23 @@ function getFilteredData() {
             for (let d = 1; d <= 31; d++) {
                 trueMtdRev += Number(r['Day' + d]) || 0;
             }
-            r.MTDRevenue = trueMtdRev; 
+            r.MTDRevenue = trueMtdRev;
 
-            // Calculate Forecast based strictly on calendar days
             const m = Number(r.Month);
-            const daysInMonth = new Date(2026, m, 0).getDate(); 
+            const daysInMonth = new Date(2026, m, 0).getDate();
+            const currentMonth = latestDate.getMonth() + 1;
 
-            if (m === latestDate.getMonth() + 1) { 
-                r.EstRevenue = (trueMtdRev / daysElapsed) * daysInMonth; 
+            if (m === currentMonth) {
+                // Ongoing month: project forward
+                r.EstRevenue = daysElapsed > 0 ? (trueMtdRev / daysElapsed) * daysInMonth : trueMtdRev;
+            } else if (m < currentMonth) {
+                // Past month: fully complete, no projection
+                r.EstRevenue = trueMtdRev;
             } else {
-                r.EstRevenue = trueMtdRev; 
+                // Future month: no data yet
+                r.EstRevenue = 0;
             }
         });
-
         skuData = fetchedData;
         console.log('SKU rows loaded:', skuData.length, 'Calendar days elapsed:', daysElapsed);
       } catch(e) {
