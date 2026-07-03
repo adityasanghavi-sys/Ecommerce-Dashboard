@@ -429,7 +429,7 @@
       letter-spacing: 0.08em;
     }
 
-    /* MoM comparison section */
+   /* MoM comparison section */
     .mom-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -437,6 +437,36 @@
       margin-bottom: 24px;
     }
     @media (max-width: 768px) { .mom-grid { grid-template-columns: 1fr; } }
+
+    /* 3-Column Sales Breakdown */
+    .sales-breakdown-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 1024px) { 
+      .sales-breakdown-grid { grid-template-columns: 1fr; } 
+    }
+    
+    .trend-dropdown {
+       background: rgba(255,255,255,0.04);
+       border: 1px solid rgba(255,255,255,0.1);
+       border-radius: 6px;
+       color: #f0f0f0;
+       font-size: 11px;
+       padding: 4px 24px 4px 10px;
+       outline: none;
+       cursor: pointer;
+       appearance: none;
+       background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="%239ca3b3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+       background-repeat: no-repeat;
+       background-position: right 6px center;
+       font-family: 'Space Grotesk', sans-serif;
+       transition: border-color 0.2s;
+    }
+    .trend-dropdown:hover { border-color: rgba(255,255,255,0.25); }
+    .trend-dropdown option { background: #11131c; } 
 
     /* Divider */
     .section-label {
@@ -940,17 +970,36 @@
         <div class="section-caption">Six metrics · live from OMS Tracker</div>
         <div class="kpi-grid" id="kpi-grid"></div>
 
-        <div class="section-label">Platform breakdown</div>
-        <div class="section-caption">Sales mix and ROAS efficiency</div>
-        <div class="mom-grid">
+        <div class="section-label">Sales breakdown</div>
+        <div class="section-caption">Mix · aggregate trend · trend by platform</div>
+        <div class="sales-breakdown-grid">
+          
           <div class="chart-section">
-            <div class="chart-title">Sales by Platform (₹)</div>
-            <div id="chart-sales" style="height:260px"></div>
+            <div class="chart-title">Sales Mix by Platform (₹)</div>
+            <div id="chart-mix" style="height:260px"></div>
           </div>
+          
           <div class="chart-section">
-            <div class="chart-title">ROAS by Platform</div>
-            <div id="chart-roas" style="height:260px"></div>
+            <div class="chart-title">Total Sales Trend · Monthly</div>
+            <div id="chart-trend-total" style="height:260px"></div>
           </div>
+          
+          <div class="chart-section" style="padding-top:18px;">
+            <div class="chart-title" style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;">Sales Trend by Platform</span>
+              <select id="trend-platform-select" class="trend-dropdown" onchange="renderPlatformTrendChart()">
+                <option value="Blinkit">Blinkit</option>
+                <option value="Zepto">Zepto</option>
+                <option value="Instamart">Instamart</option>
+                <option value="Shopify">Shopify</option>
+                <option value="Big Basket">Big Basket</option>
+                <option value="Amazon">Amazon</option>
+                <option value="First Club">First Club</option>
+              </select>
+            </div>
+            <div id="chart-trend-platform" style="height:260px; margin-top:-8px;"></div>
+          </div>
+          
         </div>
 
         <div class="section-label">Channel scorecards</div>
@@ -1688,6 +1737,7 @@ const FY25_URL = API_URL + "&type=fy25";
       'Big Basket': { color: '#A0CD4A', budget: { '04': 0,       '05': 0 } },
       'Amazon':     { color: '#F97316', budget: { '04': 0,       '05': 0 } },
       'First Club': { color: '#A855F7', budget: { '04': 0,       '05': 0 } },
+      'Shopify':    { color: '#ec4899', budget: {} }
     };
 
     // ─── STATE ─────────────────────────────────────────────────────────────────
@@ -1698,8 +1748,9 @@ const FY25_URL = API_URL + "&type=fy25";
     let activeMonth = '07';
     let activePeriod = 'mtd';
     // t1, t2, 7d, mtd, custom
-    let chartSales = null;
-    let chartRoas = null;
+    let chartMix = null;
+    let chartTrendTotal = null;
+    let chartTrendPlatform = null;
 
     // ─── INIT ──────────────────────────────────────────────────────────────────
     async function init() {
@@ -2092,90 +2143,103 @@ function getFilteredData() {
     }
 
     // ─── CHARTS ────────────────────────────────────────────────────────────────
+    // Helper to extract monthly trend data
+    function getTrendData(targetPlatform = null) {
+      const allData = [...fy25Data, ...rawData];
+      const monthly = {};
+
+      allData.forEach(r => {
+        if (targetPlatform) {
+           if (String(r.Platform) !== targetPlatform) return;
+        } else {
+           // Respect the global platform dropdown if no specific target
+           const globalPlat = document.getElementById('platformFilter').value;
+           if (globalPlat !== 'All' && String(r.Platform) !== globalPlat) return;
+        }
+        
+        const d = parseLocalDate(r.Date);
+        if (isNaN(d)) return;
+        const mKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        monthly[mKey] = (monthly[mKey] || 0) + (Number(r.Sales) || 0);
+      });
+
+      const sortedMonths = Object.keys(monthly).sort();
+      const mNames = { '01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'May','06':'Jun','07':'Jul','08':'Aug','09':'Sep','10':'Oct','11':'Nov','12':'Dec' };
+      
+      const labels = sortedMonths.map(m => mNames[m.split('-')[1]]);
+      const values = sortedMonths.map(m => monthly[m]);
+
+      return { labels, values };
+    }
+
     function renderCharts(agg) {
+      // 1. SALES MIX (DONUT)
       const platforms = Object.keys(agg).sort((a,b) => agg[b].sales - agg[a].sales);
-      const colors = platforms.map(p => PLATFORM_CONFIG[p]?.color || '#888');
-      const salesVals = platforms.map(p => agg[p].sales);
-      const roasVals  = platforms.map(p => parseFloat(agg[p].roas.toFixed(2)));
+      const mixVals = platforms.map(p => agg[p].sales);
+      const mixColors = platforms.map(p => PLATFORM_CONFIG[p]?.color || '#888');
 
-      const baseOpts = {
-        chart: { toolbar: { show: false }, background: 'transparent', fontFamily: 'DM Sans, sans-serif' },
+      if (chartMix) chartMix.destroy();
+      chartMix = new ApexCharts(document.querySelector('#chart-mix'), {
+        series: mixVals,
+        labels: platforms,
+        chart: { type: 'donut', height: 260, background: 'transparent', fontFamily: 'Space Grotesk, sans-serif' },
         theme: { mode: 'dark' },
-        grid: { borderColor: 'rgba(255,255,255,0.05)', strokeDashArray: 4, yaxis: { lines: { show: true } }, xaxis: { lines: { show: false } } },
-        xaxis: {
-          categories: platforms,
-          labels: { style: { colors: '#555', fontSize: '12px' }, rotate: 0 },
-          axisBorder: { show: false }, axisTicks: { show: false }
-        },
-        plotOptions: { bar: { borderRadius: 5, columnWidth: '55%', distributed: true } },
+        colors: mixColors,
+        stroke: { show: true, colors: ['#11131c'], width: 2 },
         dataLabels: { enabled: false },
-        legend: { show: false },
-        tooltip: { theme: 'dark' },
-      };
+        legend: { position: 'right', labels: { colors: '#9ca3b3' }, fontSize: '11px', fontFamily: 'Geist Mono, monospace', markers: { width: 10, height: 10, radius: 2 }, itemMargin: { vertical: 6 } },
+        tooltip: { y: { formatter: v => fmt(v) }, theme: 'dark' },
+        plotOptions: { pie: { donut: { size: '65%' } } }
+      });
+      chartMix.render();
 
-      if (chartSales) chartSales.destroy();
-      chartSales = new ApexCharts(document.querySelector('#chart-sales'), {
-        ...baseOpts,
-        series: [{ name: 'Sales', data: salesVals }],
-        chart: { ...baseOpts.chart, type: 'bar', height: 260 },
-        colors: colors,
-        fill: {
-          type: 'gradient',
-          gradient: {
-            shade: 'light',
-            type: 'vertical',
-            shadeIntensity: 0.15,
-            gradientToColors: colors.map(c => gradTo(c)),
-            inverseColors: false,
-            opacityFrom: 1,
-            opacityTo: 0.95,
-            stops: [0, 100]
-          }
-        },
-        states: {
-          hover: { filter: { type: 'lighten', value: 0.15 } }
-        },
-        plotOptions: { bar: { borderRadius: 6, columnWidth: '45%', distributed: true } },
-        yaxis: { labels: { formatter: v => fmt(v), style: { colors: '#9ca3b3', fontSize: '11px' } } },
+      // 2. TOTAL SALES TREND
+      const totalTrend = getTrendData();
+      const globalPlat = document.getElementById('platformFilter').value;
+      const totalColor = globalPlat !== 'All' ? (PLATFORM_CONFIG[globalPlat]?.color || '#F97316') : '#F97316';
+
+      if (chartTrendTotal) chartTrendTotal.destroy();
+      chartTrendTotal = new ApexCharts(document.querySelector('#chart-trend-total'), {
+        series: [{ name: 'Sales', data: totalTrend.values }],
+        chart: { type: 'area', height: 240, toolbar: { show: false }, background: 'transparent', fontFamily: 'Space Grotesk, sans-serif' },
+        theme: { mode: 'dark' },
+        colors: [totalColor],
+        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.0, stops: [0, 100] } },
+        stroke: { curve: 'straight', width: 3 },
+        markers: { size: 5, colors: [totalColor], strokeColors: '#11131c', strokeWidth: 2, hover: { size: 7 } },
+        dataLabels: { enabled: false },
+        grid: { borderColor: 'rgba(255,255,255,0.05)', strokeDashArray: 4, xaxis: { lines: { show: false } }, yaxis: { lines: { show: true } } },
+        xaxis: { categories: totalTrend.labels, labels: { style: { colors: '#9ca3b3', fontSize: '11px', fontFamily: 'Geist Mono, monospace' } }, axisBorder: { show: false }, axisTicks: { show: false }, crosshairs: { show: false } },
+        yaxis: { labels: { formatter: v => fmt(v), style: { colors: '#9ca3b3', fontSize: '11px', fontFamily: 'Geist Mono, monospace' } } },
         tooltip: { y: { formatter: v => fmt(v) }, theme: 'dark' }
       });
-      chartSales.render();
+      chartTrendTotal.render();
 
-     if (chartRoas) chartRoas.destroy();
-      chartRoas = new ApexCharts(document.querySelector('#chart-roas'), {
-        ...baseOpts,
-        series: [{ name: 'ROAS', data: roasVals }],
-        chart: { ...baseOpts.chart, type: 'bar', height: 260 },
-        colors: colors,
-        fill: {
-          type: 'gradient',
-          gradient: {
-            shade: 'light',
-            type: 'vertical',
-            shadeIntensity: 0.15,
-            gradientToColors: colors.map(c => gradTo(c)),
-            inverseColors: false,
-            opacityFrom: 1,
-            opacityTo: 0.95,
-            stops: [0, 100]
-          }
-        },
-        states: {
-          hover: { filter: { type: 'lighten', value: 0.15 } }
-        },
-        plotOptions: { bar: { borderRadius: 6, columnWidth: '45%', distributed: true } },
-        yaxis: { labels: { formatter: v => v > 0 ? v.toFixed(1)+'x' : '--', style: { colors: '#9ca3b3', fontSize: '11px' } } },
-        tooltip: { y: { formatter: v => fmtRoas(v) }, theme: 'dark' },
-        annotations: {
-          yaxis: roasVals.some(v => v > 0) ? [{
-            y: 1,
-            borderColor: 'rgba(255,255,255,0.15)',
-            strokeDashArray: 4,
-            label: { text: '1x', style: { color: '#555', background: 'transparent', fontSize: '10px' } }
-          }] : []
-        }
+      // 3. PLATFORM SALES TREND
+      renderPlatformTrendChart();
+    }
+
+    function renderPlatformTrendChart() {
+      const selPlatform = document.getElementById('trend-platform-select').value;
+      const platTrend = getTrendData(selPlatform);
+      const platColor = PLATFORM_CONFIG[selPlatform]?.color || '#EAB308'; // Default fallback
+
+      if (chartTrendPlatform) chartTrendPlatform.destroy();
+      chartTrendPlatform = new ApexCharts(document.querySelector('#chart-trend-platform'), {
+        series: [{ name: selPlatform + ' Sales', data: platTrend.values }],
+        chart: { type: 'area', height: 240, toolbar: { show: false }, background: 'transparent', fontFamily: 'Space Grotesk, sans-serif' },
+        theme: { mode: 'dark' },
+        colors: [platColor],
+        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.0, stops: [0, 100] } },
+        stroke: { curve: 'straight', width: 3 },
+        markers: { size: 5, colors: [platColor], strokeColors: '#11131c', strokeWidth: 2, hover: { size: 7 } },
+        dataLabels: { enabled: false },
+        grid: { borderColor: 'rgba(255,255,255,0.05)', strokeDashArray: 4, xaxis: { lines: { show: false } }, yaxis: { lines: { show: true } } },
+        xaxis: { categories: platTrend.labels, labels: { style: { colors: '#9ca3b3', fontSize: '11px', fontFamily: 'Geist Mono, monospace' } }, axisBorder: { show: false }, axisTicks: { show: false }, crosshairs: { show: false } },
+        yaxis: { labels: { formatter: v => fmt(v), style: { colors: '#9ca3b3', fontSize: '11px', fontFamily: 'Geist Mono, monospace' } } },
+        tooltip: { y: { formatter: v => fmt(v) }, theme: 'dark' }
       });
-      chartRoas.render();
+      chartTrendPlatform.render();
     }
 
 
