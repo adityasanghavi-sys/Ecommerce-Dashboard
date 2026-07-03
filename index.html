@@ -1002,6 +1002,68 @@
           
         </div>
 
+        <div class="section-label">ROAS breakdown</div>
+        <div class="section-caption">By platform · aggregate trend · trend by platform</div>
+        <div class="mom-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:28px;">
+          <div class="chart-section">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+              <div class="chart-title" style="margin-bottom:0">ROAS by Platform</div>
+            </div>
+            <div id="chart-roas-platform" style="height:260px"></div>
+          </div>
+          <div class="chart-section">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+              <div class="chart-title" style="margin-bottom:0">ROAS Trend · <span id="roas-trend-label">Monthly</span></div>
+              <select id="roas-trend-period" onchange="renderROASTrend()" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:11px;font-family:'Space Grotesk',sans-serif;padding:4px 8px;outline:none;cursor:pointer;">
+                <optgroup label="Monthly">
+                  <option value="month-2025-04">Apr 25</option>
+                  <option value="month-2025-05">May 25</option>
+                  <option value="month-2025-06">Jun 25</option>
+                  <option value="month-2025-07">Jul 25</option>
+                  <option value="month-2025-08">Aug 25</option>
+                  <option value="month-2025-09">Sep 25</option>
+                  <option value="month-2025-10">Oct 25</option>
+                  <option value="month-2025-11">Nov 25</option>
+                  <option value="month-2025-12">Dec 25</option>
+                  <option value="month-2026-01">Jan 26</option>
+                  <option value="month-2026-02">Feb 26</option>
+                  <option value="month-2026-03">Mar 26</option>
+                  <option value="month-2026-04">Apr 26</option>
+                  <option value="month-2026-05">May 26</option>
+                  <option value="month-2026-06">Jun 26</option>
+                  <option value="month-2026-07" selected>Jul 26</option>
+                  <option value="month-all">All Months</option>
+                </optgroup>
+                <optgroup label="Quarter">
+                  <option value="quarter-Q1FY26">Q1 FY26 (Apr–Jun 25)</option>
+                  <option value="quarter-Q2FY26">Q2 FY26 (Jul–Sep 25)</option>
+                  <option value="quarter-Q3FY26">Q3 FY26 (Oct–Dec 25)</option>
+                  <option value="quarter-Q4FY26">Q4 FY26 (Jan–Mar 26)</option>
+                  <option value="quarter-Q1FY27">Q1 FY27 (Apr–Jun 26)</option>
+                </optgroup>
+                <optgroup label="Financial Year">
+                  <option value="fy-FY2526">FY 2025-26</option>
+                  <option value="fy-FY2627">FY 2026-27</option>
+                </optgroup>
+              </select>
+            </div>
+            <div id="chart-roas-trend" style="height:260px"></div>
+          </div>
+          <div class="chart-section">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+              <div class="chart-title" style="margin-bottom:0">ROAS Trend by Platform</div>
+              <select id="roas-platform-select" onchange="renderROASPlatformTrend()" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:11px;font-family:'Space Grotesk',sans-serif;padding:4px 8px;outline:none;cursor:pointer;">
+                <option value="Blinkit">Blinkit</option>
+                <option value="Zepto">Zepto</option>
+                <option value="Instamart">Instamart</option>
+                <option value="Big Basket">Big Basket</option>
+                <option value="Amazon">Amazon</option>
+              </select>
+            </div>
+            <div id="chart-roas-platform-trend" style="height:260px"></div>
+          </div>
+        </div>
+
         <div class="section-label">Channel scorecards</div>
         <div class="section-caption">Drill down to platform-level metrics</div>
         <div class="platform-grid" id="platform-grid"></div>
@@ -1741,9 +1803,12 @@ const FY25_URL = API_URL + "&type=fy25";
     };
 
     // ─── STATE ─────────────────────────────────────────────────────────────────
-    let rawData = [];
+   let rawData = [];
     let fy25Data = [];
     let fy25DataLoaded = false;
+    let chartRoasPlatform = null;
+    let chartRoasTrend = null;
+    let chartRoasPlatformTrend = null;
     let skuDailyData = [];
     let activeMonth = '07';
     let activePeriod = 'mtd';
@@ -1770,6 +1835,11 @@ const FY25_URL = API_URL + "&type=fy25";
 
         // Sync activeMonth state with dropdown default value
         activeMonth = document.getElementById('month-select').value;
+      activeMonth = document.getElementById('month-select').value;
+        loadFY25Data().then(() => {
+          renderROASTrend();
+          renderROASPlatformTrend();
+        });
         render();
       } catch (err) {
         document.getElementById('loading-state').classList.add('hidden');
@@ -1916,6 +1986,170 @@ function getFilteredData() {
       return LABELS[m] || m;
     }
 
+    // ─── ROAS BREAKDOWN CHARTS ────────────────────────────────────────────────
+    function getAllData() {
+      return [...rawData, ...fy25Data];
+    }
+
+    function computeMonthlyROAS(platform) {
+      const all = getAllData();
+      const months = [
+        {key:'2025-04',m:4,y:2025},{key:'2025-05',m:5,y:2025},{key:'2025-06',m:6,y:2025},
+        {key:'2025-07',m:7,y:2025},{key:'2025-08',m:8,y:2025},{key:'2025-09',m:9,y:2025},
+        {key:'2025-10',m:10,y:2025},{key:'2025-11',m:11,y:2025},{key:'2025-12',m:12,y:2025},
+        {key:'2026-01',m:1,y:2026},{key:'2026-02',m:2,y:2026},{key:'2026-03',m:3,y:2026},
+        {key:'2026-04',m:4,y:2026},{key:'2026-05',m:5,y:2026},{key:'2026-06',m:6,y:2026},
+        {key:'2026-07',m:7,y:2026}
+      ];
+      const MONTH_LABELS = {
+        '2025-04':'Apr 25','2025-05':'May 25','2025-06':'Jun 25','2025-07':'Jul 25',
+        '2025-08':'Aug 25','2025-09':'Sep 25','2025-10':'Oct 25','2025-11':'Nov 25',
+        '2025-12':'Dec 25','2026-01':'Jan 26','2026-02':'Feb 26','2026-03':'Mar 26',
+        '2026-04':'Apr 26','2026-05':'May 26','2026-06':'Jun 26','2026-07':'Jul 26'
+      };
+      const result = [];
+      months.forEach(({key, m, y}) => {
+        const rows = all.filter(r => {
+          const d = parseLocalDate(r.Date);
+          const platMatch = !platform || String(r.Platform) === platform;
+          return d.getFullYear() === y && d.getMonth()+1 === m && platMatch && Number(r.Spends) > 0;
+        });
+        if (rows.length === 0) return;
+        const sales  = rows.reduce((s,r) => s + (Number(r.Sales)||0), 0);
+        const spends = rows.reduce((s,r) => s + (Number(r.Spends)||0), 0);
+        result.push({ label: MONTH_LABELS[key], roas: spends > 0 ? sales/spends : 0 });
+      });
+      return result;
+    }
+
+    function computeQuarterROAS(platform) {
+      const all = getAllData();
+      const quarters = [
+        { label:'Q1 FY26', months:[{m:4,y:2025},{m:5,y:2025},{m:6,y:2025}] },
+        { label:'Q2 FY26', months:[{m:7,y:2025},{m:8,y:2025},{m:9,y:2025}] },
+        { label:'Q3 FY26', months:[{m:10,y:2025},{m:11,y:2025},{m:12,y:2025}] },
+        { label:'Q4 FY26', months:[{m:1,y:2026},{m:2,y:2026},{m:3,y:2026}] },
+        { label:'Q1 FY27', months:[{m:4,y:2026},{m:5,y:2026},{m:6,y:2026}] },
+      ];
+      return quarters.map(q => {
+        const rows = all.filter(r => {
+          const d = parseLocalDate(r.Date);
+          const platMatch = !platform || String(r.Platform) === platform;
+          return platMatch && Number(r.Spends) > 0 &&
+            q.months.some(({m,y}) => d.getFullYear()===y && d.getMonth()+1===m);
+        });
+        const sales  = rows.reduce((s,r) => s+(Number(r.Sales)||0), 0);
+        const spends = rows.reduce((s,r) => s+(Number(r.Spends)||0), 0);
+        return { label: q.label, roas: spends > 0 ? sales/spends : 0 };
+      }).filter(q => q.roas > 0);
+    }
+
+    function computeFYROAS(platform) {
+      const all = getAllData();
+      const fys = [
+        { label:'FY25-26', months:[{m:4,y:2025},{m:5,y:2025},{m:6,y:2025},{m:7,y:2025},{m:8,y:2025},{m:9,y:2025},{m:10,y:2025},{m:11,y:2025},{m:12,y:2025},{m:1,y:2026},{m:2,y:2026},{m:3,y:2026}] },
+        { label:'FY26-27', months:[{m:4,y:2026},{m:5,y:2026},{m:6,y:2026},{m:7,y:2026}] },
+      ];
+      return fys.map(fy => {
+        const rows = all.filter(r => {
+          const d = parseLocalDate(r.Date);
+          const platMatch = !platform || String(r.Platform) === platform;
+          return platMatch && Number(r.Spends) > 0 &&
+            fy.months.some(({m,y}) => d.getFullYear()===y && d.getMonth()+1===m);
+        });
+        const sales  = rows.reduce((s,r) => s+(Number(r.Sales)||0), 0);
+        const spends = rows.reduce((s,r) => s+(Number(r.Spends)||0), 0);
+        return { label: fy.label, roas: spends > 0 ? sales/spends : 0 };
+      }).filter(f => f.roas > 0);
+    }
+
+    function renderROASPlatformBar(agg) {
+      const platforms = Object.keys(agg).filter(p => agg[p].roas > 0 && agg[p].spends > 0)
+        .sort((a,b) => agg[b].roas - agg[a].roas);
+      if (!platforms.length) return;
+      const colors = platforms.map(p => PLATFORM_CONFIG[p]?.color || '#888');
+      if (chartRoasPlatform) chartRoasPlatform.destroy();
+      chartRoasPlatform = new ApexCharts(document.querySelector('#chart-roas-platform'), {
+        series: [{ name:'ROAS', data: platforms.map(p => parseFloat(agg[p].roas.toFixed(2))) }],
+        chart: { type:'bar', height:260, toolbar:{show:false}, background:'transparent', fontFamily:'Space Grotesk, sans-serif' },
+        theme: { mode:'dark' },
+        colors, fill: { type:'gradient', gradient:{ shade:'light', type:'vertical', shadeIntensity:0.15, gradientToColors:colors.map(c=>gradTo(c)), inverseColors:false, opacityFrom:1, opacityTo:0.95, stops:[0,100] } },
+        plotOptions: { bar:{ borderRadius:6, columnWidth:'45%', distributed:true } },
+        dataLabels: { enabled:false },
+        legend: { show:false },
+        grid: { borderColor:'rgba(255,255,255,0.05)', strokeDashArray:4 },
+        xaxis: { categories:platforms, labels:{style:{colors:'#555',fontSize:'11px'}}, axisBorder:{show:false}, axisTicks:{show:false} },
+        yaxis: { labels:{ formatter: v => v.toFixed(1)+'x', style:{colors:'#9ca3b3',fontSize:'11px'} } },
+        tooltip: { y:{ formatter: v => v.toFixed(2)+'x' }, theme:'dark' },
+      });
+      chartRoasPlatform.render();
+    }
+
+    function renderROASTrend() {
+      const val = document.getElementById('roas-trend-period')?.value || 'month-all';
+      const labelEl = document.getElementById('roas-trend-label');
+      let points = [];
+
+      if (val.startsWith('month-')) {
+        const key = val.replace('month-','');
+        if (key === 'all') {
+          points = computeMonthlyROAS(null);
+          if (labelEl) labelEl.textContent = 'Monthly';
+        } else {
+          // single month selected — show all months but highlight selected
+          points = computeMonthlyROAS(null);
+          if (labelEl) labelEl.textContent = 'Monthly';
+        }
+      } else if (val.startsWith('quarter-')) {
+        points = computeQuarterROAS(null);
+        if (labelEl) labelEl.textContent = 'Quarterly';
+      } else if (val.startsWith('fy-')) {
+        points = computeFYROAS(null);
+        if (labelEl) labelEl.textContent = 'Financial Year';
+      }
+
+      if (!points.length) return;
+      if (chartRoasTrend) chartRoasTrend.destroy();
+      chartRoasTrend = new ApexCharts(document.querySelector('#chart-roas-trend'), {
+        series: [{ name:'ROAS', data: points.map(p => parseFloat(p.roas.toFixed(2))) }],
+        chart: { type:'area', height:260, toolbar:{show:false}, background:'transparent', fontFamily:'Space Grotesk, sans-serif' },
+        theme: { mode:'dark' },
+        colors: ['#22C55E'],
+        stroke: { width:2.5, curve:'smooth' },
+        fill: { type:'gradient', gradient:{ shade:'dark', type:'vertical', shadeIntensity:0.4, gradientToColors:['#16a34a'], opacityFrom:0.4, opacityTo:0.02, stops:[0,100] } },
+        markers: { size:5, strokeWidth:0, colors:['#22C55E'] },
+        dataLabels: { enabled:false },
+        grid: { borderColor:'rgba(255,255,255,0.05)', strokeDashArray:4 },
+        xaxis: { categories:points.map(p=>p.label), labels:{style:{colors:'#555',fontSize:'11px'}, rotate:-30}, axisBorder:{show:false}, axisTicks:{show:false} },
+        yaxis: { labels:{ formatter: v => v.toFixed(1)+'x', style:{colors:'#9ca3b3',fontSize:'11px'} } },
+        tooltip: { y:{ formatter: v => v.toFixed(2)+'x' }, theme:'dark' },
+      });
+      chartRoasTrend.render();
+    }
+
+    function renderROASPlatformTrend() {
+      const platform = document.getElementById('roas-platform-select')?.value || 'Blinkit';
+      const points = computeMonthlyROAS(platform);
+      const color = PLATFORM_CONFIG[platform]?.color || '#EAB308';
+      if (!points.length) return;
+      if (chartRoasPlatformTrend) chartRoasPlatformTrend.destroy();
+      chartRoasPlatformTrend = new ApexCharts(document.querySelector('#chart-roas-platform-trend'), {
+        series: [{ name: platform+' ROAS', data: points.map(p => parseFloat(p.roas.toFixed(2))) }],
+        chart: { type:'area', height:260, toolbar:{show:false}, background:'transparent', fontFamily:'Space Grotesk, sans-serif' },
+        theme: { mode:'dark' },
+        colors: [color],
+        stroke: { width:2.5, curve:'smooth' },
+        fill: { type:'gradient', gradient:{ shade:'dark', type:'vertical', shadeIntensity:0.4, gradientToColors:[gradTo(color)], opacityFrom:0.4, opacityTo:0.02, stops:[0,100] } },
+        markers: { size:5, strokeWidth:0, colors:[color] },
+        dataLabels: { enabled:false },
+        grid: { borderColor:'rgba(255,255,255,0.05)', strokeDashArray:4 },
+        xaxis: { categories:points.map(p=>p.label), labels:{style:{colors:'#555',fontSize:'11px'}, rotate:-30}, axisBorder:{show:false}, axisTicks:{show:false} },
+        yaxis: { labels:{ formatter: v => v.toFixed(1)+'x', style:{colors:'#9ca3b3',fontSize:'11px'} } },
+        tooltip: { y:{ formatter: v => v.toFixed(2)+'x' }, theme:'dark' },
+      });
+      chartRoasPlatformTrend.render();
+    }
+
     // ─── AGGREGATE ─────────────────────────────────────────────────────────────
     function aggregateByPlatform(data) {
       const agg = {};
@@ -1961,6 +2195,9 @@ function getFilteredData() {
       renderKPIs(data, agg);
       renderPlatformCards(agg);
       renderCharts(agg);
+      renderROASPlatformBar(agg);
+      renderROASTrend();
+      renderROASPlatformTrend();
     }
 
     // ─── KPI CARDS ─────────────────────────────────────────────────────────────
