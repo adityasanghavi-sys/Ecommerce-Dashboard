@@ -883,17 +883,25 @@
           <input type="date" id="customEnd" onchange="render()" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;padding:6px 8px;outline:none;font-family:'Space Grotesk',sans-serif;">
         </div>
 
-        <div class="control-group">
-          <button class="control-btn" onclick="setMonth('04')" id="btn-04">Apr 26</button>
-          <div class="control-divider"></div>
-          <button class="control-btn active" onclick="setMonth('05')" id="btn-05">May 26</button>
-          <div class="control-divider"></div>
-          <button class="control-btn" onclick="setMonth('06')" id="btn-06">Jun 26</button>
-          <div class="control-divider"></div>
-          <button class="control-btn" onclick="setMonth('07')" id="btn-07">Jul 26</button>
-          <div class="control-divider"></div>
-          <button class="control-btn" onclick="setMonth('All')" id="btn-All">All</button>
-        </div>
+        <select class="ctrl-select" id="month-select" onchange="setMonth(this.value)">
+          <option value="2025-04">Apr 25</option>
+          <option value="2025-05">May 25</option>
+          <option value="2025-06">Jun 25</option>
+          <option value="2025-07">Jul 25</option>
+          <option value="2025-08">Aug 25</option>
+          <option value="2025-09">Sep 25</option>
+          <option value="2025-10">Oct 25</option>
+          <option value="2025-11">Nov 25</option>
+          <option value="2025-12">Dec 25</option>
+          <option value="2026-01">Jan 26</option>
+          <option value="2026-02">Feb 26</option>
+          <option value="2026-03">Mar 26</option>
+          <option value="2026-04">Apr 26</option>
+          <option value="2026-05">May 26</option>
+          <option value="2026-06">Jun 26</option>
+          <option value="2026-07" selected>Jul 26</option>
+          <option value="All">All</option>
+        </select>
 
         <select class="ctrl-select" id="platformFilter" onchange="render()">
           <option value="All">All Platforms</option>
@@ -1657,6 +1665,7 @@
 const SKU_URL = API_URL + "&type=sku";
 const SKU_DAILY_URL = API_URL + "&type=skudaily";
 const SHOPIFY_URL = API_URL + "&type=shopify";
+const FY25_URL = API_URL + "&type=fy25";
     // Cooler "gradient-to" shade for each base color — fades darker bar bottom → lighter top
     const GRAD_PAIRS = {
       '#F97316': '#FDBA74', // orange → peach
@@ -1683,9 +1692,12 @@ const SHOPIFY_URL = API_URL + "&type=shopify";
 
     // ─── STATE ─────────────────────────────────────────────────────────────────
     let rawData = [];
+    let fy25Data = [];
+    let fy25DataLoaded = false;
     let skuDailyData = [];
-    let activeMonth = '05';
-    let activePeriod = 'mtd'; // t1, t2, 7d, mtd, custom
+    let activeMonth = '07';
+    let activePeriod = 'mtd';
+    // t1, t2, 7d, mtd, custom
     let chartSales = null;
     let chartRoas = null;
 
@@ -1715,7 +1727,20 @@ const SHOPIFY_URL = API_URL + "&type=shopify";
         console.error(err);
       }
     }
-
+async function loadFY25Data() {
+      if (fy25DataLoaded) return;
+      try {
+        const res = await fetch(FY25_URL, { redirect: 'follow' });
+        const text = await res.text();
+        if (!text || text.trim() === '') { fy25Data = []; return; }
+        fy25Data = JSON.parse(text);
+        fy25DataLoaded = true;
+        console.log('FY25 rows loaded:', fy25Data.length);
+      } catch(e) {
+        console.error('FY25 fetch failed:', e);
+        fy25Data = [];
+      }
+    }
     function parseLocalDate(str) {
       // Let the browser natively handle the UTC to IST timezone shift
       const d = new Date(str); 
@@ -1725,11 +1750,15 @@ const SHOPIFY_URL = API_URL + "&type=shopify";
     // ─── FILTERS ───────────────────────────────────────────────────────────────
     function setMonth(m) {
       activeMonth = m;
-      ['04','05','06','07','All'].forEach(k => {
-        document.getElementById('btn-' + k).classList.toggle('active', k === m);
-      });
-      if (m !== '05' && (activePeriod === 't1' || activePeriod === 't2')) {
-        setPeriod('mtd');
+      // Auto-disable MTD for past/future months — silently switch to full month
+      const isFY25Month = m !== 'All' && m.startsWith('2025');
+      const isCurrentMonth = m === '2026-07';
+      if (!isCurrentMonth && (activePeriod === 't1' || activePeriod === 't2' || activePeriod === 'mtd')) {
+        activePeriod = 'mtd'; // keep mtd internally but filter will show full month
+      }
+      // Lazy load FY25 data on first FY25 selection
+      if (isFY25Month && !fy25DataLoaded) {
+        loadFY25Data().then(() => render());
         return;
       }
       render();
@@ -1739,16 +1768,27 @@ function getFilteredData() {
       const platform = document.getElementById('platformFilter').value;
       const today = new Date(); today.setHours(0,0,0,0);
 
+      // Route to correct dataset
+      const isFY25 = activeMonth !== 'All' && activeMonth.startsWith('2025');
+      const dataset = isFY25 ? fy25Data : rawData;
+
       // Find latest date in dataset
-      const allDates = rawData.map(r => parseLocalDate(r.Date)).filter(d => !isNaN(d));
-      const latestDate = allDates.length ? new Date(Math.max(...allDates)) : today;
+      const allDates = dataset.map(r => parseLocalDate(r.Date)).filter(d => !isNaN(d));
+    const latestDate = allDates.length ? new Date(Math.max(...allDates)) : today;
       latestDate.setHours(0,0,0,0);
 
       const t1 = new Date(latestDate);
       const t2 = new Date(latestDate); t2.setDate(t2.getDate() - 1);
 
-      return rawData.filter(row => {
-        const monthMatch = activeMonth === 'All' || Number(row.Month) === parseInt(activeMonth, 10);
+      // Parse month/year from activeMonth value (e.g. "2026-07" or "All")
+      const [selYear, selMonth] = activeMonth !== 'All' ? activeMonth.split('-').map(Number) : [null, null];
+
+      return dataset.filter(row => {
+        const rowDate = parseLocalDate(row.Date);
+        const rowYear = rowDate.getFullYear();
+        const monthMatch = activeMonth === 'All'
+          ? true
+          : (Number(row.Month) === selMonth && rowYear === selYear);
         const platMatch  = platform === 'All' || String(row.Platform) === platform;
 
         const rowDate = parseLocalDate(row.Date); rowDate.setHours(0,0,0,0);
@@ -1815,7 +1855,14 @@ function getFilteredData() {
     }
 
     function monthLabel(m) {
-      return m === '04' ? 'April 2026' : m === '05' ? 'May 2026' : m === '06' ? 'June 2026' : m === '07' ? 'July 2026' : 'All Time';
+      if (m === 'All') return 'All Time';
+      const LABELS = {
+        '2025-04':'April 2025','2025-05':'May 2025','2025-06':'June 2025','2025-07':'July 2025',
+        '2025-08':'Aug 2025','2025-09':'Sep 2025','2025-10':'Oct 2025','2025-11':'Nov 2025',
+        '2025-12':'Dec 2025','2026-01':'Jan 2026','2026-02':'Feb 2026','2026-03':'Mar 2026',
+        '2026-04':'April 2026','2026-05':'May 2026','2026-06':'June 2026','2026-07':'July 2026'
+      };
+      return LABELS[m] || m;
     }
 
     // ─── AGGREGATE ─────────────────────────────────────────────────────────────
