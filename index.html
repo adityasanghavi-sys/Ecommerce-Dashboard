@@ -1717,6 +1717,8 @@ const FY25_URL = API_URL + "&type=fy25";
         // Free GPU after loading screen fades out
         setTimeout(() => ShaderManager.unmount('loading-shader-container'), 500);
 
+        // Sync activeMonth state with dropdown default value
+        activeMonth = document.getElementById('month-select').value;
         render();
       } catch (err) {
         document.getElementById('loading-state').classList.add('hidden');
@@ -1784,16 +1786,14 @@ function getFilteredData() {
       const [selYear, selMonth] = activeMonth !== 'All' ? activeMonth.split('-').map(Number) : [null, null];
 
       return dataset.filter(row => {
-        const rowDate = parseLocalDate(row.Date);
+        const rowDate = parseLocalDate(row.Date); rowDate.setHours(0,0,0,0);
         const rowYear = rowDate.getFullYear();
         const monthMatch = activeMonth === 'All'
           ? true
           : (Number(row.Month) === selMonth && rowYear === selYear);
         const platMatch  = platform === 'All' || String(row.Platform) === platform;
 
-        const rowDate = parseLocalDate(row.Date); rowDate.setHours(0,0,0,0);
         let dateMatch = true;
-
         if (activePeriod === 't1') {
           dateMatch = rowDate.getTime() === t1.getTime();
         } else if (activePeriod === 't2') {
