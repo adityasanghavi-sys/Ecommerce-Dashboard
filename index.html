@@ -1052,7 +1052,16 @@
           <div class="chart-section">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
               <div class="chart-title" style="margin-bottom:0">ROAS Trend by Platform</div>
-              <select id="roas-platform-select" onchange="renderROASPlatformTrend()" style="background:#1a1a2e;border:1px solid var(--border);border-radius:6px;color:#e2e8f0;font-size:11px;font-family:'Space Grotesk',sans-serif;padding:4px 8px;outline:none;cursor:pointer;">
+              <div class="cust-sel" id="roas-plat-dd">
+                <div class="cust-sel-val" onclick="toggleDD('roas-plat-dd')">Blinkit <span>▾</span></div>
+                <div class="cust-sel-opts">
+                  <div class="cust-opt" onclick="pickDD('roas-plat-dd','Blinkit','Blinkit')">Blinkit</div>
+                  <div class="cust-opt" onclick="pickDD('roas-plat-dd','Zepto','Zepto')">Zepto</div>
+                  <div class="cust-opt" onclick="pickDD('roas-plat-dd','Instamart','Instamart')">Instamart</div>
+                  <div class="cust-opt" onclick="pickDD('roas-plat-dd','Big Basket','Big Basket')">Big Basket</div>
+                  <div class="cust-opt" onclick="pickDD('roas-plat-dd','Amazon','Amazon')">Amazon</div>
+                </div>
+              </div>
                 <option value="Blinkit">Blinkit</option>
                 <option value="Zepto">Zepto</option>
                 <option value="Instamart">Instamart</option>
