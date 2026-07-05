@@ -1022,38 +1022,38 @@
           <div class="chart-section">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
               <div class="chart-title" style="margin-bottom:0">ROAS Trend · <span id="roas-trend-label">Monthly</span></div>
-              <select id="roas-trend-period" onchange="renderROASTrend()" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:11px;font-family:'Space Grotesk',sans-serif;padding:4px 8px;outline:none;cursor:pointer;">
-                <optgroup label="Monthly">
-                  <option value="month-2025-04">Apr 25</option>
-                  <option value="month-2025-05">May 25</option>
-                  <option value="month-2025-06">Jun 25</option>
-                  <option value="month-2025-07">Jul 25</option>
-                  <option value="month-2025-08">Aug 25</option>
-                  <option value="month-2025-09">Sep 25</option>
-                  <option value="month-2025-10">Oct 25</option>
-                  <option value="month-2025-11">Nov 25</option>
-                  <option value="month-2025-12">Dec 25</option>
-                  <option value="month-2026-01">Jan 26</option>
-                  <option value="month-2026-02">Feb 26</option>
-                  <option value="month-2026-03">Mar 26</option>
-                  <option value="month-2026-04">Apr 26</option>
-                  <option value="month-2026-05">May 26</option>
-                  <option value="month-2026-06">Jun 26</option>
-                  <option value="month-2026-07" selected>Jul 26</option>
-                  <option value="month-all">All Months</option>
-                </optgroup>
-                <optgroup label="Quarter">
-                  <option value="quarter-Q1FY26">Q1 FY26 (Apr–Jun 25)</option>
-                  <option value="quarter-Q2FY26">Q2 FY26 (Jul–Sep 25)</option>
-                  <option value="quarter-Q3FY26">Q3 FY26 (Oct–Dec 25)</option>
-                  <option value="quarter-Q4FY26">Q4 FY26 (Jan–Mar 26)</option>
-                  <option value="quarter-Q1FY27">Q1 FY27 (Apr–Jun 26)</option>
-                </optgroup>
-                <optgroup label="Financial Year">
-                  <option value="fy-FY2526">FY 2025-26</option>
-                  <option value="fy-FY2627">FY 2026-27</option>
-                </optgroup>
-              </select>
+              <div class="cust-sel" id="roas-trend-dd">
+                <div class="cust-sel-val" onclick="toggleDD('roas-trend-dd')">All Months <span>▾</span></div>
+                <div class="cust-sel-opts">
+                  <div class="cust-opt-group">Monthly</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2025-04','Apr 25')">Apr 25</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2025-05','May 25')">May 25</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2025-06','Jun 25')">Jun 25</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2025-07','Jul 25')">Jul 25</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2025-08','Aug 25')">Aug 25</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2025-09','Sep 25')">Sep 25</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2025-10','Oct 25')">Oct 25</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2025-11','Nov 25')">Nov 25</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2025-12','Dec 25')">Dec 25</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2026-01','Jan 26')">Jan 26</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2026-02','Feb 26')">Feb 26</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2026-03','Mar 26')">Mar 26</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2026-04','Apr 26')">Apr 26</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2026-05','May 26')">May 26</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2026-06','Jun 26')">Jun 26</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2026-07','Jul 26')">Jul 26</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-all','All Months')">All Months</div>
+                  <div class="cust-opt-group">Quarter</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','quarter-Q1FY26','Q1 FY26')">Q1 FY26 (Apr–Jun 25)</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','quarter-Q2FY26','Q2 FY26')">Q2 FY26 (Jul–Sep 25)</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','quarter-Q3FY26','Q3 FY26')">Q3 FY26 (Oct–Dec 25)</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','quarter-Q4FY26','Q4 FY26')">Q4 FY26 (Jan–Mar 26)</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','quarter-Q1FY27','Q1 FY27')">Q1 FY27 (Apr–Jun 26)</div>
+                  <div class="cust-opt-group">Financial Year</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','fy-FY2526','FY 25-26')">FY 2025-26</div>
+                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','fy-FY2627','FY 26-27')">FY 2026-27</div>
+                </div>
+              </div>
             </div>
             <div id="chart-roas-trend" style="height:260px"></div>
           </div>
@@ -2003,6 +2003,28 @@ function getFilteredData() {
       return LABELS[m] || m;
     }
 
+    // ─── CUSTOM DROPDOWN HELPERS ───────────────────────────────────────────────
+    const _ddVals = {};
+    function toggleDD(id) {
+      const el = document.getElementById(id);
+      const isOpen = el.classList.contains('open');
+      document.querySelectorAll('.cust-sel.open').forEach(e => e.classList.remove('open'));
+      if (!isOpen) el.classList.add('open');
+    }
+    function pickDD(id, val, label) {
+      _ddVals[id] = val;
+      const el = document.getElementById(id);
+      el.querySelector('.cust-sel-val').innerHTML = label + ' <span>▾</span>';
+      el.classList.remove('open');
+      if (id === 'roas-trend-dd') renderROASTrend();
+      if (id === 'roas-plat-dd') renderROASPlatformTrend();
+    }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.cust-sel')) {
+        document.querySelectorAll('.cust-sel.open').forEach(el => el.classList.remove('open'));
+      }
+    });
+
     // ─── ROAS BREAKDOWN CHARTS ────────────────────────────────────────────────
     function getAllData() {
       return [...rawData, ...fy25Data];
@@ -2103,7 +2125,7 @@ function getFilteredData() {
     }
 
     function renderROASTrend() {
-      const val = document.getElementById('roas-trend-period')?.value || 'month-all';
+      const val = _ddVals['roas-trend-dd'] || 'month-all';
       const labelEl = document.getElementById('roas-trend-label');
       let points = [];
 
