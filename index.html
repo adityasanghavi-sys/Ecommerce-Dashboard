@@ -3432,7 +3432,7 @@ function getFilteredData() {
 
     // ─── TAB SWITCHING ─────────────────────────────────────────────────────────
     let activeTab = 'overview';
-    const ALL_TABS = ['overview','compare','blinkit','zepto','instamart','bigbasket','skus','skucompare','shopify','ai-insights'];
+    const ALL_TABS = ['overview','compare','blinkit','zepto','instamart','bigbasket','skus','skucompare','shopify','ai-insights','deepdive'];
     const PLATFORM_TAB_MAP = { 'blinkit':'Blinkit', 'zepto':'Zepto', 'instamart':'Instamart', 'bigbasket':'Big Basket' };
 
     function switchTab(tab) {
@@ -3448,6 +3448,9 @@ function getFilteredData() {
       document.getElementById('view-skucompare').style.display = tab === 'skucompare' ? 'block' : 'none';
       document.getElementById('view-ai-insights').style.display = tab === 'ai-insights' ? 'block' : 'none';
       document.getElementById('view-shopify').style.display = tab === 'shopify' ? 'block' : 'none';
+      const ddEl = document.getElementById('view-deepdive');
+      if (ddEl) ddEl.style.display = tab === 'deepdive' ? 'block' : 'none';
+      if (tab === 'deepdive') { updateDDView(); }
       // Mount shader only when AI Insights is visible
       if (tab === 'ai-insights') {
         setTimeout(() => ShaderManager.mount('ai-shader-container'), 100);
