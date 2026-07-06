@@ -1092,22 +1092,16 @@
 
         <div id="dd-sales-trends" class="dd-view" style="display:none;padding-top:16px;">
           <div class="dd-view-label" style="background:rgba(139,92,246,0.08);color:#a78bfa;border:1px solid rgba(139,92,246,0.18);">Trends · Monthly / Quarterly / FY</div>
-          <div class="mom-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px;">
-            <div class="chart-section">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                <div class="chart-title" style="margin-bottom:0">Total sales trajectory</div>
-                <select id="dd-sales-trend-period" onchange="renderDDSalesTrend()" class="ctrl-select" style="font-size:11px;padding:4px 8px;">
-                  <option value="monthly">Monthly</option>
-                  <option value="quarterly">Quarterly</option>
-                  <option value="fy">Financial Year</option>
-                </select>
-              </div>
-              <div id="dd-chart-sales-trend" style="height:220px"></div>
+          <div class="chart-section" style="margin-bottom:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <div class="chart-title" style="margin-bottom:0">Total sales trajectory</div>
+              <select id="dd-sales-trend-period" onchange="renderDDSalesTrend()" class="ctrl-select" style="font-size:11px;padding:4px 8px;">
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="fy">Financial Year</option>
+              </select>
             </div>
-            <div class="chart-section">
-              <div class="chart-title">Month-on-month % Δ</div>
-              <div id="dd-chart-sales-mom" style="height:220px"></div>
-            </div>
+            <div id="dd-chart-sales-trend" style="height:320px"></div>
           </div>
           <div class="chart-section" style="margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
@@ -2394,7 +2388,7 @@ function getFilteredData() {
     function renderDDView(metric, view) {
       if (metric === 'sales') {
         if (view === 'current') renderDDSalesCurrent();
-        else if (view === 'trends') { renderDDSalesTrend(); renderDDSalesMoM(); renderDDSalesByPlat(); }
+        else if (view === 'trends') { renderDDSalesTrend(); renderDDSalesByPlat(); }
         else if (view === 'yoy') { renderDDSalesYoYKPIs(); renderDDSalesYoYChart(); }
       } else if (metric === 'roas') {
         if (view === 'current') renderDDROASCurrent();
@@ -2519,18 +2513,24 @@ function getFilteredData() {
     function renderDDSalesTrend() {
       const period = document.getElementById('dd-sales-trend-period')?.value || 'monthly';
       const pts = getDDPeriodPoints(period);
-      const fy25pts = period === 'monthly' ? getDDPeriodPoints('monthly').filter(p=>['Apr 25','May 25','Jun 25','Jul 25','Aug 25','Sep 25','Oct 25','Nov 25','Dec 25','Jan 26','Feb 26','Mar 26'].includes(p.l)) : [];
+      const growths = pts.map((p,i)=>i===0?null:(pts[i-1].sales>0?((p.sales-pts[i-1].sales)/pts[i-1].sales*100):0));
       if (ddCharts['dd-chart-sales-trend']) ddCharts['dd-chart-sales-trend'].destroy();
       ddCharts['dd-chart-sales-trend'] = new ApexCharts(document.getElementById('dd-chart-sales-trend'), {
         series:[{name:'Sales',data:pts.map(p=>+(p.sales/1e7).toFixed(3))}],
-        chart:{type:'area',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        chart:{type:'area',height:320,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
         theme:{mode:'dark'},colors:['#EAB308'],stroke:{width:2.5,curve:'smooth'},
         fill:{type:'gradient',gradient:{shade:'dark',type:'vertical',opacityFrom:0.35,opacityTo:0.02}},
-        markers:{size:4,strokeWidth:0},dataLabels:{enabled:false},
-        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
-        xaxis:{categories:pts.map(p=>p.l),labels:{style:{colors:'#555',fontSize:'10px'},rotate:-30},axisBorder:{show:false},axisTicks:{show:false}},
-        yaxis:{labels:{formatter:v=>v.toFixed(1)+'Cr',style:{colors:'#9ca3b3',fontSize:'10px'}}},
-        tooltip:{y:{formatter:v=>fmtDD(v*1e7)},theme:'dark'}
+        markers:{size:5,strokeWidth:0},dataLabels:{enabled:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4,padding:{left:10,right:20}},
+        xaxis:{categories:pts.map(p=>p.l),labels:{style:{colors:'#9ca3b3',fontSize:'11px'},rotate:-30,rotateAlways:false,hideOverlappingLabels:false,offsetY:4},axisBorder:{show:false},axisTicks:{show:false},tickPlacement:'on'},
+        yaxis:{labels:{formatter:v=>v.toFixed(1)+'Cr',style:{colors:'#9ca3b3',fontSize:'11px'}}},
+        tooltip:{theme:'dark',custom:function({series,seriesIndex,dataPointIndex,w}){
+          const sales=series[seriesIndex][dataPointIndex];
+          const g=growths[dataPointIndex];
+          const label=w.globals.labels[dataPointIndex];
+          const gStr=g===null?'':g>=0?`<div style="color:#22c55e;font-family:'Geist Mono',monospace;font-size:11px;margin-top:2px">↑ ${g.toFixed(1)}% MoM</div>`:`<div style="color:#ef4444;font-family:'Geist Mono',monospace;font-size:11px;margin-top:2px">↓ ${Math.abs(g).toFixed(1)}% MoM</div>`;
+          return `<div style="padding:8px 12px;background:#0f172a;border:1px solid rgba(255,255,255,0.1);border-radius:6px"><div style="color:#f1f5f9;font-weight:600;font-size:12px">${label}</div><div style="color:#EAB308;font-family:'Geist Mono',monospace;font-size:13px;margin-top:4px">Sales: ${fmtDD(sales*1e7)}</div>${gStr}</div>`;
+        }}
       });
       ddCharts['dd-chart-sales-trend'].render();
     }
