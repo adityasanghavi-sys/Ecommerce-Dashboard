@@ -1106,8 +1106,16 @@
           <div class="chart-section" style="margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
               <div class="chart-title" style="margin-bottom:0">Sales by platform — monthly trajectory</div>
+              <select id="dd-sales-byplat-sel" onchange="renderDDSalesByPlat()" class="ctrl-select" style="font-size:11px;padding:4px 8px;">
+                <option value="all">All platforms</option>
+                <option value="Blinkit">Blinkit</option>
+                <option value="Zepto">Zepto</option>
+                <option value="Instamart">Instamart</option>
+                <option value="Big Basket">Big Basket</option>
+                <option value="Amazon">Amazon</option>
+              </select>
             </div>
-            <div id="dd-chart-sales-byplat" style="height:220px"></div>
+            <div id="dd-chart-sales-byplat" style="height:320px"></div>
           </div>
         </div>
 
@@ -2484,7 +2492,7 @@ function getFilteredData() {
         colors: platData.map(([k])=>PLAT_COLORS[k]||'#888'),
         theme:{mode:'dark'}, legend:{position:'right',fontSize:'11px',fontFamily:'Geist Mono, monospace'},
         dataLabels:{enabled:false}, plotOptions:{pie:{donut:{size:'65%',labels:{show:true,total:{show:true,label:'Total',formatter:()=>fmtDD(totalSales),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
-        tooltip:{y:{formatter:v=>fmtDD(v)},theme:'dark'}
+        tooltip:{y:{formatter:v=>{if(v>=1e7)return '₹'+(v/1e7).toFixed(2)+'Cr';if(v>=1e5)return '₹'+(v/1e5).toFixed(2)+'L';if(v>=1e3)return '₹'+(v/1e3).toFixed(2)+'K';return '₹'+v.toFixed(0);}},theme:'dark'}
       });
       ddCharts['dd-chart-sales-mix'].render();
       const sc = document.getElementById('dd-sales-scorecards');
@@ -2553,23 +2561,24 @@ function getFilteredData() {
     }
 
     function renderDDSalesByPlat() {
-      const PLATS = ['Blinkit','Zepto','Instamart','Amazon'];
+      const sel = document.getElementById('dd-sales-byplat-sel')?.value || 'all';
+      const ALL_PLATS = ['Blinkit','Zepto','Instamart','Big Basket','Amazon'];
+      const PLATS = sel === 'all' ? ALL_PLATS : [sel];
       const MONTHS_DEF = [{y:2025,m:4,l:'Apr 25'},{y:2025,m:5,l:'May 25'},{y:2025,m:6,l:'Jun 25'},{y:2025,m:7,l:'Jul 25'},{y:2025,m:8,l:'Aug 25'},{y:2025,m:9,l:'Sep 25'},{y:2025,m:10,l:'Oct 25'},{y:2025,m:11,l:'Nov 25'},{y:2025,m:12,l:'Dec 25'},{y:2026,m:1,l:'Jan 26'},{y:2026,m:2,l:'Feb 26'},{y:2026,m:3,l:'Mar 26'},{y:2026,m:4,l:'Apr 26'},{y:2026,m:5,l:'May 26'},{y:2026,m:6,l:'Jun 26'},{y:2026,m:7,l:'Jul 26'}];
       const series = PLATS.map(p => ({ name:p, data: MONTHS_DEF.map(({y,m})=>{ const rows=getDDMonthData(y,m,p); return +(rows.reduce((s,r)=>s+(Number(r.Sales)||0),0)/1e7).toFixed(3); }) }));
       if (ddCharts['dd-chart-sales-byplat']) ddCharts['dd-chart-sales-byplat'].destroy();
       ddCharts['dd-chart-sales-byplat'] = new ApexCharts(document.getElementById('dd-chart-sales-byplat'), {
-        series, chart:{type:'line',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
-        theme:{mode:'dark'},colors:PLATS.map(p=>PLAT_COLORS[p]),stroke:{width:[2.5,2,2,1.5],curve:'smooth'},
-        markers:{size:3,strokeWidth:0},dataLabels:{enabled:false},
-        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
-        xaxis:{categories:MONTHS_DEF.map(m=>m.l),labels:{style:{colors:'#555',fontSize:'10px'},rotate:-30},axisBorder:{show:false},axisTicks:{show:false}},
-        yaxis:{labels:{formatter:v=>v.toFixed(1)+'Cr',style:{colors:'#9ca3b3',fontSize:'10px'}}},
-        legend:{labels:{colors:['#9ca3b3']},fontSize:'11px',fontFamily:'Geist Mono, monospace'},
-        tooltip:{y:{formatter:v=>fmtDD(v*1e7)},theme:'dark'}
+        series, chart:{type:'line',height:320,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:PLATS.map(p=>PLAT_COLORS[p]),stroke:{width:PLATS.length===1?3:2,curve:'smooth'},
+        markers:{size:4,strokeWidth:0},dataLabels:{enabled:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4,padding:{left:10,right:20}},
+        xaxis:{categories:MONTHS_DEF.map(m=>m.l),labels:{style:{colors:'#9ca3b3',fontSize:'11px'},rotate:-30,offsetY:4},axisBorder:{show:false},axisTicks:{show:false},tickPlacement:'on'},
+        yaxis:{labels:{formatter:v=>v.toFixed(2)+'Cr',style:{colors:'#9ca3b3',fontSize:'11px'}}},
+        legend:{labels:{colors:['#9ca3b3']},fontSize:'11px',fontFamily:'Geist Mono, monospace',show:PLATS.length>1},
+        tooltip:{theme:'dark',y:{formatter:v=>{const val=v*1e7;if(val>=1e7)return '₹'+(val/1e7).toFixed(2)+'Cr';if(val>=1e5)return '₹'+(val/1e5).toFixed(2)+'L';if(val>=1e3)return '₹'+(val/1e3).toFixed(2)+'K';return '₹'+val.toFixed(0);}}}
       });
       ddCharts['dd-chart-sales-byplat'].render();
     }
-
     function renderDDSalesYoYKPIs() {
       const PLATS = ['Blinkit','Zepto','Instamart','Amazon'];
       const COLORS = ['linear-gradient(90deg,#EAB308,#F97316)','linear-gradient(90deg,#a78bfa,#8B5CF6)','linear-gradient(90deg,#22C55E,#16a34a)','linear-gradient(90deg,#3B82F6,#0ea5e9)'];
