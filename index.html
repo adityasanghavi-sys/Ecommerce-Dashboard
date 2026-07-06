@@ -860,6 +860,13 @@
 .cust-opt { padding:7px 14px; font-size:12px; color:#cbd5e1; cursor:pointer; font-family:'Space Grotesk',sans-serif; }
 .cust-opt:hover { background:rgba(255,255,255,0.07); color:#fff; }
 .cust-opt-group { padding:6px 14px 3px; font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:0.08em; pointer-events:none; }
+.dd-mtab { padding:10px 18px;font-size:13px;font-weight:500;color:var(--text-muted);border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;cursor:pointer;font-family:'Space Grotesk',sans-serif; }
+    .dd-mtab.active { color:#EAB308;border-bottom-color:#EAB308; }
+    .dd-vpill { padding:5px 14px;border-radius:20px;font-size:10px;font-weight:600;border:1px solid var(--border);color:var(--text-muted);background:none;cursor:pointer;font-family:'Geist Mono',monospace;letter-spacing:.03em; }
+    .dd-vpill.active { background:rgba(234,179,8,0.1);border-color:rgba(234,179,8,0.35);color:#EAB308; }
+    .dd-view-label { display:inline-block;padding:2px 9px;border-radius:5px;font-size:9px;font-family:'Geist Mono',monospace;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:12px; }
+    .dd-kpi-row { display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:8px; }
+    .dd-scorecard { display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;border:1px solid var(--border); }
 </style>
 </head>
 <body>
@@ -970,6 +977,7 @@
         <button class="tab-btn" onclick="switchTab('skus')" id="tab-skus">SKU View</button>
         <button class="tab-btn" onclick="switchTab('skucompare')" id="tab-skucompare">SKU Compare</button>
         <button class="tab-btn" onclick="switchTab('shopify')" id="tab-shopify">Shopify</button>
+        <button class="tab-btn" onclick="switchTab('deepdive')" id="tab-deepdive" style="color:#a78bfa;">✦ Deep Dive</button>
         <button class="tab-btn" onclick="switchTab('ai-insights')" id="tab-ai-insights">✦ AI Insights</button>
       </div>
 
@@ -1010,74 +1018,29 @@
           
         </div>
 
-        <div class="section-label">ROAS breakdown</div>
-        <div class="section-caption">By platform · aggregate trend · trend by platform</div>
+        <div class="section-label">Overview</div>
+        <div class="section-caption">Sales · ROAS · Volume — click Deep Dive for full analysis</div>
         <div class="mom-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:28px;">
           <div class="chart-section">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-              <div class="chart-title" style="margin-bottom:0">ROAS by Platform</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <div class="chart-title" style="margin-bottom:0">SALES MIX BY PLATFORM (₹)</div>
+              <button onclick="openDeepDive('sales')" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);color:#a78bfa;font-size:11px;font-weight:600;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:'Space Grotesk',sans-serif;">DEEP DIVE →</button>
             </div>
-            <div id="chart-roas-platform" style="height:260px"></div>
+            <div id="chart-ov-sales-mix" style="height:240px"></div>
           </div>
           <div class="chart-section">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-              <div class="chart-title" style="margin-bottom:0">ROAS Trend · <span id="roas-trend-label">Monthly</span></div>
-              <div class="cust-sel" id="roas-trend-dd">
-                <div class="cust-sel-val" onclick="toggleDD('roas-trend-dd')">All Months <span>▾</span></div>
-                <div class="cust-sel-opts">
-                  <div class="cust-opt-group">Monthly</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2025-04','Apr 25')">Apr 25</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2025-05','May 25')">May 25</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2025-06','Jun 25')">Jun 25</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2025-07','Jul 25')">Jul 25</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2025-08','Aug 25')">Aug 25</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2025-09','Sep 25')">Sep 25</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2025-10','Oct 25')">Oct 25</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2025-11','Nov 25')">Nov 25</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2025-12','Dec 25')">Dec 25</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2026-01','Jan 26')">Jan 26</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2026-02','Feb 26')">Feb 26</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2026-03','Mar 26')">Mar 26</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2026-04','Apr 26')">Apr 26</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2026-05','May 26')">May 26</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2026-06','Jun 26')">Jun 26</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-2026-07','Jul 26')">Jul 26</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','month-all','All Months')">All Months</div>
-                  <div class="cust-opt-group">Quarter</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','quarter-Q1FY26','Q1 FY26')">Q1 FY26 (Apr–Jun 25)</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','quarter-Q2FY26','Q2 FY26')">Q2 FY26 (Jul–Sep 25)</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','quarter-Q3FY26','Q3 FY26')">Q3 FY26 (Oct–Dec 25)</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','quarter-Q4FY26','Q4 FY26')">Q4 FY26 (Jan–Mar 26)</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','quarter-Q1FY27','Q1 FY27')">Q1 FY27 (Apr–Jun 26)</div>
-                  <div class="cust-opt-group">Financial Year</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','fy-FY2526','FY 25-26')">FY 2025-26</div>
-                  <div class="cust-opt" onclick="pickDD('roas-trend-dd','fy-FY2627','FY 26-27')">FY 2026-27</div>
-                </div>
-              </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <div class="chart-title" style="margin-bottom:0">ROAS BY PLATFORM</div>
+              <button onclick="openDeepDive('roas')" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);color:#a78bfa;font-size:11px;font-weight:600;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:'Space Grotesk',sans-serif;">DEEP DIVE →</button>
             </div>
-            <div id="chart-roas-trend" style="height:260px"></div>
+            <div id="chart-ov-roas-bar" style="height:240px"></div>
           </div>
           <div class="chart-section">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-              <div class="chart-title" style="margin-bottom:0">ROAS Trend by Platform</div>
-              <div class="cust-sel" id="roas-plat-dd">
-                <div class="cust-sel-val" onclick="toggleDD('roas-plat-dd')">Blinkit <span>▾</span></div>
-                <div class="cust-sel-opts">
-                  <div class="cust-opt" onclick="pickDD('roas-plat-dd','Blinkit','Blinkit')">Blinkit</div>
-                  <div class="cust-opt" onclick="pickDD('roas-plat-dd','Zepto','Zepto')">Zepto</div>
-                  <div class="cust-opt" onclick="pickDD('roas-plat-dd','Instamart','Instamart')">Instamart</div>
-                  <div class="cust-opt" onclick="pickDD('roas-plat-dd','Big Basket','Big Basket')">Big Basket</div>
-                  <div class="cust-opt" onclick="pickDD('roas-plat-dd','Amazon','Amazon')">Amazon</div>
-                </div>
-              </div>
-                <option value="Blinkit">Blinkit</option>
-                <option value="Zepto">Zepto</option>
-                <option value="Instamart">Instamart</option>
-                <option value="Big Basket">Big Basket</option>
-                <option value="Amazon">Amazon</option>
-              </select>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <div class="chart-title" style="margin-bottom:0">QTY MIX BY PLATFORM (UNITS)</div>
+              <button onclick="openDeepDive('qty')" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);color:#a78bfa;font-size:11px;font-weight:600;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:'Space Grotesk',sans-serif;">DEEP DIVE →</button>
             </div>
-            <div id="chart-roas-platform-trend" style="height:260px"></div>
+            <div id="chart-ov-qty-mix" style="height:240px"></div>
           </div>
         </div>
 
@@ -1085,6 +1048,402 @@
         <div class="section-caption">Drill down to platform-level metrics</div>
         <div class="platform-grid" id="platform-grid"></div>
       </div>
+
+      <!-- DEEP DIVE TAB -->
+      <div id="view-deepdive" style="display:none">
+        <div style="margin-bottom:20px;">
+          <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.28);border-radius:20px;padding:3px 11px;font-size:10px;color:#a78bfa;font-family:'Geist Mono',monospace;margin-bottom:10px;">
+            <span style="width:5px;height:5px;border-radius:50%;background:#a78bfa;box-shadow:0 0 5px #a78bfa;display:inline-block"></span>Deep Dive
+          </div>
+          <div style="font-size:26px;font-weight:700;background:linear-gradient(130deg,#f1f5f9,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px;">Cross-channel Analytics</div>
+          <div style="font-size:11px;color:var(--text-muted);font-family:'Geist Mono',monospace;">Sales · ROAS · Volume — current, trends, and year-on-year</div>
+        </div>
+
+        <!-- Metric sub-tabs -->
+        <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:0;">
+          <button class="dd-mtab active" id="dd-tab-sales" onclick="setDDMetric('sales')">Sales</button>
+          <button class="dd-mtab" id="dd-tab-roas" onclick="setDDMetric('roas')">ROAS</button>
+          <button class="dd-mtab" id="dd-tab-qty" onclick="setDDMetric('qty')">Qty Sold</button>
+        </div>
+
+        <!-- View pills -->
+        <div style="display:flex;gap:6px;padding:14px 0 0;">
+          <button class="dd-vpill active" id="dd-pill-current" onclick="setDDView('current')">Current</button>
+          <button class="dd-vpill" id="dd-pill-trends" onclick="setDDView('trends')">Trends</button>
+          <button class="dd-vpill" id="dd-pill-yoy" onclick="setDDView('yoy')">YoY</button>
+        </div>
+
+        <!-- SALES metric views -->
+        <div id="dd-sales-current" class="dd-view" style="padding-top:16px;">
+          <div class="dd-view-label" style="background:rgba(234,179,8,0.08);color:#EAB308;border:1px solid rgba(234,179,8,0.18);">Current · MTD</div>
+          <div class="dd-kpi-row" id="dd-sales-kpis"></div>
+          <div class="section-label" style="margin-top:16px;">Platform breakdown</div>
+          <div class="mom-grid" style="grid-template-columns:2fr 1fr;margin-bottom:16px;">
+            <div class="chart-section">
+              <div class="chart-title">Sales by platform · MTD</div>
+              <div id="dd-chart-sales-mix" style="height:220px"></div>
+            </div>
+            <div class="chart-section">
+              <div class="chart-title">Platform snapshot</div>
+              <div id="dd-sales-scorecards" style="display:flex;flex-direction:column;gap:8px;padding-top:4px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="dd-sales-trends" class="dd-view" style="display:none;padding-top:16px;">
+          <div class="dd-view-label" style="background:rgba(139,92,246,0.08);color:#a78bfa;border:1px solid rgba(139,92,246,0.18);">Trends · Monthly / Quarterly / FY</div>
+          <div class="mom-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px;">
+            <div class="chart-section">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div class="chart-title" style="margin-bottom:0">Total sales trajectory</div>
+                <select id="dd-sales-trend-period" onchange="renderDDSalesTrend()" class="ctrl-select" style="font-size:11px;padding:4px 8px;">
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly</option>
+                  <option value="fy">Financial Year</option>
+                </select>
+              </div>
+              <div id="dd-chart-sales-trend" style="height:220px"></div>
+            </div>
+            <div class="chart-section">
+              <div class="chart-title">Month-on-month % Δ</div>
+              <div id="dd-chart-sales-mom" style="height:220px"></div>
+            </div>
+          </div>
+          <div class="chart-section" style="margin-bottom:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <div class="chart-title" style="margin-bottom:0">Sales by platform — monthly trajectory</div>
+            </div>
+            <div id="dd-chart-sales-byplat" style="height:220px"></div>
+          </div>
+        </div>
+
+        <div id="dd-sales-yoy" class="dd-view" style="display:none;padding-top:16px;">
+          <div class="dd-view-label" style="background:rgba(34,197,94,0.08);color:#22C55E;border:1px solid rgba(34,197,94,0.18);">YoY · FY25-26 vs FY26-27</div>
+          <div class="dd-kpi-row" id="dd-sales-yoy-kpis"></div>
+          <div class="chart-section" style="margin-top:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <div class="chart-title" style="margin-bottom:0">FY25-26 vs FY26-27 · same period</div>
+            </div>
+            <div id="dd-chart-sales-yoy" style="height:260px"></div>
+          </div>
+        </div>
+
+        <!-- ROAS metric views -->
+        <div id="dd-roas-current" class="dd-view" style="display:none;padding-top:16px;">
+          <div class="dd-view-label" style="background:rgba(234,179,8,0.08);color:#EAB308;border:1px solid rgba(234,179,8,0.18);">Current · MTD</div>
+          <div class="dd-kpi-row" id="dd-roas-kpis"></div>
+          <div class="mom-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:16px;margin-top:16px;">
+            <div class="chart-section">
+              <div class="chart-title">ROAS by platform</div>
+              <div id="dd-chart-roas-bar" style="height:220px"></div>
+            </div>
+            <div class="chart-section">
+              <div class="chart-title">ROAS vs Spend · last 30 days</div>
+              <div id="dd-chart-roas-spend" style="height:220px"></div>
+            </div>
+            <div class="chart-section">
+              <div class="chart-title">Platform snapshot</div>
+              <div id="dd-roas-scorecards" style="display:flex;flex-direction:column;gap:8px;padding-top:4px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="dd-roas-trends" class="dd-view" style="display:none;padding-top:16px;">
+          <div class="dd-view-label" style="background:rgba(139,92,246,0.08);color:#a78bfa;border:1px solid rgba(139,92,246,0.18);">Trends · Monthly / Quarterly / FY</div>
+          <div class="mom-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px;">
+            <div class="chart-section">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div class="chart-title" style="margin-bottom:0">Blended ROAS trajectory</div>
+                <select id="dd-roas-trend-period" onchange="renderDDROASTrend()" class="ctrl-select" style="font-size:11px;padding:4px 8px;">
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly</option>
+                  <option value="fy">Financial Year</option>
+                </select>
+              </div>
+              <div id="dd-chart-roas-trend" style="height:220px"></div>
+            </div>
+            <div class="chart-section">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div class="chart-title" style="margin-bottom:0">ROAS by platform trend</div>
+                <select id="dd-roas-plat-sel" onchange="renderDDROASPlatTrend()" class="ctrl-select" style="font-size:11px;padding:4px 8px;">
+                  <option value="Blinkit">Blinkit</option>
+                  <option value="Zepto">Zepto</option>
+                  <option value="Instamart">Instamart</option>
+                  <option value="Amazon">Amazon</option>
+                </select>
+              </div>
+              <div id="dd-chart-roas-plat-trend" style="height:220px"></div>
+            </div>
+          </div>
+          <div class="chart-section" style="margin-bottom:16px;">
+            <div class="chart-title">Blended vs platform ROAS — monthly</div>
+            <div id="dd-chart-roas-grouped" style="height:220px"></div>
+          </div>
+        </div>
+
+        <div id="dd-roas-yoy" class="dd-view" style="display:none;padding-top:16px;">
+          <div class="dd-view-label" style="background:rgba(34,197,94,0.08);color:#22C55E;border:1px solid rgba(34,197,94,0.18);">YoY · FY25-26 vs FY26-27</div>
+          <div class="dd-kpi-row" id="dd-roas-yoy-kpis"></div>
+          <div class="chart-section" style="margin-top:16px;">
+            <div class="chart-title">ROAS comparison — FY25 vs FY26 same period</div>
+            <div id="dd-chart-roas-yoy" style="height:260px"></div>
+          </div>
+        </div>
+
+        <!-- QTY metric views -->
+        <div id="dd-qty-current" class="dd-view" style="display:none;padding-top:16px;">
+          <div class="dd-view-label" style="background:rgba(234,179,8,0.08);color:#EAB308;border:1px solid rgba(234,179,8,0.18);">Current · MTD</div>
+          <div class="dd-kpi-row" id="dd-qty-kpis"></div>
+          <div class="mom-grid" style="grid-template-columns:2fr 1fr;margin-bottom:16px;margin-top:16px;">
+            <div class="chart-section">
+              <div class="chart-title">Units by platform · MTD</div>
+              <div id="dd-chart-qty-mix" style="height:220px"></div>
+            </div>
+            <div class="chart-section">
+              <div class="chart-title">ASP by platform</div>
+              <div id="dd-chart-asp-bar" style="height:220px"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="dd-qty-trends" class="dd-view" style="display:none;padding-top:16px;">
+          <div class="dd-view-label" style="background:rgba(139,92,246,0.08);color:#a78bfa;border:1px solid rgba(139,92,246,0.18);">Trends · Monthly / Quarterly / FY</div>
+          <div class="mom-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px;">
+            <div class="chart-section">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div class="chart-title" style="margin-bottom:0">Units trajectory</div>
+                <select id="dd-qty-trend-period" onchange="renderDDQtyTrend()" class="ctrl-select" style="font-size:11px;padding:4px 8px;">
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly</option>
+                  <option value="fy">Financial Year</option>
+                </select>
+              </div>
+              <div id="dd-chart-qty-trend" style="height:220px"></div>
+            </div>
+            <div class="chart-section">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div class="chart-title" style="margin-bottom:0">ASP trend</div>
+                <select id="dd-asp-plat-sel" onchange="renderDDASPTrend()" class="ctrl-select" style="font-size:11px;padding:4px 8px;">
+                  <option value="Blinkit">Blinkit</option>
+                  <option value="Zepto">Zepto</option>
+                  <option value="Instamart">Instamart</option>
+                  <option value="Amazon">Amazon</option>
+                </select>
+              </div>
+              <div id="dd-chart-asp-trend" style="height:220px"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="dd-qty-yoy" class="dd-view" style="display:none;padding-top:16px;">
+          <div class="dd-view-label" style="background:rgba(34,197,94,0.08);color:#22C55E;border:1px solid rgba(34,197,94,0.18);">YoY · FY25-26 vs FY26-27</div>
+          <div class="dd-kpi-row" id="dd-qty-yoy-kpis"></div>
+          <div class="chart-section" style="margin-top:16px;">
+            <div class="chart-title">Units comparison — FY25 vs FY26 same period</div>
+            <div id="dd-chart-qty-yoy" style="height:260px"></div>
+          </div>
+        </div>
+
+      </div>
+      <!-- END DEEP DIVE TAB -->
+
+      <!-- DEEP DIVE TAB -->
+      <div id="view-deepdive" style="display:none">
+        <div style="margin-bottom:20px;">
+          <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.28);border-radius:20px;padding:3px 11px;font-size:10px;color:#a78bfa;font-family:'Geist Mono',monospace;margin-bottom:10px;">
+            <span style="width:5px;height:5px;border-radius:50%;background:#a78bfa;box-shadow:0 0 5px #a78bfa;display:inline-block"></span>Deep Dive
+          </div>
+          <div style="font-size:26px;font-weight:700;background:linear-gradient(130deg,#f1f5f9,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px;">Cross-channel Analytics</div>
+          <div style="font-size:11px;color:var(--text-muted);font-family:'Geist Mono',monospace;">Sales · ROAS · Volume — current, trends, and year-on-year</div>
+        </div>
+
+        <!-- Metric sub-tabs -->
+        <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:0;">
+          <button class="dd-mtab active" id="dd-tab-sales" onclick="setDDMetric('sales')">Sales</button>
+          <button class="dd-mtab" id="dd-tab-roas" onclick="setDDMetric('roas')">ROAS</button>
+          <button class="dd-mtab" id="dd-tab-qty" onclick="setDDMetric('qty')">Qty Sold</button>
+        </div>
+
+        <!-- View pills -->
+        <div style="display:flex;gap:6px;padding:14px 0 0;">
+          <button class="dd-vpill active" id="dd-pill-current" onclick="setDDView('current')">Current</button>
+          <button class="dd-vpill" id="dd-pill-trends" onclick="setDDView('trends')">Trends</button>
+          <button class="dd-vpill" id="dd-pill-yoy" onclick="setDDView('yoy')">YoY</button>
+        </div>
+
+        <!-- SALES metric views -->
+        <div id="dd-sales-current" class="dd-view" style="padding-top:16px;">
+          <div class="dd-view-label" style="background:rgba(234,179,8,0.08);color:#EAB308;border:1px solid rgba(234,179,8,0.18);">Current · MTD</div>
+          <div class="dd-kpi-row" id="dd-sales-kpis"></div>
+          <div class="section-label" style="margin-top:16px;">Platform breakdown</div>
+          <div class="mom-grid" style="grid-template-columns:2fr 1fr;margin-bottom:16px;">
+            <div class="chart-section">
+              <div class="chart-title">Sales by platform · MTD</div>
+              <div id="dd-chart-sales-mix" style="height:220px"></div>
+            </div>
+            <div class="chart-section">
+              <div class="chart-title">Platform snapshot</div>
+              <div id="dd-sales-scorecards" style="display:flex;flex-direction:column;gap:8px;padding-top:4px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="dd-sales-trends" class="dd-view" style="display:none;padding-top:16px;">
+          <div class="dd-view-label" style="background:rgba(139,92,246,0.08);color:#a78bfa;border:1px solid rgba(139,92,246,0.18);">Trends · Monthly / Quarterly / FY</div>
+          <div class="mom-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px;">
+            <div class="chart-section">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div class="chart-title" style="margin-bottom:0">Total sales trajectory</div>
+                <select id="dd-sales-trend-period" onchange="renderDDSalesTrend()" class="ctrl-select" style="font-size:11px;padding:4px 8px;">
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly</option>
+                  <option value="fy">Financial Year</option>
+                </select>
+              </div>
+              <div id="dd-chart-sales-trend" style="height:220px"></div>
+            </div>
+            <div class="chart-section">
+              <div class="chart-title">Month-on-month % Δ</div>
+              <div id="dd-chart-sales-mom" style="height:220px"></div>
+            </div>
+          </div>
+          <div class="chart-section" style="margin-bottom:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <div class="chart-title" style="margin-bottom:0">Sales by platform — monthly trajectory</div>
+            </div>
+            <div id="dd-chart-sales-byplat" style="height:220px"></div>
+          </div>
+        </div>
+
+        <div id="dd-sales-yoy" class="dd-view" style="display:none;padding-top:16px;">
+          <div class="dd-view-label" style="background:rgba(34,197,94,0.08);color:#22C55E;border:1px solid rgba(34,197,94,0.18);">YoY · FY25-26 vs FY26-27</div>
+          <div class="dd-kpi-row" id="dd-sales-yoy-kpis"></div>
+          <div class="chart-section" style="margin-top:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <div class="chart-title" style="margin-bottom:0">FY25-26 vs FY26-27 · same period</div>
+            </div>
+            <div id="dd-chart-sales-yoy" style="height:260px"></div>
+          </div>
+        </div>
+
+        <!-- ROAS metric views -->
+        <div id="dd-roas-current" class="dd-view" style="display:none;padding-top:16px;">
+          <div class="dd-view-label" style="background:rgba(234,179,8,0.08);color:#EAB308;border:1px solid rgba(234,179,8,0.18);">Current · MTD</div>
+          <div class="dd-kpi-row" id="dd-roas-kpis"></div>
+          <div class="mom-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:16px;margin-top:16px;">
+            <div class="chart-section">
+              <div class="chart-title">ROAS by platform</div>
+              <div id="dd-chart-roas-bar" style="height:220px"></div>
+            </div>
+            <div class="chart-section">
+              <div class="chart-title">ROAS vs Spend · last 30 days</div>
+              <div id="dd-chart-roas-spend" style="height:220px"></div>
+            </div>
+            <div class="chart-section">
+              <div class="chart-title">Platform snapshot</div>
+              <div id="dd-roas-scorecards" style="display:flex;flex-direction:column;gap:8px;padding-top:4px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="dd-roas-trends" class="dd-view" style="display:none;padding-top:16px;">
+          <div class="dd-view-label" style="background:rgba(139,92,246,0.08);color:#a78bfa;border:1px solid rgba(139,92,246,0.18);">Trends · Monthly / Quarterly / FY</div>
+          <div class="mom-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px;">
+            <div class="chart-section">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div class="chart-title" style="margin-bottom:0">Blended ROAS trajectory</div>
+                <select id="dd-roas-trend-period" onchange="renderDDROASTrend()" class="ctrl-select" style="font-size:11px;padding:4px 8px;">
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly</option>
+                  <option value="fy">Financial Year</option>
+                </select>
+              </div>
+              <div id="dd-chart-roas-trend" style="height:220px"></div>
+            </div>
+            <div class="chart-section">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div class="chart-title" style="margin-bottom:0">ROAS by platform trend</div>
+                <select id="dd-roas-plat-sel" onchange="renderDDROASPlatTrend()" class="ctrl-select" style="font-size:11px;padding:4px 8px;">
+                  <option value="Blinkit">Blinkit</option>
+                  <option value="Zepto">Zepto</option>
+                  <option value="Instamart">Instamart</option>
+                  <option value="Amazon">Amazon</option>
+                </select>
+              </div>
+              <div id="dd-chart-roas-plat-trend" style="height:220px"></div>
+            </div>
+          </div>
+          <div class="chart-section" style="margin-bottom:16px;">
+            <div class="chart-title">Blended vs platform ROAS — monthly</div>
+            <div id="dd-chart-roas-grouped" style="height:220px"></div>
+          </div>
+        </div>
+
+        <div id="dd-roas-yoy" class="dd-view" style="display:none;padding-top:16px;">
+          <div class="dd-view-label" style="background:rgba(34,197,94,0.08);color:#22C55E;border:1px solid rgba(34,197,94,0.18);">YoY · FY25-26 vs FY26-27</div>
+          <div class="dd-kpi-row" id="dd-roas-yoy-kpis"></div>
+          <div class="chart-section" style="margin-top:16px;">
+            <div class="chart-title">ROAS comparison — FY25 vs FY26 same period</div>
+            <div id="dd-chart-roas-yoy" style="height:260px"></div>
+          </div>
+        </div>
+
+        <!-- QTY metric views -->
+        <div id="dd-qty-current" class="dd-view" style="display:none;padding-top:16px;">
+          <div class="dd-view-label" style="background:rgba(234,179,8,0.08);color:#EAB308;border:1px solid rgba(234,179,8,0.18);">Current · MTD</div>
+          <div class="dd-kpi-row" id="dd-qty-kpis"></div>
+          <div class="mom-grid" style="grid-template-columns:2fr 1fr;margin-bottom:16px;margin-top:16px;">
+            <div class="chart-section">
+              <div class="chart-title">Units by platform · MTD</div>
+              <div id="dd-chart-qty-mix" style="height:220px"></div>
+            </div>
+            <div class="chart-section">
+              <div class="chart-title">ASP by platform</div>
+              <div id="dd-chart-asp-bar" style="height:220px"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="dd-qty-trends" class="dd-view" style="display:none;padding-top:16px;">
+          <div class="dd-view-label" style="background:rgba(139,92,246,0.08);color:#a78bfa;border:1px solid rgba(139,92,246,0.18);">Trends · Monthly / Quarterly / FY</div>
+          <div class="mom-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px;">
+            <div class="chart-section">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div class="chart-title" style="margin-bottom:0">Units trajectory</div>
+                <select id="dd-qty-trend-period" onchange="renderDDQtyTrend()" class="ctrl-select" style="font-size:11px;padding:4px 8px;">
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly</option>
+                  <option value="fy">Financial Year</option>
+                </select>
+              </div>
+              <div id="dd-chart-qty-trend" style="height:220px"></div>
+            </div>
+            <div class="chart-section">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div class="chart-title" style="margin-bottom:0">ASP trend</div>
+                <select id="dd-asp-plat-sel" onchange="renderDDASPTrend()" class="ctrl-select" style="font-size:11px;padding:4px 8px;">
+                  <option value="Blinkit">Blinkit</option>
+                  <option value="Zepto">Zepto</option>
+                  <option value="Instamart">Instamart</option>
+                  <option value="Amazon">Amazon</option>
+                </select>
+              </div>
+              <div id="dd-chart-asp-trend" style="height:220px"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="dd-qty-yoy" class="dd-view" style="display:none;padding-top:16px;">
+          <div class="dd-view-label" style="background:rgba(34,197,94,0.08);color:#22C55E;border:1px solid rgba(34,197,94,0.18);">YoY · FY25-26 vs FY26-27</div>
+          <div class="dd-kpi-row" id="dd-qty-yoy-kpis"></div>
+          <div class="chart-section" style="margin-top:16px;">
+            <div class="chart-title">Units comparison — FY25 vs FY26 same period</div>
+            <div id="dd-chart-qty-yoy" style="height:260px"></div>
+          </div>
+        </div>
+
+      </div>
+      <!-- END DEEP DIVE TAB -->
 
       <div id="view-compare" style="display:none">
 
@@ -1853,9 +2212,7 @@ const FY25_URL = API_URL + "&type=fy25";
         // Sync activeMonth state with dropdown default value
         activeMonth = document.getElementById('month-select').value;
       activeMonth = document.getElementById('month-select').value;
-        loadFY25Data().then(() => {
-          renderROASTrend();
-          renderROASPlatformTrend();
+      loadFY25Data();
         });
         render();
       } catch (err) {
@@ -2001,6 +2358,562 @@ function getFilteredData() {
         '2026-04':'April 2026','2026-05':'May 2026','2026-06':'June 2026','2026-07':'July 2026'
       };
       return LABELS[m] || m;
+    }
+
+    // ─── DEEP DIVE ─────────────────────────────────────────────────────────────
+    let ddMetric = 'sales';
+    let ddView = 'current';
+    let ddCharts = {};
+
+    function openDeepDive(metric) {
+      switchTab('deepdive');
+      setDDMetric(metric);
+    }
+
+    function setDDMetric(metric) {
+      ddMetric = metric;
+      ['sales','roas','qty'].forEach(m => {
+        document.getElementById('dd-tab-' + m).classList.toggle('active', m === metric);
+      });
+      updateDDView();
+    }
+
+    function setDDView(view) {
+      ddView = view;
+      ['current','trends','yoy'].forEach(v => {
+        document.getElementById('dd-pill-' + v).classList.toggle('active', v === view);
+      });
+      updateDDView();
+    }
+
+    function updateDDView() {
+      document.querySelectorAll('.dd-view').forEach(el => el.style.display = 'none');
+      const el = document.getElementById('dd-' + ddMetric + '-' + ddView);
+      if (el) { el.style.display = 'block'; renderDDView(ddMetric, ddView); }
+    }
+
+    function renderDDView(metric, view) {
+      if (metric === 'sales') {
+        if (view === 'current') renderDDSalesCurrent();
+        else if (view === 'trends') { renderDDSalesTrend(); renderDDSalesMoM(); renderDDSalesByPlat(); }
+        else if (view === 'yoy') { renderDDSalesYoYKPIs(); renderDDSalesYoYChart(); }
+      } else if (metric === 'roas') {
+        if (view === 'current') renderDDROASCurrent();
+        else if (view === 'trends') { renderDDROASTrend(); renderDDROASPlatTrend(); renderDDROASGrouped(); }
+        else if (view === 'yoy') { renderDDROASYoYKPIs(); renderDDROASYoYChart(); }
+      } else if (metric === 'qty') {
+        if (view === 'current') renderDDQtyCurrent();
+        else if (view === 'trends') { renderDDQtyTrend(); renderDDASPTrend(); }
+        else if (view === 'yoy') { renderDDQtyYoYKPIs(); renderDDQtyYoYChart(); }
+      }
+    }
+
+    function fmtDD(v) { if(v>=1e7) return '₹'+(v/1e7).toFixed(2)+'Cr'; if(v>=1e5) return '₹'+(v/1e5).toFixed(1)+'L'; if(v>=1e3) return '₹'+(v/1e3).toFixed(1)+'K'; return '₹'+v.toFixed(0); }
+    function fmtDDU(v) { if(v>=1e5) return (v/1e5).toFixed(1)+'L'; if(v>=1e3) return (v/1e3).toFixed(1)+'K'; return v.toFixed(0); }
+
+    function getDDMonthData(year, month, platform) {
+      const src = (year === 2025 || (year === 2026 && month <= 3)) ? fy25Data : rawData;
+      return src.filter(r => {
+        const d = parseLocalDate(r.Date);
+        const platOk = !platform || r.Platform === platform;
+        return d.getFullYear() === year && d.getMonth()+1 === month && platOk;
+      });
+    }
+
+    function getDDPeriodPoints(period) {
+      const MONTHS = [
+        {y:2025,m:4,l:'Apr 25'},{y:2025,m:5,l:'May 25'},{y:2025,m:6,l:'Jun 25'},
+        {y:2025,m:7,l:'Jul 25'},{y:2025,m:8,l:'Aug 25'},{y:2025,m:9,l:'Sep 25'},
+        {y:2025,m:10,l:'Oct 25'},{y:2025,m:11,l:'Nov 25'},{y:2025,m:12,l:'Dec 25'},
+        {y:2026,m:1,l:'Jan 26'},{y:2026,m:2,l:'Feb 26'},{y:2026,m:3,l:'Mar 26'},
+        {y:2026,m:4,l:'Apr 26'},{y:2026,m:5,l:'May 26'},{y:2026,m:6,l:'Jun 26'},{y:2026,m:7,l:'Jul 26'}
+      ];
+      const QUARTERS = [
+        {l:'Q1 FY26',months:[{y:2025,m:4},{y:2025,m:5},{y:2025,m:6}]},
+        {l:'Q2 FY26',months:[{y:2025,m:7},{y:2025,m:8},{y:2025,m:9}]},
+        {l:'Q3 FY26',months:[{y:2025,m:10},{y:2025,m:11},{y:2025,m:12}]},
+        {l:'Q4 FY26',months:[{y:2026,m:1},{y:2026,m:2},{y:2026,m:3}]},
+        {l:'Q1 FY27',months:[{y:2026,m:4},{y:2026,m:5},{y:2026,m:6}]}
+      ];
+      const FYS = [
+        {l:'FY25-26',months:[{y:2025,m:4},{y:2025,m:5},{y:2025,m:6},{y:2025,m:7},{y:2025,m:8},{y:2025,m:9},{y:2025,m:10},{y:2025,m:11},{y:2025,m:12},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3}]},
+        {l:'FY26-27',months:[{y:2026,m:4},{y:2026,m:5},{y:2026,m:6},{y:2026,m:7}]}
+      ];
+      if (period === 'monthly') return MONTHS.map(({y,m,l}) => { const rows = getDDMonthData(y,m,null); const sales=rows.reduce((s,r)=>s+(Number(r.Sales)||0),0); const spends=rows.reduce((s,r)=>s+(Number(r.Spends)||0),0); const units=rows.reduce((s,r)=>s+(Number(r.Units)||0),0); return {l,sales,spends,units,roas:spends>0?sales/spends:0}; }).filter(p=>p.sales>0);
+      if (period === 'quarterly') return QUARTERS.map(q => { const rows = q.months.flatMap(({y,m})=>getDDMonthData(y,m,null)); const sales=rows.reduce((s,r)=>s+(Number(r.Sales)||0),0); const spends=rows.reduce((s,r)=>s+(Number(r.Spends)||0),0); const units=rows.reduce((s,r)=>s+(Number(r.Units)||0),0); return {l:q.l,sales,spends,units,roas:spends>0?sales/spends:0}; }).filter(p=>p.sales>0);
+      if (period === 'fy') return FYS.map(f => { const rows = f.months.flatMap(({y,m})=>getDDMonthData(y,m,null)); const sales=rows.reduce((s,r)=>s+(Number(r.Sales)||0),0); const spends=rows.reduce((s,r)=>s+(Number(r.Spends)||0),0); const units=rows.reduce((s,r)=>s+(Number(r.Units)||0),0); return {l:f.l,sales,spends,units,roas:spends>0?sales/spends:0}; }).filter(p=>p.sales>0);
+      return [];
+    }
+
+    function ddKpiHtml(label, val, delta, sub, colorClass) {
+      const isUp = delta > 0; const isDn = delta < 0;
+      const pillCls = isUp ? 'color:#22C55E;background:rgba(34,197,94,0.1)' : isDn ? 'color:#EF4444;background:rgba(239,68,68,0.1)' : 'color:#6b7280;background:rgba(148,163,184,0.08)';
+      const arrow = isUp ? '↑' : isDn ? '↓' : '→';
+      return `<div class="kpi-card" style="padding:14px 16px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${colorClass}"></div>
+        <div class="section-caption" style="margin-bottom:4px;">${label}</div>
+        <div style="font-size:22px;font-weight:700;color:var(--text-primary);line-height:1.1;">${val}</div>
+        <div style="display:inline-flex;align-items:center;gap:2px;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:600;font-family:'Geist Mono',monospace;margin-top:5px;${pillCls}">${arrow} ${Math.abs(delta).toFixed(1)}%</div>
+        <div class="section-caption" style="margin-top:3px;">${sub}</div>
+      </div>`;
+    }
+
+    function ddScoreHtml(platform, val, deltaVal, color) {
+      const isUp = deltaVal >= 0;
+      const pillStyle = isUp ? 'color:#22C55E;background:rgba(34,197,94,0.1)' : 'color:#EF4444;background:rgba(239,68,68,0.1)';
+      return `<div class="dd-scorecard" style="background:${color}11;border-color:${color}25;">
+        <span style="font-size:12px;font-weight:600;color:${color}">${platform}</span>
+        <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--text-primary)">${val}</span>
+        <span style="display:inline-flex;align-items:center;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:600;font-family:'Geist Mono',monospace;${pillStyle}">${isUp?'↑':'↓'}${Math.abs(deltaVal).toFixed(1)}%</span>
+      </div>`;
+    }
+
+    const PLAT_COLORS = { Blinkit:'#EAB308', Zepto:'#8B5CF6', Instamart:'#3B82F6', Amazon:'#F97316', 'Big Basket':'#22C55E', Shopify:'#EC4899', 'First Club':'#06B6D4' };
+
+    function renderDDSalesCurrent() {
+      const data = getFilteredData();
+      const agg = {}; let totalSales=0; let totalUnits=0;
+      data.forEach(r => { const p=r.Platform; if(!agg[p]) agg[p]={sales:0,units:0}; agg[p].sales+=Number(r.Sales)||0; agg[p].units+=Number(r.Units)||0; totalSales+=Number(r.Sales)||0; totalUnits+=Number(r.Units)||0; });
+      const prevMonth = getPrevMonthAgg();
+      const prevSales = prevMonth ? Object.values(prevMonth).reduce((s,v)=>s+(v.sales||0),0) : 0;
+      const momPct = prevSales > 0 ? (totalSales - prevSales)/prevSales*100 : 0;
+      const bestPlat = Object.entries(agg).sort((a,b)=>b[1].sales-a[1].sales)[0];
+      document.getElementById('dd-sales-kpis').innerHTML =
+        ddKpiHtml('Total Sales', fmtDD(totalSales), momPct, `vs prev month`, 'linear-gradient(90deg,#EAB308,#F97316)') +
+        ddKpiHtml('Best Platform', bestPlat?bestPlat[0]:'—', bestPlat?(agg[bestPlat[0]].sales/totalSales*100):0, bestPlat?fmtDD(agg[bestPlat[0]].sales)+' MTD':'', 'linear-gradient(90deg,#a78bfa,#8B5CF6)') +
+        ddKpiHtml('Total Units', fmtDDU(totalUnits), momPct*0.8, `blended`, 'linear-gradient(90deg,#22C55E,#16a34a)') +
+        ddKpiHtml('Proj. Month', fmtDD(totalSales * projMultiplier()), 0, 'at current run rate', 'linear-gradient(90deg,#3B82F6,#0ea5e9)');
+      const platData = Object.entries(agg).filter(([,v])=>v.sales>0).sort((a,b)=>b[1].sales-a[1].sales);
+      if (ddCharts['dd-chart-sales-mix']) { ddCharts['dd-chart-sales-mix'].destroy(); }
+      ddCharts['dd-chart-sales-mix'] = new ApexCharts(document.getElementById('dd-chart-sales-mix'), {
+        series: platData.map(([,v])=>v.sales), labels: platData.map(([k])=>k),
+        chart:{type:'donut',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        colors: platData.map(([k])=>PLAT_COLORS[k]||'#888'),
+        theme:{mode:'dark'}, legend:{position:'right',fontSize:'11px',fontFamily:'Geist Mono, monospace'},
+        dataLabels:{enabled:false}, plotOptions:{pie:{donut:{size:'65%',labels:{show:true,total:{show:true,label:'Total',formatter:()=>fmtDD(totalSales),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
+        tooltip:{y:{formatter:v=>fmtDD(v)},theme:'dark'}
+      });
+      ddCharts['dd-chart-sales-mix'].render();
+      const sc = document.getElementById('dd-sales-scorecards');
+      sc.innerHTML = platData.slice(0,5).map(([k,v]) => {
+        const prev = prevMonth && prevMonth[k] ? prevMonth[k].sales : 0;
+        const d = prev > 0 ? (v.sales-prev)/prev*100 : 0;
+        return ddScoreHtml(k, fmtDD(v.sales), d, PLAT_COLORS[k]||'#888');
+      }).join('');
+    }
+
+    function projMultiplier() {
+      const now = new Date(); const dim = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+      return dim / now.getDate();
+    }
+
+    function getPrevMonthAgg() {
+      const now = new Date(); let py=now.getFullYear(), pm=now.getMonth();
+      if(pm===0){pm=12;py--;}
+      const src = (py===2025||(py===2026&&pm<=3)) ? fy25Data : rawData;
+      const rows = src.filter(r=>{const d=parseLocalDate(r.Date);return d.getFullYear()===py&&d.getMonth()+1===pm;});
+      const agg = {};
+      rows.forEach(r=>{const p=r.Platform;if(!agg[p])agg[p]={sales:0,units:0,spends:0};agg[p].sales+=Number(r.Sales)||0;agg[p].units+=Number(r.Units)||0;agg[p].spends+=Number(r.Spends)||0;});
+      return agg;
+    }
+
+    function renderDDSalesTrend() {
+      const period = document.getElementById('dd-sales-trend-period')?.value || 'monthly';
+      const pts = getDDPeriodPoints(period);
+      const fy25pts = period === 'monthly' ? getDDPeriodPoints('monthly').filter(p=>['Apr 25','May 25','Jun 25','Jul 25','Aug 25','Sep 25','Oct 25','Nov 25','Dec 25','Jan 26','Feb 26','Mar 26'].includes(p.l)) : [];
+      if (ddCharts['dd-chart-sales-trend']) ddCharts['dd-chart-sales-trend'].destroy();
+      ddCharts['dd-chart-sales-trend'] = new ApexCharts(document.getElementById('dd-chart-sales-trend'), {
+        series:[{name:'Sales',data:pts.map(p=>+(p.sales/1e7).toFixed(3))}],
+        chart:{type:'area',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:['#EAB308'],stroke:{width:2.5,curve:'smooth'},
+        fill:{type:'gradient',gradient:{shade:'dark',type:'vertical',opacityFrom:0.35,opacityTo:0.02}},
+        markers:{size:4,strokeWidth:0},dataLabels:{enabled:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:pts.map(p=>p.l),labels:{style:{colors:'#555',fontSize:'10px'},rotate:-30},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>v.toFixed(1)+'Cr',style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        tooltip:{y:{formatter:v=>fmtDD(v*1e7)},theme:'dark'}
+      });
+      ddCharts['dd-chart-sales-trend'].render();
+    }
+
+    function renderDDSalesMoM() {
+      const pts = getDDPeriodPoints('monthly');
+      const growths = pts.slice(1).map((p,i)=>{ const prev=pts[i].sales; return{l:p.l,g:prev>0?(p.sales-prev)/prev*100:0}; });
+      if (ddCharts['dd-chart-sales-mom']) ddCharts['dd-chart-sales-mom'].destroy();
+      ddCharts['dd-chart-sales-mom'] = new ApexCharts(document.getElementById('dd-chart-sales-mom'), {
+        series:[{name:'MoM %',data:growths.map(g=>+g.g.toFixed(1))}],
+        chart:{type:'bar',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:['#22C55E'],
+        plotOptions:{bar:{borderRadius:4,columnWidth:'55%',colors:{ranges:[{from:-100,to:0,color:'#EF4444'}]}}},
+        dataLabels:{enabled:false},grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:growths.map(g=>g.l),labels:{style:{colors:'#555',fontSize:'10px'},rotate:-30},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>v.toFixed(0)+'%',style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        tooltip:{y:{formatter:v=>v.toFixed(1)+'%'},theme:'dark'}
+      });
+      ddCharts['dd-chart-sales-mom'].render();
+    }
+
+    function renderDDSalesByPlat() {
+      const PLATS = ['Blinkit','Zepto','Instamart','Amazon'];
+      const MONTHS_DEF = [{y:2025,m:4,l:'Apr 25'},{y:2025,m:5,l:'May 25'},{y:2025,m:6,l:'Jun 25'},{y:2025,m:7,l:'Jul 25'},{y:2025,m:8,l:'Aug 25'},{y:2025,m:9,l:'Sep 25'},{y:2025,m:10,l:'Oct 25'},{y:2025,m:11,l:'Nov 25'},{y:2025,m:12,l:'Dec 25'},{y:2026,m:1,l:'Jan 26'},{y:2026,m:2,l:'Feb 26'},{y:2026,m:3,l:'Mar 26'},{y:2026,m:4,l:'Apr 26'},{y:2026,m:5,l:'May 26'},{y:2026,m:6,l:'Jun 26'},{y:2026,m:7,l:'Jul 26'}];
+      const series = PLATS.map(p => ({ name:p, data: MONTHS_DEF.map(({y,m})=>{ const rows=getDDMonthData(y,m,p); return +(rows.reduce((s,r)=>s+(Number(r.Sales)||0),0)/1e7).toFixed(3); }) }));
+      if (ddCharts['dd-chart-sales-byplat']) ddCharts['dd-chart-sales-byplat'].destroy();
+      ddCharts['dd-chart-sales-byplat'] = new ApexCharts(document.getElementById('dd-chart-sales-byplat'), {
+        series, chart:{type:'line',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:PLATS.map(p=>PLAT_COLORS[p]),stroke:{width:[2.5,2,2,1.5],curve:'smooth'},
+        markers:{size:3,strokeWidth:0},dataLabels:{enabled:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:MONTHS_DEF.map(m=>m.l),labels:{style:{colors:'#555',fontSize:'10px'},rotate:-30},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>v.toFixed(1)+'Cr',style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        legend:{labels:{colors:['#9ca3b3']},fontSize:'11px',fontFamily:'Geist Mono, monospace'},
+        tooltip:{y:{formatter:v=>fmtDD(v*1e7)},theme:'dark'}
+      });
+      ddCharts['dd-chart-sales-byplat'].render();
+    }
+
+    function renderDDSalesYoYKPIs() {
+      const PLATS = ['Blinkit','Zepto','Instamart','Amazon'];
+      const COLORS = ['linear-gradient(90deg,#EAB308,#F97316)','linear-gradient(90deg,#a78bfa,#8B5CF6)','linear-gradient(90deg,#22C55E,#16a34a)','linear-gradient(90deg,#3B82F6,#0ea5e9)'];
+      const now = new Date(); const cm=now.getMonth()+1; const cy=now.getFullYear();
+      const pm = cm<=3?cm+9:cm-3; const py25 = cm<=3?2025:2025;
+      let html = '';
+      PLATS.forEach((p,i)=>{
+        const fy26rows = getDDMonthData(cy,cm,p); const fy25rows = getDDMonthData(2025,cm,p);
+        const fy26s=fy26rows.reduce((s,r)=>s+(Number(r.Sales)||0),0);
+        const fy25s=fy25rows.reduce((s,r)=>s+(Number(r.Sales)||0),0);
+        const pct=fy25s>0?(fy26s-fy25s)/fy25s*100:0;
+        html+=ddKpiHtml(p+' YoY',pct.toFixed(1)+'%',pct,'FY26 '+fmtDD(fy26s)+' · FY25 '+fmtDD(fy25s),COLORS[i]);
+      });
+      document.getElementById('dd-sales-yoy-kpis').innerHTML=html;
+    }
+
+    function renderDDSalesYoYChart() {
+      const PLATS = ['Blinkit','Zepto','Instamart','Amazon'];
+      const now = new Date(); const months = [];
+      for(let m=4;m<=now.getMonth()+1+(now.getFullYear()===2026?0:0);m++) months.push(m);
+      const fy26 = PLATS.map(p=>({name:'FY26 '+p,data:months.map(m=>{const rows=getDDMonthData(2026,m,p);return +(rows.reduce((s,r)=>s+(Number(r.Sales)||0),0)/1e7).toFixed(3);})}));
+      const fy25 = PLATS.map(p=>({name:'FY25 '+p,data:months.map(m=>{const rows=getDDMonthData(2025,m,p);return +(rows.reduce((s,r)=>s+(Number(r.Sales)||0),0)/1e7).toFixed(3);})}));
+      const labels = months.map(m=>['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m]);
+      if(ddCharts['dd-chart-sales-yoy'])ddCharts['dd-chart-sales-yoy'].destroy();
+      ddCharts['dd-chart-sales-yoy']=new ApexCharts(document.getElementById('dd-chart-sales-yoy'),{
+        series:[...fy26,...fy25],chart:{type:'bar',height:260,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:[...PLATS.map(p=>PLAT_COLORS[p]),...PLATS.map(p=>PLAT_COLORS[p]+'66')],
+        plotOptions:{bar:{borderRadius:3,columnWidth:'70%',grouped:true}},dataLabels:{enabled:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:labels,labels:{style:{colors:'#555',fontSize:'10px'}},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>v.toFixed(1)+'Cr',style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        legend:{labels:{colors:['#9ca3b3']},fontSize:'11px',fontFamily:'Geist Mono, monospace'},
+        tooltip:{y:{formatter:v=>fmtDD(v*1e7)},theme:'dark'}
+      });
+      ddCharts['dd-chart-sales-yoy'].render();
+    }
+
+    function renderDDROASCurrent() {
+      const data = getFilteredData();
+      const agg = {};
+      data.forEach(r=>{const p=r.Platform;if(!agg[p])agg[p]={sales:0,spends:0};agg[p].sales+=Number(r.Sales)||0;agg[p].spends+=Number(r.Spends)||0;});
+      const platData=Object.entries(agg).filter(([,v])=>v.spends>0).sort((a,b)=>(b[1].sales/b[1].spends)-(a[1].sales/a[1].spends));
+      const totalS=Object.values(agg).reduce((s,v)=>s+(v.sales||0),0);
+      const totalSp=Object.values(agg).reduce((s,v)=>s+(v.spends||0),0);
+      const blended=totalSp>0?totalS/totalSp:0;
+      const best=platData[0]; const worst=platData[platData.length-1];
+      document.getElementById('dd-roas-kpis').innerHTML=
+        ddKpiHtml('Blended ROAS',blended.toFixed(2)+'x',0,'all platforms','linear-gradient(90deg,#EAB308,#F97316)')+
+        ddKpiHtml('Best ROAS',best?best[0]:'—',0,best?(best[1].sales/best[1].spends).toFixed(2)+'x':'','linear-gradient(90deg,#a78bfa,#8B5CF6)')+
+        ddKpiHtml('Total Ad Spend',fmtDD(totalSp),0,'tracked budget','linear-gradient(90deg,#22C55E,#16a34a)')+
+        ddKpiHtml('Watch',worst&&(worst[1].sales/worst[1].spends)<5?worst[0]:'—',worst?-(5-(worst[1].sales/worst[1].spends)):0,'below 5x target','linear-gradient(90deg,#3B82F6,#0ea5e9)');
+      if(ddCharts['dd-chart-roas-bar'])ddCharts['dd-chart-roas-bar'].destroy();
+      ddCharts['dd-chart-roas-bar']=new ApexCharts(document.getElementById('dd-chart-roas-bar'),{
+        series:[{name:'ROAS',data:platData.map(([,v])=>+(v.sales/v.spends).toFixed(2))}],
+        chart:{type:'bar',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:platData.map(([k])=>PLAT_COLORS[k]||'#888'),
+        plotOptions:{bar:{borderRadius:4,columnWidth:'50%',distributed:true}},dataLabels:{enabled:false},legend:{show:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:platData.map(([k])=>k),labels:{style:{colors:'#555',fontSize:'10px'}},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>v.toFixed(1)+'x',style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        tooltip:{y:{formatter:v=>v.toFixed(2)+'x'},theme:'dark'}
+      });
+      ddCharts['dd-chart-roas-bar'].render();
+      renderDDROASSpend();
+      const sc=document.getElementById('dd-roas-scorecards');
+      sc.innerHTML=platData.slice(0,5).map(([k,v])=>ddScoreHtml(k,(v.sales/v.spends).toFixed(2)+'x',0,PLAT_COLORS[k]||'#888')).join('');
+    }
+
+    function renderDDROASSpend() {
+      const all = [...rawData, ...fy25Data];
+      const now = new Date();
+      const last30 = new Date(now - 30*24*60*60*1000);
+      const daily = {};
+      all.filter(r=>{const d=parseLocalDate(r.Date);return d>=last30&&d<=now;}).forEach(r=>{
+        const ds=r.Date.slice(0,10);
+        if(!daily[ds])daily[ds]={sales:0,spends:0};
+        daily[ds].sales+=Number(r.Sales)||0;
+        daily[ds].spends+=Number(r.Spends)||0;
+      });
+      const dates=Object.keys(daily).sort();
+      const roasData=dates.map(d=>daily[d].spends>0?+(daily[d].sales/daily[d].spends).toFixed(2):0);
+      const spendData=dates.map(d=>+(daily[d].spends/1e5).toFixed(1));
+      if(ddCharts['dd-chart-roas-spend'])ddCharts['dd-chart-roas-spend'].destroy();
+      ddCharts['dd-chart-roas-spend']=new ApexCharts(document.getElementById('dd-chart-roas-spend'),{
+        series:[{name:'ROAS',type:'line',data:roasData},{name:'Spend (L)',type:'bar',data:spendData}],
+        chart:{height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:['#22C55E','#8B5CF6'],
+        stroke:{width:[2.5,0],curve:'smooth'},
+        plotOptions:{bar:{columnWidth:'70%',borderRadius:2}},
+        fill:{opacity:[1,0.35]},dataLabels:{enabled:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:dates.map(d=>d.slice(5)),labels:{style:{colors:'#555',fontSize:'9px'},rotate:-45},axisBorder:{show:false},axisTicks:{show:false},tickAmount:8},
+        yaxis:[{labels:{formatter:v=>v.toFixed(1)+'x',style:{colors:'#22C55E',fontSize:'10px'}}},{opposite:true,labels:{formatter:v=>v.toFixed(0)+'L',style:{colors:'#8B5CF6',fontSize:'10px'}}}],
+        legend:{labels:{colors:['#9ca3b3']},fontSize:'11px',fontFamily:'Geist Mono, monospace'},
+        tooltip:{theme:'dark'}
+      });
+      ddCharts['dd-chart-roas-spend'].render();
+    }
+
+    function renderDDROASTrend() {
+      const period=document.getElementById('dd-roas-trend-period')?.value||'monthly';
+      const pts=getDDPeriodPoints(period);
+      if(ddCharts['dd-chart-roas-trend'])ddCharts['dd-chart-roas-trend'].destroy();
+      ddCharts['dd-chart-roas-trend']=new ApexCharts(document.getElementById('dd-chart-roas-trend'),{
+        series:[{name:'Blended ROAS',data:pts.map(p=>+p.roas.toFixed(2))}],
+        chart:{type:'area',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:['#22C55E'],stroke:{width:2.5,curve:'smooth'},
+        fill:{type:'gradient',gradient:{shade:'dark',type:'vertical',opacityFrom:0.35,opacityTo:0.02}},
+        markers:{size:4,strokeWidth:0},dataLabels:{enabled:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:pts.map(p=>p.l),labels:{style:{colors:'#555',fontSize:'10px'},rotate:-30},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>v.toFixed(1)+'x',style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        tooltip:{y:{formatter:v=>v.toFixed(2)+'x'},theme:'dark'}
+      });
+      ddCharts['dd-chart-roas-trend'].render();
+    }
+
+    function renderDDROASPlatTrend() {
+      const plat=document.getElementById('dd-roas-plat-sel')?.value||'Blinkit';
+      const MONTHS_DEF=[{y:2025,m:4,l:'Apr 25'},{y:2025,m:5,l:'May 25'},{y:2025,m:6,l:'Jun 25'},{y:2025,m:7,l:'Jul 25'},{y:2025,m:8,l:'Aug 25'},{y:2025,m:9,l:'Sep 25'},{y:2025,m:10,l:'Oct 25'},{y:2025,m:11,l:'Nov 25'},{y:2025,m:12,l:'Dec 25'},{y:2026,m:1,l:'Jan 26'},{y:2026,m:2,l:'Feb 26'},{y:2026,m:3,l:'Mar 26'},{y:2026,m:4,l:'Apr 26'},{y:2026,m:5,l:'May 26'},{y:2026,m:6,l:'Jun 26'},{y:2026,m:7,l:'Jul 26'}];
+      const data=MONTHS_DEF.map(({y,m,l})=>{const rows=getDDMonthData(y,m,plat);const s=rows.reduce((a,r)=>a+(Number(r.Sales)||0),0);const sp=rows.reduce((a,r)=>a+(Number(r.Spends)||0),0);return{l,roas:sp>0?+(s/sp).toFixed(2):0};}).filter(p=>p.roas>0);
+      const color=PLAT_COLORS[plat]||'#EAB308';
+      if(ddCharts['dd-chart-roas-plat-trend'])ddCharts['dd-chart-roas-plat-trend'].destroy();
+      ddCharts['dd-chart-roas-plat-trend']=new ApexCharts(document.getElementById('dd-chart-roas-plat-trend'),{
+        series:[{name:plat+' ROAS',data:data.map(p=>p.roas)}],
+        chart:{type:'area',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:[color],stroke:{width:2.5,curve:'smooth'},
+        fill:{type:'gradient',gradient:{shade:'dark',type:'vertical',opacityFrom:0.3,opacityTo:0.02}},
+        markers:{size:4,strokeWidth:0},dataLabels:{enabled:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:data.map(p=>p.l),labels:{style:{colors:'#555',fontSize:'10px'},rotate:-30},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>v.toFixed(1)+'x',style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        tooltip:{y:{formatter:v=>v.toFixed(2)+'x'},theme:'dark'}
+      });
+      ddCharts['dd-chart-roas-plat-trend'].render();
+    }
+
+    function renderDDROASGrouped() {
+      const PLATS=['Blinkit','Zepto','Instamart','Amazon'];
+      const MONTHS_DEF=[{y:2025,m:10,l:'Oct 25'},{y:2025,m:11,l:'Nov 25'},{y:2025,m:12,l:'Dec 25'},{y:2026,m:1,l:'Jan 26'},{y:2026,m:2,l:'Feb 26'},{y:2026,m:3,l:'Mar 26'},{y:2026,m:4,l:'Apr 26'},{y:2026,m:5,l:'May 26'},{y:2026,m:6,l:'Jun 26'},{y:2026,m:7,l:'Jul 26'}];
+      const blended=MONTHS_DEF.map(({y,m})=>{const rows=getDDMonthData(y,m,null);const s=rows.reduce((a,r)=>a+(Number(r.Sales)||0),0);const sp=rows.reduce((a,r)=>a+(Number(r.Spends)||0),0);return sp>0?+(s/sp).toFixed(2):0;});
+      const series=[{name:'Blended',data:blended},...PLATS.map(p=>({name:p,data:MONTHS_DEF.map(({y,m})=>{const rows=getDDMonthData(y,m,p);const s=rows.reduce((a,r)=>a+(Number(r.Sales)||0),0);const sp=rows.reduce((a,r)=>a+(Number(r.Spends)||0),0);return sp>0?+(s/sp).toFixed(2):0;})}))];
+      if(ddCharts['dd-chart-roas-grouped'])ddCharts['dd-chart-roas-grouped'].destroy();
+      ddCharts['dd-chart-roas-grouped']=new ApexCharts(document.getElementById('dd-chart-roas-grouped'),{
+        series,chart:{type:'bar',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:['#94a3b8',...PLATS.map(p=>PLAT_COLORS[p])],
+        plotOptions:{bar:{borderRadius:2,columnWidth:'75%',grouped:true}},dataLabels:{enabled:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:MONTHS_DEF.map(m=>m.l),labels:{style:{colors:'#555',fontSize:'10px'},rotate:-30},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>v.toFixed(1)+'x',style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        legend:{labels:{colors:['#9ca3b3']},fontSize:'11px',fontFamily:'Geist Mono, monospace'},
+        tooltip:{y:{formatter:v=>v.toFixed(2)+'x'},theme:'dark'}
+      });
+      ddCharts['dd-chart-roas-grouped'].render();
+    }
+
+    function renderDDROASYoYKPIs() {
+      const PLATS=['Blinkit','Zepto','Instamart','Amazon'];
+      const COLORS=['linear-gradient(90deg,#EAB308,#F97316)','linear-gradient(90deg,#a78bfa,#8B5CF6)','linear-gradient(90deg,#22C55E,#16a34a)','linear-gradient(90deg,#3B82F6,#0ea5e9)'];
+      const now=new Date();const cm=now.getMonth()+1;
+      let html='';
+      PLATS.forEach((p,i)=>{
+        const r26=getDDMonthData(2026,cm,p);const r25=getDDMonthData(2025,cm,p);
+        const s26=r26.reduce((a,r)=>a+(Number(r.Sales)||0),0);const sp26=r26.reduce((a,r)=>a+(Number(r.Spends)||0),0);
+        const s25=r25.reduce((a,r)=>a+(Number(r.Sales)||0),0);const sp25=r25.reduce((a,r)=>a+(Number(r.Spends)||0),0);
+        const roas26=sp26>0?s26/sp26:0;const roas25=sp25>0?s25/sp25:0;
+        const delta=roas25>0?(roas26-roas25)/roas25*100:0;
+        html+=ddKpiHtml(p+' ROAS YoY',roas26.toFixed(2)+'x',delta,'FY25: '+roas25.toFixed(2)+'x',COLORS[i]);
+      });
+      document.getElementById('dd-roas-yoy-kpis').innerHTML=html;
+    }
+
+    function renderDDROASYoYChart() {
+      const PLATS=['Blinkit','Zepto','Instamart','Amazon'];
+      const now=new Date();const months=[];
+      for(let m=4;m<=now.getMonth()+1;m++)months.push(m);
+      const labels=months.map(m=>['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m]);
+      const fy26=PLATS.map(p=>({name:'FY26 '+p,data:months.map(m=>{const rows=getDDMonthData(2026,m,p);const s=rows.reduce((a,r)=>a+(Number(r.Sales)||0),0);const sp=rows.reduce((a,r)=>a+(Number(r.Spends)||0),0);return sp>0?+(s/sp).toFixed(2):0;})}));
+      const fy25=PLATS.map(p=>({name:'FY25 '+p,data:months.map(m=>{const rows=getDDMonthData(2025,m,p);const s=rows.reduce((a,r)=>a+(Number(r.Sales)||0),0);const sp=rows.reduce((a,r)=>a+(Number(r.Spends)||0),0);return sp>0?+(s/sp).toFixed(2):0;})}));
+      if(ddCharts['dd-chart-roas-yoy'])ddCharts['dd-chart-roas-yoy'].destroy();
+      ddCharts['dd-chart-roas-yoy']=new ApexCharts(document.getElementById('dd-chart-roas-yoy'),{
+        series:[...fy26,...fy25],chart:{type:'bar',height:260,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:[...PLATS.map(p=>PLAT_COLORS[p]),...PLATS.map(p=>PLAT_COLORS[p]+'66')],
+        plotOptions:{bar:{borderRadius:3,columnWidth:'70%',grouped:true}},dataLabels:{enabled:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:labels,labels:{style:{colors:'#555',fontSize:'10px'}},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>v.toFixed(1)+'x',style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        legend:{labels:{colors:['#9ca3b3']},fontSize:'11px',fontFamily:'Geist Mono, monospace'},
+        tooltip:{y:{formatter:v=>v.toFixed(2)+'x'},theme:'dark'}
+      });
+      ddCharts['dd-chart-roas-yoy'].render();
+    }
+
+    function renderDDQtyCurrent() {
+      const data=getFilteredData();
+      const agg={};let totalUnits=0;let totalSales=0;
+      data.forEach(r=>{const p=r.Platform;if(!agg[p])agg[p]={units:0,sales:0};agg[p].units+=Number(r.Units)||0;agg[p].sales+=Number(r.Sales)||0;totalUnits+=Number(r.Units)||0;totalSales+=Number(r.Sales)||0;});
+      const blendedASP=totalUnits>0?totalSales/totalUnits:0;
+      const best=Object.entries(agg).sort((a,b)=>b[1].units-a[1].units)[0];
+      const lowestASP=Object.entries(agg).filter(([,v])=>v.units>0).sort((a,b)=>(a[1].sales/a[1].units)-(b[1].sales/b[1].units))[0];
+      document.getElementById('dd-qty-kpis').innerHTML=
+        ddKpiHtml('Total Units',fmtDDU(totalUnits),0,'MTD','linear-gradient(90deg,#EAB308,#F97316)')+
+        ddKpiHtml('Blended ASP','₹'+blendedASP.toFixed(0),0,'all platforms','linear-gradient(90deg,#a78bfa,#8B5CF6)')+
+        ddKpiHtml('Top Channel',best?best[0]:'—',0,best?fmtDDU(best[1].units)+' units':'','linear-gradient(90deg,#22C55E,#16a34a)')+
+        ddKpiHtml('Lowest ASP',lowestASP?'₹'+(lowestASP[1].sales/lowestASP[1].units).toFixed(0)+' '+lowestASP[0]:'—',0,'watch mix shift','linear-gradient(90deg,#3B82F6,#0ea5e9)');
+      const platData=Object.entries(agg).filter(([,v])=>v.units>0).sort((a,b)=>b[1].units-a[1].units);
+      if(ddCharts['dd-chart-qty-mix'])ddCharts['dd-chart-qty-mix'].destroy();
+      ddCharts['dd-chart-qty-mix']=new ApexCharts(document.getElementById('dd-chart-qty-mix'),{
+        series:platData.map(([,v])=>v.units),labels:platData.map(([k])=>k),
+        chart:{type:'donut',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        colors:platData.map(([k])=>PLAT_COLORS[k]||'#888'),theme:{mode:'dark'},
+        legend:{position:'right',fontSize:'11px',fontFamily:'Geist Mono, monospace'},
+        dataLabels:{enabled:false},plotOptions:{pie:{donut:{size:'65%',labels:{show:true,total:{show:true,label:'Total',formatter:()=>fmtDDU(totalUnits),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
+        tooltip:{y:{formatter:v=>fmtDDU(v)+' units'},theme:'dark'}
+      });
+      ddCharts['dd-chart-qty-mix'].render();
+      if(ddCharts['dd-chart-asp-bar'])ddCharts['dd-chart-asp-bar'].destroy();
+      ddCharts['dd-chart-asp-bar']=new ApexCharts(document.getElementById('dd-chart-asp-bar'),{
+        series:[{name:'ASP',data:platData.map(([,v])=>v.units>0?+(v.sales/v.units).toFixed(0):0)}],
+        chart:{type:'bar',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:platData.map(([k])=>PLAT_COLORS[k]||'#888'),
+        plotOptions:{bar:{borderRadius:4,columnWidth:'50%',distributed:true}},dataLabels:{enabled:false},legend:{show:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:platData.map(([k])=>k),labels:{style:{colors:'#555',fontSize:'10px'}},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>'₹'+v,style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        tooltip:{y:{formatter:v=>'₹'+v},theme:'dark'}
+      });
+      ddCharts['dd-chart-asp-bar'].render();
+    }
+
+    function renderDDQtyTrend() {
+      const period=document.getElementById('dd-qty-trend-period')?.value||'monthly';
+      const pts=getDDPeriodPoints(period);
+      if(ddCharts['dd-chart-qty-trend'])ddCharts['dd-chart-qty-trend'].destroy();
+      ddCharts['dd-chart-qty-trend']=new ApexCharts(document.getElementById('dd-chart-qty-trend'),{
+        series:[{name:'Units',data:pts.map(p=>+(p.units/1e5).toFixed(2))}],
+        chart:{type:'area',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:['#3B82F6'],stroke:{width:2.5,curve:'smooth'},
+        fill:{type:'gradient',gradient:{shade:'dark',type:'vertical',opacityFrom:0.35,opacityTo:0.02}},
+        markers:{size:4,strokeWidth:0},dataLabels:{enabled:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:pts.map(p=>p.l),labels:{style:{colors:'#555',fontSize:'10px'},rotate:-30},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>v.toFixed(1)+'L',style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        tooltip:{y:{formatter:v=>fmtDDU(v*1e5)+' units'},theme:'dark'}
+      });
+      ddCharts['dd-chart-qty-trend'].render();
+    }
+
+    function renderDDASPTrend() {
+      const plat=document.getElementById('dd-asp-plat-sel')?.value||'Blinkit';
+      const MONTHS_DEF=[{y:2025,m:4,l:'Apr 25'},{y:2025,m:5,l:'May 25'},{y:2025,m:6,l:'Jun 25'},{y:2025,m:7,l:'Jul 25'},{y:2025,m:8,l:'Aug 25'},{y:2025,m:9,l:'Sep 25'},{y:2025,m:10,l:'Oct 25'},{y:2025,m:11,l:'Nov 25'},{y:2025,m:12,l:'Dec 25'},{y:2026,m:1,l:'Jan 26'},{y:2026,m:2,l:'Feb 26'},{y:2026,m:3,l:'Mar 26'},{y:2026,m:4,l:'Apr 26'},{y:2026,m:5,l:'May 26'},{y:2026,m:6,l:'Jun 26'},{y:2026,m:7,l:'Jul 26'}];
+      const data=MONTHS_DEF.map(({y,m,l})=>{const rows=getDDMonthData(y,m,plat);const s=rows.reduce((a,r)=>a+(Number(r.Sales)||0),0);const u=rows.reduce((a,r)=>a+(Number(r.Units)||0),0);return{l,asp:u>0?+(s/u).toFixed(0):0};}).filter(p=>p.asp>0);
+      const color=PLAT_COLORS[plat]||'#EAB308';
+      if(ddCharts['dd-chart-asp-trend'])ddCharts['dd-chart-asp-trend'].destroy();
+      ddCharts['dd-chart-asp-trend']=new ApexCharts(document.getElementById('dd-chart-asp-trend'),{
+        series:[{name:plat+' ASP',data:data.map(p=>p.asp)}],
+        chart:{type:'line',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:[color],stroke:{width:2.5,curve:'smooth'},
+        markers:{size:4,strokeWidth:0},dataLabels:{enabled:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:data.map(p=>p.l),labels:{style:{colors:'#555',fontSize:'10px'},rotate:-30},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>'₹'+v,style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        tooltip:{y:{formatter:v=>'₹'+v},theme:'dark'}
+      });
+      ddCharts['dd-chart-asp-trend'].render();
+    }
+
+    function renderDDQtyYoYKPIs() {
+      const PLATS=['Blinkit','Zepto','Instamart','Amazon'];
+      const COLORS=['linear-gradient(90deg,#EAB308,#F97316)','linear-gradient(90deg,#a78bfa,#8B5CF6)','linear-gradient(90deg,#22C55E,#16a34a)','linear-gradient(90deg,#3B82F6,#0ea5e9)'];
+      const now=new Date();const cm=now.getMonth()+1;
+      let html='';
+      PLATS.forEach((p,i)=>{
+        const r26=getDDMonthData(2026,cm,p);const r25=getDDMonthData(2025,cm,p);
+        const u26=r26.reduce((a,r)=>a+(Number(r.Units)||0),0);
+        const u25=r25.reduce((a,r)=>a+(Number(r.Units)||0),0);
+        const pct=u25>0?(u26-u25)/u25*100:0;
+        html+=ddKpiHtml(p+' Units YoY',pct.toFixed(1)+'%',pct,'FY26: '+fmtDDU(u26)+' · FY25: '+fmtDDU(u25),COLORS[i]);
+      });
+      document.getElementById('dd-qty-yoy-kpis').innerHTML=html;
+    }
+
+    function renderDDQtyYoYChart() {
+      const PLATS=['Blinkit','Zepto','Instamart','Amazon'];
+      const now=new Date();const months=[];
+      for(let m=4;m<=now.getMonth()+1;m++)months.push(m);
+      const labels=months.map(m=>['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m]);
+      const fy26=PLATS.map(p=>({name:'FY26 '+p,data:months.map(m=>{const rows=getDDMonthData(2026,m,p);return rows.reduce((a,r)=>a+(Number(r.Units)||0),0);})}));
+      const fy25=PLATS.map(p=>({name:'FY25 '+p,data:months.map(m=>{const rows=getDDMonthData(2025,m,p);return rows.reduce((a,r)=>a+(Number(r.Units)||0),0);})}));
+      if(ddCharts['dd-chart-qty-yoy'])ddCharts['dd-chart-qty-yoy'].destroy();
+      ddCharts['dd-chart-qty-yoy']=new ApexCharts(document.getElementById('dd-chart-qty-yoy'),{
+        series:[...fy26,...fy25],chart:{type:'bar',height:260,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:[...PLATS.map(p=>PLAT_COLORS[p]),...PLATS.map(p=>PLAT_COLORS[p]+'66')],
+        plotOptions:{bar:{borderRadius:3,columnWidth:'70%',grouped:true}},dataLabels:{enabled:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:labels,labels:{style:{colors:'#555',fontSize:'10px'}},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>fmtDDU(v),style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        legend:{labels:{colors:['#9ca3b3']},fontSize:'11px',fontFamily:'Geist Mono, monospace'},
+        tooltip:{y:{formatter:v=>fmtDDU(v)+' units'},theme:'dark'}
+      });
+      ddCharts['dd-chart-qty-yoy'].render();
+    }
+
+    // ─── OVERVIEW SUMMARY CHARTS ────────────────────────────────────────────────
+    let chartOvSalesMix=null, chartOvROASBar=null, chartOvQtyMix=null;
+    function renderOverviewSummaryCharts(agg) {
+      const platData=Object.entries(agg).filter(([,v])=>v.sales>0).sort((a,b)=>b[1].sales-a[1].sales);
+      const platDataQ=Object.entries(agg).filter(([,v])=>v.units>0).sort((a,b)=>b[1].units-a[1].units);
+      const platDataR=Object.entries(agg).filter(([,v])=>v.spends>0&&v.sales>0).sort((a,b)=>(b[1].sales/b[1].spends)-(a[1].sales/a[1].spends));
+      const totalS=platData.reduce((s,[,v])=>s+v.sales,0);
+      const totalU=platDataQ.reduce((s,[,v])=>s+v.units,0);
+      if(chartOvSalesMix)chartOvSalesMix.destroy();
+      chartOvSalesMix=new ApexCharts(document.getElementById('chart-ov-sales-mix'),{
+        series:platData.map(([,v])=>v.sales),labels:platData.map(([k])=>k),
+        chart:{type:'donut',height:240,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        colors:platData.map(([k])=>PLAT_COLORS[k]||'#888'),theme:{mode:'dark'},
+        legend:{position:'bottom',fontSize:'10px',fontFamily:'Geist Mono, monospace'},
+        dataLabels:{enabled:false},plotOptions:{pie:{donut:{size:'65%',labels:{show:true,total:{show:true,label:'Total',formatter:()=>fmtDD(totalS),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
+        tooltip:{y:{formatter:v=>fmtDD(v)},theme:'dark'}
+      });
+      chartOvSalesMix.render();
+      if(chartOvROASBar)chartOvROASBar.destroy();
+      chartOvROASBar=new ApexCharts(document.getElementById('chart-ov-roas-bar'),{
+        series:[{name:'ROAS',data:platDataR.map(([,v])=>+(v.sales/v.spends).toFixed(2))}],
+        chart:{type:'bar',height:240,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:platDataR.map(([k])=>PLAT_COLORS[k]||'#888'),
+        plotOptions:{bar:{borderRadius:4,columnWidth:'50%',distributed:true}},dataLabels:{enabled:false},legend:{show:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:platDataR.map(([k])=>k),labels:{style:{colors:'#555',fontSize:'10px'}},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>v.toFixed(1)+'x',style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        tooltip:{y:{formatter:v=>v.toFixed(2)+'x'},theme:'dark'}
+      });
+      chartOvROASBar.render();
+      if(chartOvQtyMix)chartOvQtyMix.destroy();
+      chartOvQtyMix=new ApexCharts(document.getElementById('chart-ov-qty-mix'),{
+        series:platDataQ.map(([,v])=>v.units),labels:platDataQ.map(([k])=>k),
+        chart:{type:'donut',height:240,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        colors:platDataQ.map(([k])=>PLAT_COLORS[k]||'#888'),theme:{mode:'dark'},
+        legend:{position:'bottom',fontSize:'10px',fontFamily:'Geist Mono, monospace'},
+        dataLabels:{enabled:false},plotOptions:{pie:{donut:{size:'65%',labels:{show:true,total:{show:true,label:'Total',formatter:()=>fmtDDU(totalU),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
+        tooltip:{y:{formatter:v=>fmtDDU(v)+' units'},theme:'dark'}
+      });
+      chartOvQtyMix.render();
     }
 
     // ─── CUSTOM DROPDOWN HELPERS ───────────────────────────────────────────────
@@ -2234,9 +3147,7 @@ function getFilteredData() {
       renderKPIs(data, agg);
       renderPlatformCards(agg);
       renderCharts(agg);
-      renderROASPlatformBar(agg);
-      renderROASTrend();
-      renderROASPlatformTrend();
+      renderOverviewSummaryCharts(agg);
     }
 
     // ─── KPI CARDS ─────────────────────────────────────────────────────────────
