@@ -4070,12 +4070,15 @@ function getFilteredData() {
         const url = isFY25Month ? FY25_SKU_URL : SKU_URL;
         const res = await fetch(url, { redirect: 'follow' });
         const text = await res.text();
+        
         if (!text || text.trim() === '') {
           console.warn('⚠️ Empty response for SKU Data.');
           skuData = [];
           return;
         }
+        
         let fetchedData = JSON.parse(text);
+        
         if (isFY25Month) {
           fetchedData = fetchedData.map(r => ({
             ...r,
@@ -4087,16 +4090,22 @@ function getFilteredData() {
           console.log('FY25 SKU rows loaded:', skuData.length);
           return;
         }
+        
         const allDates = rawData.map(r => parseLocalDate(r.Date)).filter(d => !isNaN(d));
         const latestDate = allDates.length ? new Date(Math.max(...allDates)) : new Date();
         const daysElapsed = latestDate.getDate() || 1;
+        
         fetchedData.forEach(r => {
           let trueMtdRev = 0;
-          for (let d = 1; d <= 31; d++) { trueMtdRev += Number(r['Day' + d]) || 0; }
+          for (let d = 1; d <= 31; d++) { 
+            trueMtdRev += Number(r['Day' + d]) || 0; 
+          }
           r.MTDRevenue = trueMtdRev;
+          
           const m = Number(r.Month);
           const daysInMonth = new Date(2026, m, 0).getDate();
           const currentMonth = latestDate.getMonth() + 1;
+          
           if (m === currentMonth) {
             r.EstRevenue = daysElapsed > 0 ? (trueMtdRev / daysElapsed) * daysInMonth : trueMtdRev;
           } else if (m < currentMonth) {
@@ -4105,73 +4114,15 @@ function getFilteredData() {
             r.EstRevenue = 0;
           }
         });
+        
         skuData = fetchedData;
         console.log('SKU rows loaded:', skuData.length, 'Calendar days elapsed:', daysElapsed);
+        
       } catch(e) {
         console.error('SKU fetch failed:', e);
         skuData = [];
       }
-    
-        fetchedData.forEach(r => {
-            // Rebuild TRUE MTD Revenue
-            let trueMtdRev = 0;
-            for (let d = 1; d <= 31; d++) {
-                trueMtdRev += Number(r['Day' + d]) || 0;
-            }
-            r.MTDRevenue = trueMtdRev;
-
-            const m = Number(r.Month);
-            const daysInMonth = new Date(2026, m, 0).getDate();
-            const currentMonth = latestDate.getMonth() + 1;
-
-            if (m === currentMonth) {
-                // Ongoing month: project forward
-                r.EstRevenue = daysElapsed > 0 ? (trueMtdRev / daysElapsed) * daysInMonth : trueMtdRev;
-            } else if (m < currentMonth) {
-                // Past month: fully complete, no projection
-                r.EstRevenue = trueMtdRev;
-            } else {
-                // Future month: no data yet
-                r.EstRevenue = 0;
-            }
-        });
-        // ... inside loadSKUData()
-    const allDates = rawData.map(r => parseLocalDate(r.Date)).filter(d => !isNaN(d));
-    const latestDate = allDates.length ? new Date(Math.max(...allDates)) : new Date();
-    const daysElapsed = latestDate.getDate() || 1;
-    
-    fetchedData.forEach(r => {
-        // Rebuild TRUE MTD Revenue
-        let trueMtdRev = 0;
-        for (let d = 1; d <= 31; d++) {
-            trueMtdRev += Number(r['Day' + d]) || 0;
-        }
-        r.MTDRevenue = trueMtdRev;
-
-        const m = Number(r.Month);
-        const daysInMonth = new Date(2026, m, 0).getDate();
-        const currentMonth = latestDate.getMonth() + 1;
-
-        if (m === currentMonth) {
-            // Ongoing month: project forward
-            r.EstRevenue = daysElapsed > 0 ? (trueMtdRev / daysElapsed) * daysInMonth : trueMtdRev;
-        } else if (m < currentMonth) {
-            // Past month: fully complete, no projection
-            r.EstRevenue = trueMtdRev;
-        } else {
-            // Future month: no data yet
-            r.EstRevenue = 0;
-        }
-    });
-
-    skuData = fetchedData;
-    console.log('SKU rows loaded:', skuData.length, 'Calendar days elapsed:', daysElapsed);
-    
-  } catch(e) {
-    console.error('SKU fetch failed:', e);
-    skuData = [];
-  }
-}
+    }
 
     async function openChannelView(platform) {
       _lastSkuRows = [];
