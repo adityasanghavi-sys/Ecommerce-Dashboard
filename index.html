@@ -4188,32 +4188,48 @@ function getFilteredData() {
         return parts.length === 3 ? parts[2] + '/' + parts[1] : d;
       });
       const values = sortedDates.map(d => dateMap[d]);
+      
+      // Calculate Day-over-Day (DoD) growth percentage
+      const growths = values.map((v, i) => i === 0 ? null : (values[i-1] > 0 ? ((v - values[i-1]) / values[i-1] * 100) : 0));
 
       if (detailChartDaily) detailChartDaily.destroy();
       detailChartDaily = new ApexCharts(document.querySelector('#detail-chart-daily'), {
         series: [{ name: 'Sales', data: values }],
-        chart: { type: 'bar', height: 260, toolbar: { show: false }, background: 'transparent', fontFamily: 'Space Grotesk, sans-serif' },
+        chart: { type: 'area', height: 260, toolbar: { show: false }, background: 'transparent', fontFamily: 'Space Grotesk, sans-serif' },
         theme: { mode: 'dark' },
         colors: ['#F97316'],
+        stroke: { width: 2.5, curve: 'smooth' },
         fill: {
           type: 'gradient',
           gradient: {
             shade: 'dark',
             type: 'vertical',
-            shadeIntensity: 0.4,
-            gradientToColors: ['#FDBA74'],
-            inverseColors: false,
-            opacityFrom: 1,
-            opacityTo: 0.75,
+            opacityFrom: 0.4,
+            opacityTo: 0.02,
             stops: [0, 100]
           }
         },
-        plotOptions: { bar: { borderRadius: 5, columnWidth: '55%' } },
+        markers: { size: 4, strokeWidth: 0, colors: ['#F97316'] },
         dataLabels: { enabled: false },
         grid: { borderColor: 'rgba(255,255,255,0.05)', strokeDashArray: 4 },
         xaxis: { categories: labels, tickAmount: 10, labels: { style: { colors: '#555', fontSize: '11px' }, rotate: -45, rotateAlways: true }, axisBorder: { show: false }, axisTicks: { show: false } },
         yaxis: { labels: { formatter: v => fmt(v), style: { colors: '#555', fontSize: '11px' } } },
-        tooltip: { y: { formatter: v => fmt(v) }, theme: 'dark' },
+        tooltip: {
+          theme: 'dark',
+          custom: function({series, seriesIndex, dataPointIndex, w}) {
+            const sales = series[seriesIndex][dataPointIndex];
+            const g = growths[dataPointIndex];
+            const label = w.globals.labels[dataPointIndex];
+            const gStr = g === null ? '' : g >= 0
+              ? `<div style="color:#22c55e;font-family:'Geist Mono',monospace;font-size:11px;margin-top:2px">↑ ${g.toFixed(1)}% DoD</div>`
+              : `<div style="color:#ef4444;font-family:'Geist Mono',monospace;font-size:11px;margin-top:2px">↓ ${Math.abs(g).toFixed(1)}% DoD</div>`;
+            return `<div style="padding:8px 12px;background:#0f172a;border:1px solid rgba(255,255,255,0.1);border-radius:6px">
+                      <div style="color:#f1f5f9;font-weight:600;font-size:12px">${label}</div>
+                      <div style="color:#F97316;font-family:'Geist Mono',monospace;font-size:13px;margin-top:4px">Sales: ${fmt(sales)}</div>
+                      ${gStr}
+                    </div>`;
+          }
+        }
       });
       detailChartDaily.render();
     }
