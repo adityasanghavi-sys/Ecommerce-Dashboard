@@ -2427,10 +2427,16 @@ function getFilteredData() {
       updateDDView();
     }
 
-    function updateDDView() {
+    async function updateDDView() {
       document.querySelectorAll('.dd-view').forEach(el => el.style.display = 'none');
       const el = document.getElementById('dd-' + ddMetric + '-' + ddView);
-      if (el) { el.style.display = 'block'; renderDDView(ddMetric, ddView); }
+      if (!el) return;
+      el.style.display = 'block';
+      await Promise.all([
+        preloadFY25SKUData(),
+        skuData.length === 0 ? loadSKUData() : Promise.resolve()
+      ]);
+      renderDDView(ddMetric, ddView);
     }
 
     function renderDDView(metric, view) {
@@ -2885,13 +2891,13 @@ function getFilteredData() {
       });
       ddCharts['dd-chart-asp-trend'].render();
     }
-    function renderDDQtyCatDonut() {
-      const now = new Date(); const cm = now.getMonth() + 1;
+     function renderDDQtyCatDonut() {
       const CATS = ['Ragi Chips','Dipsters','Puffs','Others'];
       const CAT_COLORS = ['#EAB308','#8B5CF6','#3B82F6','#6B7280'];
-      const isFY25m = FY25_MONTHS.has(activeMonth);
+      const isFY25m = activeMonth !== 'All' && FY25_MONTHS.has(activeMonth);
       const src = isFY25m ? fy25SKUData : skuData;
       const [selY, selM] = activeMonth !== 'All' ? activeMonth.split('-').map(Number) : [null, null];
+      if (src.length === 0) { document.getElementById('dd-chart-qty-cat-donut').innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);font-size:12px">Loading SKU data...</div>'; return; }
       const rows = src.filter(r => selM ? Number(r.Month) === selM : true);
       const totals = CATS.map(cat => rows.filter(r => String(r.Category) === cat).reduce((a,r) => a + (Number(r.MTDUnits)||Number(r.Quantity)||0), 0));
       const total = totals.reduce((a,b) => a+b, 0);
@@ -2907,11 +2913,12 @@ function getFilteredData() {
       ddCharts['dd-chart-qty-cat-donut'].render();
     }
 
-    function renderDDQtyTopSKUs() {
+     function renderDDQtyTopSKUs() {
       const platFilter = document.getElementById('dd-qty-sku-plat')?.value || 'All';
-      const isFY25m = FY25_MONTHS.has(activeMonth);
+      const isFY25m = activeMonth !== 'All' && FY25_MONTHS.has(activeMonth);
       const src = isFY25m ? fy25SKUData : skuData;
       const [selY, selM] = activeMonth !== 'All' ? activeMonth.split('-').map(Number) : [null, null];
+      if (src.length === 0) { document.getElementById('dd-qty-top-skus').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:12px">Loading SKU data...</div>'; return; }
       let rows = src.filter(r => selM ? Number(r.Month) === selM : true);
       if (platFilter !== 'All') rows = rows.filter(r => String(r.Platform) === platFilter);
       const skuMap = {};
