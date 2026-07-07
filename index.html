@@ -2220,7 +2220,7 @@ async function loadFY25Data() {
   activeMonth = m;
   skuData = []; // reset so loadSKUData re-fetches for correct FY
       // Auto-disable MTD for past/future months — silently switch to full month
-      const isFY25Month = m !== 'All' && m.startsWith('2025');
+      const isFY25Month = m !== 'All' && FY25_MONTHS.has(m);
       const isCurrentMonth = m === '2026-07';
       if (!isCurrentMonth && (activePeriod === 't1' || activePeriod === 't2' || activePeriod === 'mtd')) {
         activePeriod = 'mtd'; // keep mtd internally but filter will show full month
@@ -4064,64 +4064,54 @@ function getFilteredData() {
     }
 
     async function loadSKUData() {
-      if (skuData.length > 0) return; 
+      if (skuData.length > 0) return;
       try {
-        async function loadSKUData() {
-  if (skuData.length > 0) return;
-  try {
-    const isFY25Month = activeMonth !== 'All' && FY25_MONTHS.has(activeMonth);
-    const url = isFY25Month ? FY25_SKU_URL : SKU_URL;
-    const res = await fetch(url, { redirect: 'follow' });
-    const text = await res.text();
-    if (!text || text.trim() === '') {
-      console.warn('⚠️ Empty response for SKU Data.');
-      skuData = [];
-      return;
-    }
-    let fetchedData = JSON.parse(text);
-
-    if (isFY25Month) {
-      // FY25 data has GMV+Quantity columns, no Day1-31
-      // Treat GMV as both MTDRevenue and EstRevenue, Quantity as MTDUnits
-      fetchedData = fetchedData.map(r => ({
-        ...r,
-        MTDRevenue: Number(r.GMV) || 0,
-        MTDUnits:   Number(r.Quantity) || 0,
-        EstRevenue: Number(r.GMV) || 0,
-      }));
-      skuData = fetchedData;
-      console.log('FY25 SKU rows loaded:', skuData.length);
-      return;
-    }
-
-    // FY26-27: existing projection logic
-    const allDates = rawData.map(r => parseLocalDate(r.Date)).filter(d => !isNaN(d));
-    const latestDate = allDates.length ? new Date(Math.max(...allDates)) : new Date();
-    const daysElapsed = latestDate.getDate() || 1;
-
-    fetchedData.forEach(r => {
-      let trueMtdRev = 0;
-      for (let d = 1; d <= 31; d++) { trueMtdRev += Number(r['Day' + d]) || 0; }
-      r.MTDRevenue = trueMtdRev;
-
-      const m = Number(r.Month);
-      const daysInMonth = new Date(2026, m, 0).getDate();
-      const currentMonth = latestDate.getMonth() + 1;
-      if (m === currentMonth) {
-        r.EstRevenue = daysElapsed > 0 ? (trueMtdRev / daysElapsed) * daysInMonth : trueMtdRev;
-      } else if (m < currentMonth) {
-        r.EstRevenue = trueMtdRev;
-      } else {
-        r.EstRevenue = 0;
+        const isFY25Month = activeMonth !== 'All' && FY25_MONTHS.has(activeMonth);
+        const url = isFY25Month ? FY25_SKU_URL : SKU_URL;
+        const res = await fetch(url, { redirect: 'follow' });
+        const text = await res.text();
+        if (!text || text.trim() === '') {
+          console.warn('⚠️ Empty response for SKU Data.');
+          skuData = [];
+          return;
+        }
+        let fetchedData = JSON.parse(text);
+        if (isFY25Month) {
+          fetchedData = fetchedData.map(r => ({
+            ...r,
+            MTDRevenue: Number(r.GMV) || 0,
+            MTDUnits:   Number(r.Quantity) || 0,
+            EstRevenue: Number(r.GMV) || 0,
+          }));
+          skuData = fetchedData;
+          console.log('FY25 SKU rows loaded:', skuData.length);
+          return;
+        }
+        const allDates = rawData.map(r => parseLocalDate(r.Date)).filter(d => !isNaN(d));
+        const latestDate = allDates.length ? new Date(Math.max(...allDates)) : new Date();
+        const daysElapsed = latestDate.getDate() || 1;
+        fetchedData.forEach(r => {
+          let trueMtdRev = 0;
+          for (let d = 1; d <= 31; d++) { trueMtdRev += Number(r['Day' + d]) || 0; }
+          r.MTDRevenue = trueMtdRev;
+          const m = Number(r.Month);
+          const daysInMonth = new Date(2026, m, 0).getDate();
+          const currentMonth = latestDate.getMonth() + 1;
+          if (m === currentMonth) {
+            r.EstRevenue = daysElapsed > 0 ? (trueMtdRev / daysElapsed) * daysInMonth : trueMtdRev;
+          } else if (m < currentMonth) {
+            r.EstRevenue = trueMtdRev;
+          } else {
+            r.EstRevenue = 0;
+          }
+        });
+        skuData = fetchedData;
+        console.log('SKU rows loaded:', skuData.length, 'Calendar days elapsed:', daysElapsed);
+      } catch(e) {
+        console.error('SKU fetch failed:', e);
+        skuData = [];
       }
-    });
-    skuData = fetchedData;
-    console.log('SKU rows loaded:', skuData.length, 'Calendar days elapsed:', daysElapsed);
-  } catch(e) {
-    console.error('SKU fetch failed:', e);
-    skuData = [];
-  }
-}
+    }
         const text = await res.text();
 
         // --- DEFENSIVE SHIELD: Prevent crash if Google sends empty data ---
@@ -4199,7 +4189,6 @@ function getFilteredData() {
       await loadSKUData();
 
       const month = activeMonth;
-      const [selYear, selMonth] = month !== 'All' ? month.split('-').map(Number) : [null, null];
       const [selYear, selMonth] = month !== 'All' ? month.split('-').map(Number) : [null, null];
       const filtered = skuData.filter(r => {
       const mMatch = month === 'All' || Number(r.Month) === selMonth;
@@ -4494,11 +4483,8 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
   const month = activeMonth;
   const [selYear, selMonth] = month !== 'All' ? month.split('-').map(Number) : [null, null];
   const platFilter = document.getElementById('skuPlatFilter')?.value || 'All';
-      const search = (document.getElementById('skuSearch')?.value || '').toLowerCase();
-
-      const bounds = getDateBoundaries();
-
-      const [selYear, selMonth] = month !== 'All' ? month.split('-').map(Number) : [null, null];
+  const search = (document.getElementById('skuSearch')?.value || '').toLowerCase();
+  const bounds = getDateBoundaries();
 let rows = skuData.filter(r => {
   const mMatch = month === 'All' || (Number(r.Month) === selMonth && (Number(r.Year) === selYear || !r.Year));
   const pMatch = platFilter === 'All' || String(r.Platform) === platFilter;
