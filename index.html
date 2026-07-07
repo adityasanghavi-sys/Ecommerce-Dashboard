@@ -4200,8 +4200,9 @@ function getFilteredData() {
 
       const month = activeMonth;
       const [selYear, selMonth] = month !== 'All' ? month.split('-').map(Number) : [null, null];
+      const [selYear, selMonth] = month !== 'All' ? month.split('-').map(Number) : [null, null];
       const filtered = skuData.filter(r => {
-      const mMatch = month === 'All' || (Number(r.Month) === selMonth && (Number(r.Year) === selYear || !r.Year));
+      const mMatch = month === 'All' || Number(r.Month) === selMonth;
       return mMatch && String(r.Platform) === platform;
       });
 
@@ -4489,9 +4490,10 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
       renderSKUView();
     }
 
-    function getSKUViewData() {
-      const month = activeMonth;
-      const platFilter = document.getElementById('skuPlatFilter')?.value || 'All';
+      function getSKUViewData() {
+  const month = activeMonth;
+  const [selYear, selMonth] = month !== 'All' ? month.split('-').map(Number) : [null, null];
+  const platFilter = document.getElementById('skuPlatFilter')?.value || 'All';
       const search = (document.getElementById('skuSearch')?.value || '').toLowerCase();
 
       const bounds = getDateBoundaries();
