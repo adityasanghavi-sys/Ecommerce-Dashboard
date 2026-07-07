@@ -1170,12 +1170,24 @@
               <div id="dd-chart-qty-mix" style="height:220px"></div>
             </div>
             <div class="chart-section">
-              <div class="chart-title">ASP by platform</div>
-              <div id="dd-chart-asp-bar" style="height:220px"></div>
+              <div class="chart-title">Category mix · by units</div>
+              <div id="dd-chart-qty-cat-donut" style="height:220px"></div>
             </div>
           </div>
+          <div class="chart-section" style="margin-top:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <div class="chart-title" style="margin-bottom:0">Top SKUs by units · MTD</div>
+              <select id="dd-qty-sku-plat" onchange="renderDDQtyTopSKUs()" class="ctrl-select" style="font-size:11px;padding:4px 8px;">
+                <option value="All">All Platforms</option>
+                <option value="Blinkit">Blinkit</option>
+                <option value="Zepto">Zepto</option>
+                <option value="Instamart">Instamart</option>
+              </select>
+            </div>
+            <div id="dd-qty-top-skus"></div>
+          </div>
         </div>
-<div id="dd-qty-trends" class="dd-view" style="display:none;padding-top:16px;">
+         <div id="dd-qty-trends" class="dd-view" style="display:none;padding-top:16px;">
           <div class="dd-view-label" style="background:rgba(139,92,246,0.08);color:#a78bfa;border:1px solid rgba(139,92,246,0.18);">Trends · Monthly / Quarterly / FY</div>
           <div class="mom-grid" style="grid-template-columns:1fr;margin-bottom:16px;">
             <div class="chart-section">
@@ -1190,8 +1202,25 @@
               <div id="dd-chart-qty-trend" style="height:220px"></div>
             </div>
           </div>
-        </div>
-        
+          <div class="mom-grid" style="grid-template-columns:1fr;margin-bottom:16px;">
+            <div class="chart-section">
+              <div class="chart-title">Category units trajectory · monthly</div>
+              <div id="dd-chart-qty-cat-trend" style="height:200px"></div>
+            </div>
+          </div>
+          <div class="mom-grid" style="grid-template-columns:1fr;margin-bottom:16px;">
+            <div class="chart-section">
+              <div class="chart-title">Platform share shift · % of total units by month</div>
+              <div id="dd-chart-qty-plat-share" style="height:220px"></div>
+            </div>
+          </div>
+          <div class="mom-grid" style="grid-template-columns:1fr;margin-bottom:16px;">
+            <div class="chart-section">
+              <div class="chart-title">SKU concentration risk · top 3 SKUs as % of total units</div>
+              <div id="dd-chart-qty-concentration" style="height:180px"></div>
+            </div>
+          </div>
+        </div>     
         <div id="dd-qty-yoy" class="dd-view" style="display:none;padding-top:16px;">
           <div class="dd-view-label" style="background:rgba(34,197,94,0.08);color:#22C55E;border:1px solid rgba(34,197,94,0.18);">YoY · FY25-26 vs FY26-27</div>
           <div class="dd-kpi-row" id="dd-qty-yoy-kpis"></div>
@@ -1199,6 +1228,15 @@
             <div class="chart-title">Units comparison — FY25 vs FY26 same period</div>
             <div id="dd-chart-qty-yoy" style="height:260px"></div>
           </div>
+          <div class="chart-section" style="margin-top:16px;">
+            <div class="chart-title">Category YoY · units (FY25 vs FY26 same period)</div>
+            <div id="dd-chart-qty-cat-yoy" style="height:220px"></div>
+          </div>
+          <div class="chart-section" style="margin-top:16px;">
+            <div class="chart-title">Platform mix shift · % of total units FY25 vs FY26</div>
+            <div id="dd-chart-qty-mix-yoy" style="height:220px"></div>
+          </div>
+          <div style="margin-top:16px;" id="dd-qty-sku-yoy-table"></div>
         </div>
 
       </div>
@@ -2153,6 +2191,17 @@ const FY25_SKU_URL = API_URL + "&type=fy25sku";
     let chartTrendPlatform = null;
 
     // ─── INIT ──────────────────────────────────────────────────────────────────
+    async function preloadFY25SKUData() {
+      if (fy25SKUData.length > 0) return;
+      try {
+        const res = await fetch(FY25_SKU_URL, { redirect: 'follow' });
+        const text = await res.text();
+        if (!text || text.trim() === '') return;
+        fy25SKUData = JSON.parse(text).map(r => ({...r, MTDUnits: Number(r.Quantity)||0, MTDRevenue: Number(r.GMV)||0}));
+        console.log('FY25 SKU preloaded:', fy25SKUData.length);
+      } catch(e) { console.error('FY25 SKU preload failed:', e); }
+    }
+
     async function init() {
       try {
         const res = await fetch(API_URL, { redirect: 'follow' });
@@ -2363,7 +2412,7 @@ function getFilteredData() {
       } else if (metric === 'qty') {
         if (view === 'current') renderDDQtyCurrent();
         else if (view === 'trends') { renderDDQtyTrend(); renderDDASPTrend(); }
-        else if (view === 'yoy') { renderDDQtyYoYKPIs(); renderDDQtyYoYChart(); }
+        else if (view === 'yoy') { renderDDQtyYoYKPIs(); renderDDQtyYoYChart(); renderDDQtyCatYoY(); renderDDQtyMixYoY(); }
       }
     }
 
@@ -2803,14 +2852,158 @@ function getFilteredData() {
       });
       ddCharts['dd-chart-asp-trend'].render();
     }
+    function renderDDQtyCatDonut() {
+      const now = new Date(); const cm = now.getMonth() + 1;
+      const CATS = ['Ragi Chips','Dipsters','Puffs','Others'];
+      const CAT_COLORS = ['#EAB308','#8B5CF6','#3B82F6','#6B7280'];
+      const isFY25m = FY25_MONTHS.has(activeMonth);
+      const src = isFY25m ? fy25SKUData : skuData;
+      const [selY, selM] = activeMonth !== 'All' ? activeMonth.split('-').map(Number) : [null, null];
+      const rows = src.filter(r => selM ? Number(r.Month) === selM : true);
+      const totals = CATS.map(cat => rows.filter(r => String(r.Category) === cat).reduce((a,r) => a + (Number(r.MTDUnits)||Number(r.Quantity)||0), 0));
+      const total = totals.reduce((a,b) => a+b, 0);
+      if(ddCharts['dd-chart-qty-cat-donut']) ddCharts['dd-chart-qty-cat-donut'].destroy();
+      ddCharts['dd-chart-qty-cat-donut'] = new ApexCharts(document.getElementById('dd-chart-qty-cat-donut'), {
+        series: totals, labels: CATS,
+        chart:{type:'donut',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        colors: CAT_COLORS, theme:{mode:'dark'},
+        legend:{position:'bottom',fontSize:'10px'},dataLabels:{enabled:false},
+        plotOptions:{pie:{donut:{size:'65%',labels:{show:true,total:{show:true,label:'Total',formatter:()=>fmtDDU(total),color:'#f0f0f0'}}}}},
+        tooltip:{y:{formatter:v=>fmtDDU(v)+' units'},theme:'dark'}
+      });
+      ddCharts['dd-chart-qty-cat-donut'].render();
+    }
+
+    function renderDDQtyTopSKUs() {
+      const platFilter = document.getElementById('dd-qty-sku-plat')?.value || 'All';
+      const isFY25m = FY25_MONTHS.has(activeMonth);
+      const src = isFY25m ? fy25SKUData : skuData;
+      const [selY, selM] = activeMonth !== 'All' ? activeMonth.split('-').map(Number) : [null, null];
+      let rows = src.filter(r => selM ? Number(r.Month) === selM : true);
+      if (platFilter !== 'All') rows = rows.filter(r => String(r.Platform) === platFilter);
+      const skuMap = {};
+      rows.forEach(r => {
+        const k = String(r.SKU);
+        if (!skuMap[k]) skuMap[k] = {sku:k, cat:r.Category, units:0, gmv:0};
+        skuMap[k].units += Number(r.MTDUnits)||Number(r.Quantity)||0;
+        skuMap[k].gmv   += Number(r.MTDRevenue)||Number(r.GMV)||0;
+      });
+      const top = Object.values(skuMap).sort((a,b) => b.units - a.units).slice(0, 8);
+      const totalU = top.reduce((a,r) => a+r.units, 0);
+      let html = `<table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="border-bottom:1px solid rgba(255,255,255,0.08);">
+          <th style="text-align:left;padding:6px 8px;color:#555;font-weight:500;font-size:11px;">#</th>
+          <th style="text-align:left;padding:6px 8px;color:#555;font-weight:500;font-size:11px;">SKU</th>
+          <th style="text-align:left;padding:6px 8px;color:#555;font-weight:500;font-size:11px;">Category</th>
+          <th style="text-align:right;padding:6px 8px;color:#555;font-weight:500;font-size:11px;">Units</th>
+          <th style="text-align:right;padding:6px 8px;color:#555;font-weight:500;font-size:11px;">% of total</th>
+          <th style="text-align:right;padding:6px 8px;color:#555;font-weight:500;font-size:11px;">ASP</th>
+        </tr></thead><tbody>`;
+      top.forEach((r,i) => {
+        const pct = totalU > 0 ? (r.units/totalU*100).toFixed(1) : '0.0';
+        const asp = r.units > 0 ? Math.round(r.gmv/r.units) : 0;
+        html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+          <td style="padding:7px 8px;color:#555;font-size:11px;">${i+1}</td>
+          <td style="padding:7px 8px;color:#e2e8f0;font-size:12px;">${r.sku}</td>
+          <td style="padding:7px 8px;color:#9ca3af;font-size:11px;">${r.cat||'—'}</td>
+          <td style="padding:7px 8px;text-align:right;color:#e2e8f0;">${fmtDDU(r.units)}</td>
+          <td style="padding:7px 8px;text-align:right;color:#9ca3af;">${pct}%</td>
+          <td style="padding:7px 8px;text-align:right;color:#9ca3af;">₹${asp}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      document.getElementById('dd-qty-top-skus').innerHTML = html;
+    }
+
+    function renderDDQtyCatTrend() {
+      const CATS = ['Ragi Chips','Dipsters','Puffs','Others'];
+      const CAT_COLORS = ['#EAB308','#8B5CF6','#3B82F6','#6B7280'];
+      const MONTHS = [{y:2025,m:4},{y:2025,m:5},{y:2025,m:6},{y:2025,m:7},{y:2025,m:8},{y:2025,m:9},{y:2025,m:10},{y:2025,m:11},{y:2025,m:12},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3},{y:2026,m:4},{y:2026,m:5},{y:2026,m:6},{y:2026,m:7}];
+      const MLBLs = MONTHS.map(({y,m})=>['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m]+(m===4?' '+String(y).slice(2):''));
+      const series = CATS.map((cat,ci) => ({
+        name: cat,
+        data: MONTHS.map(({y,m}) => {
+          const src = FY25_MONTHS.has(`${y}-${String(m).padStart(2,'0')}`) ? fy25SKUData : skuData;
+          return src.filter(r => Number(r.Month)===m && String(r.Category)===cat).reduce((a,r)=>a+(Number(r.MTDUnits)||Number(r.Quantity)||0),0);
+        })
+      }));
+      if(ddCharts['dd-chart-qty-cat-trend']) ddCharts['dd-chart-qty-cat-trend'].destroy();
+      ddCharts['dd-chart-qty-cat-trend'] = new ApexCharts(document.getElementById('dd-chart-qty-cat-trend'), {
+        series, chart:{type:'line',height:200,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'}, colors:CAT_COLORS, stroke:{width:2,curve:'smooth'}, markers:{size:3},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4}, dataLabels:{enabled:false},
+        xaxis:{categories:MLBLs,labels:{style:{colors:'#555',fontSize:'9px'},rotate:-30},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>fmtDDU(v),style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        legend:{labels:{colors:['#9ca3b3']},fontSize:'11px'},
+        tooltip:{y:{formatter:v=>fmtDDU(v)+' units'},theme:'dark'}
+      });
+      ddCharts['dd-chart-qty-cat-trend'].render();
+    }
+
+    function renderDDQtyPlatShare() {
+      const PLATS = ['Blinkit','Instamart','Zepto','First Club'];
+      const PLAT_C = ['#EAB308','#3B82F6','#8B5CF6','#06B6D4'];
+      const MONTHS = [{y:2025,m:4},{y:2025,m:7},{y:2025,m:10},{y:2026,m:1},{y:2026,m:4},{y:2026,m:7}];
+      const MLBLs = MONTHS.map(({y,m})=>['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m]+' '+String(y).slice(2));
+      const series = PLATS.map((plat,pi) => ({
+        name: plat,
+        data: MONTHS.map(({y,m}) => {
+          const src = FY25_MONTHS.has(`${y}-${String(m).padStart(2,'0')}`) ? fy25SKUData : skuData;
+          const total = src.filter(r => Number(r.Month)===m).reduce((a,r)=>a+(Number(r.MTDUnits)||Number(r.Quantity)||0),0);
+          const platU = src.filter(r => Number(r.Month)===m && String(r.Platform)===plat).reduce((a,r)=>a+(Number(r.MTDUnits)||Number(r.Quantity)||0),0);
+          return total > 0 ? Math.round(platU/total*100) : 0;
+        })
+      }));
+      if(ddCharts['dd-chart-qty-plat-share']) ddCharts['dd-chart-qty-plat-share'].destroy();
+      ddCharts['dd-chart-qty-plat-share'] = new ApexCharts(document.getElementById('dd-chart-qty-plat-share'), {
+        series, chart:{type:'bar',height:220,stacked:true,stackType:'100%',toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'}, colors:PLAT_C, dataLabels:{enabled:true,formatter:(v)=>v>8?Math.round(v)+'%':'',style:{fontSize:'9px',colors:['#000']}},
+        plotOptions:{bar:{borderRadius:0,columnWidth:'60%'}},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:MLBLs,labels:{style:{colors:'#555',fontSize:'10px'}},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>v+'%',style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        legend:{labels:{colors:['#9ca3b3']},fontSize:'11px'},
+        tooltip:{y:{formatter:v=>Math.round(v)+'%'},theme:'dark'}
+      });
+      ddCharts['dd-chart-qty-plat-share'].render();
+    }
+
+    function renderDDQtyConcentration() {
+      const MONTHS = [{y:2025,m:4},{y:2025,m:7},{y:2025,m:10},{y:2026,m:1},{y:2026,m:4},{y:2026,m:7}];
+      const MLBLs = MONTHS.map(({y,m})=>['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m]+' '+String(y).slice(2));
+      const data = MONTHS.map(({y,m}) => {
+        const src = FY25_MONTHS.has(`${y}-${String(m).padStart(2,'0')}`) ? fy25SKUData : skuData;
+        const rows = src.filter(r => Number(r.Month)===m);
+        const skuMap = {};
+        rows.forEach(r => { const k=String(r.SKU); skuMap[k]=(skuMap[k]||0)+(Number(r.MTDUnits)||Number(r.Quantity)||0); });
+        const sorted = Object.values(skuMap).sort((a,b)=>b-a);
+        const top3 = sorted.slice(0,3).reduce((a,b)=>a+b,0);
+        const total = sorted.reduce((a,b)=>a+b,0);
+        return total > 0 ? Math.round(top3/total*100) : 0;
+      });
+      if(ddCharts['dd-chart-qty-concentration']) ddCharts['dd-chart-qty-concentration'].destroy();
+      ddCharts['dd-chart-qty-concentration'] = new ApexCharts(document.getElementById('dd-chart-qty-concentration'), {
+        series:[{name:'Top 3 SKU share',data}],
+        chart:{type:'bar',height:180,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},
+        colors: data.map(v => v > 55 ? '#ef4444' : v > 50 ? '#f97316' : '#EAB308'),
+        plotOptions:{bar:{borderRadius:4,columnWidth:'55%',distributed:true}}, dataLabels:{enabled:true,formatter:v=>v+'%',style:{fontSize:'11px',colors:['#e2e8f0']}},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},legend:{show:false},
+        xaxis:{categories:MLBLs,labels:{style:{colors:'#555',fontSize:'10px'}},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>v+'%',style:{colors:'#9ca3b3',fontSize:'10px'}},max:80},
+        annotations:{yaxis:[{y:55,borderColor:'#ef4444',strokeDashArray:4,label:{text:'Risk threshold',style:{color:'#ef4444',fontSize:'10px',background:'transparent'}}},{y:50,borderColor:'#f97316',strokeDashArray:4}]},
+        tooltip:{y:{formatter:v=>v+'% of units'},theme:'dark'}
+      });
+      ddCharts['dd-chart-qty-concentration'].render();
+    }
 
     function renderDDQtyYoYKPIs() {
       const PLATS=['Blinkit','Zepto','Instamart','Amazon'];
       const COLORS=['linear-gradient(90deg,#EAB308,#F97316)','linear-gradient(90deg,#a78bfa,#8B5CF6)','linear-gradient(90deg,#22C55E,#16a34a)','linear-gradient(90deg,#3B82F6,#0ea5e9)'];
-      const now=new Date();const cm=now.getMonth()+1;
+      const now=new Date(); const cm=now.getMonth()+1;
       let html='';
       PLATS.forEach((p,i)=>{
-        const r26=getDDMonthData(2026,cm,p);const r25=getDDMonthData(2025,cm,p);
+        const r26=getDDMonthData(2026,cm,p); const r25=getDDMonthData(2025,cm,p);
         const u26=r26.reduce((a,r)=>a+(Number(r.Units)||0),0);
         const u25=r25.reduce((a,r)=>a+(Number(r.Units)||0),0);
         const pct=u25>0?(u26-u25)/u25*100:0;
@@ -2821,8 +3014,8 @@ function getFilteredData() {
 
     function renderDDQtyYoYChart() {
       const PLATS=['Blinkit','Zepto','Instamart','Amazon'];
-      const now=new Date();const months=[];
-      for(let m=4;m<=now.getMonth()+1;m++)months.push(m);
+      const now=new Date(); const months=[];
+      for(let m=4;m<=now.getMonth()+1;m++) months.push(m);
       const labels=months.map(m=>['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m]);
       const fy26=PLATS.map(p=>({name:'FY26 '+p,data:months.map(m=>{const rows=getDDMonthData(2026,m,p);return rows.reduce((a,r)=>a+(Number(r.Units)||0),0);})}));
       const fy25=PLATS.map(p=>({name:'FY25 '+p,data:months.map(m=>{const rows=getDDMonthData(2025,m,p);return rows.reduce((a,r)=>a+(Number(r.Units)||0),0);})}));
@@ -2839,6 +3032,71 @@ function getFilteredData() {
       });
       ddCharts['dd-chart-qty-yoy'].render();
     }
+
+    function renderDDQtyCatYoY() {
+      const CATS = ['Ragi Chips','Dipsters','Puffs','Others'];
+      const CAT_COLORS = ['#EAB308','#8B5CF6','#3B82F6','#6B7280'];
+      const now = new Date(); const months = [];
+      for(let m=4;m<=now.getMonth()+1;m++) months.push(m);
+      const labels = months.map(m=>['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m]);
+      const fy26 = CATS.map((cat,ci)=>({
+        name:'FY26 '+cat,
+        data: months.map(m => {
+          const src = skuData.filter(r=>Number(r.Month)===m && String(r.Category)===cat);
+          return src.reduce((a,r)=>a+(Number(r.MTDUnits)||0),0);
+        })
+      }));
+      const fy25 = CATS.map((cat,ci)=>({
+        name:'FY25 '+cat,
+        data: months.map(m => {
+          const src = fy25SKUData.filter(r=>Number(r.Month)===m && String(r.Category)===cat);
+          return src.reduce((a,r)=>a+(Number(r.Quantity)||0),0);
+        })
+      }));
+      if(ddCharts['dd-chart-qty-cat-yoy'])ddCharts['dd-chart-qty-cat-yoy'].destroy();
+      ddCharts['dd-chart-qty-cat-yoy'] = new ApexCharts(document.getElementById('dd-chart-qty-cat-yoy'),{
+        series:[...fy26,...fy25],chart:{type:'bar',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:[...CAT_COLORS,...CAT_COLORS.map(c=>c+'66')],
+        plotOptions:{bar:{borderRadius:3,columnWidth:'75%',grouped:true}},dataLabels:{enabled:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:labels,labels:{style:{colors:'#555',fontSize:'10px'}},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>fmtDDU(v),style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        legend:{labels:{colors:['#9ca3b3']},fontSize:'11px'},
+        tooltip:{y:{formatter:v=>fmtDDU(v)+' units'},theme:'dark'}
+      });
+      ddCharts['dd-chart-qty-cat-yoy'].render();
+    }
+
+    function renderDDQtyMixYoY() {
+      const PLATS = ['Blinkit','Instamart','Zepto','First Club'];
+      const PLAT_C = ['#EAB308','#3B82F6','#8B5CF6','#06B6D4'];
+      const now = new Date(); const months = [];
+      for(let m=4;m<=now.getMonth()+1;m++) months.push(m);
+      const labels = months.map(m=>['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m]);
+      const mkSeries = (srcData, fy) => PLATS.map(plat=>({
+        name: fy+' '+plat,
+        data: months.map(m => {
+          const rows = srcData.filter(r=>Number(r.Month)===m);
+          const total = rows.reduce((a,r)=>a+(Number(r.MTDUnits)||Number(r.Quantity)||0),0);
+          const platU = rows.filter(r=>String(r.Platform)===plat).reduce((a,r)=>a+(Number(r.MTDUnits)||Number(r.Quantity)||0),0);
+          return total>0 ? Math.round(platU/total*100) : 0;
+        })
+      }));
+      if(ddCharts['dd-chart-qty-mix-yoy'])ddCharts['dd-chart-qty-mix-yoy'].destroy();
+      ddCharts['dd-chart-qty-mix-yoy'] = new ApexCharts(document.getElementById('dd-chart-qty-mix-yoy'),{
+        series:[...mkSeries(skuData,'FY26'),...mkSeries(fy25SKUData,'FY25')],
+        chart:{type:'bar',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:[...PLAT_C,...PLAT_C.map(c=>c+'66')],
+        plotOptions:{bar:{borderRadius:3,columnWidth:'75%',grouped:true}},dataLabels:{enabled:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:labels,labels:{style:{colors:'#555',fontSize:'10px'}},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>v+'%',style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        legend:{labels:{colors:['#9ca3b3']},fontSize:'11px'},
+        tooltip:{y:{formatter:v=>v+'% of units'},theme:'dark'}
+      });
+      ddCharts['dd-chart-qty-mix-yoy'].render();
+    }
+    
 
     // ─── OVERVIEW SUMMARY CHARTS ────────────────────────────────────────────────
     let chartOvSalesMix=null, chartOvROASBar=null, chartOvQtyMix=null;
@@ -4030,6 +4288,7 @@ function getFilteredData() {
 
     // ─── CHANNEL DETAIL ENGINE ─────────────────────────────────────────────────
     let skuData = [];
+    let fy25SKUData = [];
     let detailChartDaily = null, detailChartCat = null;
 
     // DEFINED GLOBALLY TO AVOID REFERENCE ERRORS
@@ -4073,8 +4332,8 @@ function getFilteredData() {
             MTDUnits:   Number(r.Quantity) || 0,
             EstRevenue: Number(r.GMV) || 0,
           }));
-          skuData = fetchedData;
-          console.log('FY25 SKU rows loaded:', skuData.length);
+          fy25SKUData = fetchedData;
+          console.log('FY25 SKU rows loaded:', fy25SKUData.length);
           return;
         }
         
