@@ -4111,25 +4111,7 @@ function getFilteredData() {
         console.error('SKU fetch failed:', e);
         skuData = [];
       }
-    }
-        const text = await res.text();
-
-        // --- DEFENSIVE SHIELD: Prevent crash if Google sends empty data ---
-        if (!text || text.trim() === '') {
-            console.warn('⚠️ Empty response for SKU Data.');
-            skuData = [];
-            const tbody = document.getElementById('sku-leaderboard-body');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted)">⚠️ No SKU Data Found.</td></tr>';
-            return;
-        }
-
-        let fetchedData = JSON.parse(text);
-
-        // --- CALENDAR MATH: Strictly use the OMS reporting date ---
-        const allDates = rawData.map(r => parseLocalDate(r.Date)).filter(d => !isNaN(d));
-        const latestDate = allDates.length ? new Date(Math.max(...allDates)) : new Date();
-        const daysElapsed = latestDate.getDate() || 1;
-
+    
         fetchedData.forEach(r => {
             // Rebuild TRUE MTD Revenue
             let trueMtdRev = 0;
