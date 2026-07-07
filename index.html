@@ -2117,7 +2117,8 @@
     }
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-    const TOKEN = "sk_snk_a7Xq2mP9vL4nR8tK"; // must match Apps Script EXPECTED_TOKEN
+    const TOKEN = "sk_snk_a7Xq2mP9vL4nR8tK";
+const FY25_MONTHS = new Set(['2025-04','2025-05','2025-06','2025-07','2025-08','2025-09','2025-10','2025-11','2025-12','2026-01','2026-02','2026-03']);
     const API_URL = "https://script.google.com/macros/s/AKfycbxM2JHOpEzxrUOKpc0fFfrbX0go3L7lVBWxAY8tERN1FYbOIBzfNjs4h7UsVpi9y-0i/exec?token=" + TOKEN;
 const SKU_URL = API_URL + "&type=sku";
 const SKU_DAILY_URL = API_URL + "&type=skudaily";
@@ -2237,7 +2238,7 @@ function getFilteredData() {
       const today = new Date(); today.setHours(0,0,0,0);
 
       // Route to correct dataset
-      const isFY25 = activeMonth !== 'All' && activeMonth.startsWith('2025');
+      const isFY25 = activeMonth !== 'All' && FY25_MONTHS.has(activeMonth);
       const dataset = isFY25 ? fy25Data : rawData;
 
       // Find latest date in dataset
@@ -4068,7 +4069,7 @@ function getFilteredData() {
         async function loadSKUData() {
   if (skuData.length > 0) return;
   try {
-    const isFY25Month = activeMonth !== 'All' && activeMonth.startsWith('2025');
+    const isFY25Month = activeMonth !== 'All' && FY25_MONTHS.has(activeMonth);
     const url = isFY25Month ? FY25_SKU_URL : SKU_URL;
     const res = await fetch(url, { redirect: 'follow' });
     const text = await res.text();
