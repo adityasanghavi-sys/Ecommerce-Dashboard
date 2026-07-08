@@ -2293,11 +2293,15 @@ async function loadFY25Data() {
         loadFY25Data().then(() => {
           render();
           if (activeTab === 'deepdive') updateDDView();
+          if (activeTab === 'skus') loadSKUData().then(() => renderSKUView());
+          if (PLATFORM_TAB_MAP[activeTab]) openChannelView(PLATFORM_TAB_MAP[activeTab]);
         });
         return;
       }
       render();
       if (activeTab === 'deepdive') updateDDView();
+      if (activeTab === 'skus') loadSKUData().then(() => renderSKUView());
+      if (PLATFORM_TAB_MAP[activeTab]) openChannelView(PLATFORM_TAB_MAP[activeTab]);
     }
 
 function getFilteredData() {
