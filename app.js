@@ -522,12 +522,58 @@ function getFilteredData() {
         tooltip:{y:{formatter:v=>{if(v>=1e7)return '₹'+(v/1e7).toFixed(2)+'Cr';if(v>=1e5)return '₹'+(v/1e5).toFixed(2)+'L';if(v>=1e3)return '₹'+(v/1e3).toFixed(2)+'K';return '₹'+v.toFixed(0);}},theme:'dark'}
       });
       ddCharts['dd-chart-sales-mix'].render();
-      const sc = document.getElementById('dd-sales-scorecards');
-      sc.innerHTML = platData.slice(0,5).map(([k,v]) => {
-        const prev = prevMonth && prevMonth[k] ? prevMonth[k].sales : 0;
-        const d = prev > 0 ? (v.sales-prev)/prev*100 : 0;
-        return ddScoreHtml(k, fmtDD(v.sales), d, PLAT_COLORS[k]||'#888');
-      }).join('');
+      // Day of week breakdown
+      const DOW_LABELS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const dowSales = Array(7).fill(0);
+      data.forEach(r => {
+        const d = parseLocalDate(r.Date);
+        dowSales[d.getDay()] += Number(r.Sales)||0;
+      });
+      const dowTotal = dowSales.reduce((a,b)=>a+b,0);
+      const dowOrdered = [1,2,3,4,5,6,0]; // Mon→Sun
+      const dowLabels = dowOrdered.map(i=>DOW_LABELS[i]);
+      const dowValues = dowOrdered.map(i=>dowSales[i]);
+      if(ddCharts['dd-chart-sales-dow']) ddCharts['dd-chart-sales-dow'].destroy();
+      ddCharts['dd-chart-sales-dow'] = new ApexCharts(document.getElementById('dd-chart-sales-dow'), {
+        series: dowValues,
+        labels: dowLabels,
+        chart:{type:'donut',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        colors:['#EAB308','#F97316','#22C55E','#3B82F6','#A855F7','#06B6D4','#EC4899'],
+        theme:{mode:'dark'},
+        legend:{position:'right',fontSize:'10px',fontFamily:'Geist Mono, monospace'},
+        dataLabels:{enabled:false},
+        plotOptions:{pie:{donut:{size:'62%',labels:{show:true,total:{show:true,label:'Total',formatter:()=>fmtDD(dowTotal),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
+        tooltip:{theme:'dark',custom:function({seriesIndex,w}){
+          const pct = dowTotal>0?(dowValues[seriesIndex]/dowTotal*100).toFixed(1):'0.0';
+          return `<div style="padding:8px 12px;background:#0f172a;border:1px solid rgba(255,255,255,0.1);border-radius:6px">
+            <div style="color:#f1f5f9;font-weight:600;font-size:12px">${dowLabels[seriesIndex]}</div>
+            <div style="color:#EAB308;font-family:'Geist Mono',monospace;font-size:13px;margin-top:4px">${fmtDD(dowValues[seriesIndex])}</div>
+            <div style="color:#9ca3b3;font-family:'Geist Mono',monospace;font-size:11px;margin-top:2px">${pct}% of week</div>
+          </div>`;
+        }}
+      });
+      ddCharts['dd-chart-sales-dow'].render();
+
+      // Week of month breakdown
+      const weekBuckets = [{l:'W1 (1–7)',s:0},{l:'W2 (8–14)',s:0},{l:'W3 (15–21)',s:0},{l:'W4 (22–28)',s:0},{l:'W5 (29+)',s:0}];
+      data.forEach(r => {
+        const day = parseLocalDate(r.Date).getDate();
+        const wi = day<=7?0:day<=14?1:day<=21?2:day<=28?3:4;
+        weekBuckets[wi].s += Number(r.Sales)||0;
+      });
+      const filledWeeks = weekBuckets.filter(w=>w.s>0);
+      if(ddCharts['dd-chart-sales-wow']) ddCharts['dd-chart-sales-wow'].destroy();
+      ddCharts['dd-chart-sales-wow'] = new ApexCharts(document.getElementById('dd-chart-sales-wow'), {
+        series:[{name:'Sales',data:filledWeeks.map(w=>+(w.s/1e5).toFixed(2))}],
+        chart:{type:'line',height:180,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:['#EAB308'],stroke:{width:2.5,curve:'smooth'},
+        markers:{size:5,strokeWidth:0},dataLabels:{enabled:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:filledWeeks.map(w=>w.l),labels:{style:{colors:'#9ca3b3',fontSize:'10px'}},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>fmtDD(v*1e5),style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        tooltip:{theme:'dark',y:{formatter:v=>fmtDD(v*1e5)}}
+      });
+      ddCharts['dd-chart-sales-wow'].render();
     }
 
     function projMultiplier() {
