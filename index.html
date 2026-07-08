@@ -2580,7 +2580,7 @@ function getFilteredData() {
         tooltip:{theme:'dark',custom:function({series,seriesIndex,dataPointIndex,w}){
           const sales=series[seriesIndex][dataPointIndex];
           const g=growths[dataPointIndex];
-          const label=w.globals.labels[dataPointIndex];
+          const label=pts[dataPointIndex]?.l || w.globals.labels[dataPointIndex];
           const gStr=g===null?'':g>=0?`<div style="color:#22c55e;font-family:'Geist Mono',monospace;font-size:11px;margin-top:2px">↑ ${g.toFixed(1)}% MoM</div>`:`<div style="color:#ef4444;font-family:'Geist Mono',monospace;font-size:11px;margin-top:2px">↓ ${Math.abs(g).toFixed(1)}% MoM</div>`;
           return `<div style="padding:8px 12px;background:#0f172a;border:1px solid rgba(255,255,255,0.1);border-radius:6px"><div style="color:#f1f5f9;font-weight:600;font-size:12px">${label}</div><div style="color:#EAB308;font-family:'Geist Mono',monospace;font-size:13px;margin-top:4px">Sales: ${fmtDD(sales*1e7)}</div>${gStr}</div>`;
         }}
