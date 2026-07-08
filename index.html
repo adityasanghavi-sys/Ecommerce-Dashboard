@@ -2731,7 +2731,6 @@ function getFilteredData() {
       const titleEl = document.getElementById('dd-roas-spend-title');
       if (titleEl) titleEl.textContent = chartTitle;
       const dates=Object.keys(daily).sort();
-      const dates=Object.keys(daily).sort();
       const roasData=dates.map(d=>daily[d].spends>0?+(daily[d].sales/daily[d].spends).toFixed(2):0);
       const spendData=dates.map(d=>+(daily[d].spends/1e5).toFixed(1));
       if(ddCharts['dd-chart-roas-spend'])ddCharts['dd-chart-roas-spend'].destroy();
