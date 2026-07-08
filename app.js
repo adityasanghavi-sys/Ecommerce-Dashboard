@@ -522,6 +522,26 @@ function getFilteredData() {
         tooltip:{y:{formatter:v=>{if(v>=1e7)return '₹'+(v/1e7).toFixed(2)+'Cr';if(v>=1e5)return '₹'+(v/1e5).toFixed(2)+'L';if(v>=1e3)return '₹'+(v/1e3).toFixed(2)+'K';return '₹'+v.toFixed(0);}},theme:'dark'}
       });
       ddCharts['dd-chart-sales-mix'].render();
+      // Daily line chart
+      const dailyMap = {};
+      data.forEach(r => { const d=r.Date.slice(0,10); dailyMap[d]=(dailyMap[d]||0)+(Number(r.Sales)||0); });
+      const dailyDates = Object.keys(dailyMap).sort();
+      const dailyVals = dailyDates.map(d=>dailyMap[d]);
+      const dailyLabels = dailyDates.map(d=>{ const p=d.split('-'); return p[2]+'/'+p[1]; });
+      if(ddCharts['dd-chart-sales-daily']) ddCharts['dd-chart-sales-daily'].destroy();
+      ddCharts['dd-chart-sales-daily'] = new ApexCharts(document.getElementById('dd-chart-sales-daily'),{
+        series:[{name:'Sales',data:dailyVals}],
+        chart:{type:'area',height:180,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        theme:{mode:'dark'},colors:['#F97316'],stroke:{width:2.5,curve:'smooth'},
+        fill:{type:'gradient',gradient:{shade:'dark',type:'vertical',opacityFrom:0.3,opacityTo:0.02}},
+        markers:{size:0},dataLabels:{enabled:false},
+        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
+        xaxis:{categories:dailyLabels,tickAmount:6,labels:{style:{colors:'#555',fontSize:'9px'},rotate:-30},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>fmtDD(v),style:{colors:'#9ca3b3',fontSize:'9px'}}},
+        tooltip:{theme:'dark',y:{formatter:v=>fmtDD(v)}}
+      });
+      ddCharts['dd-chart-sales-daily'].render();
+
       // Day of week breakdown
       const DOW_LABELS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
       const dowSales = Array(7).fill(0);
@@ -564,14 +584,15 @@ function getFilteredData() {
       const filledWeeks = weekBuckets.filter(w=>w.s>0);
       if(ddCharts['dd-chart-sales-wow']) ddCharts['dd-chart-sales-wow'].destroy();
       ddCharts['dd-chart-sales-wow'] = new ApexCharts(document.getElementById('dd-chart-sales-wow'), {
-        series:[{name:'Sales',data:filledWeeks.map(w=>+(w.s/1e5).toFixed(2))}],
-        chart:{type:'line',height:180,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        series:[{name:'Sales',data:filledWeeks.map(w=>w.s)}],
+        chart:{type:'area',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
         theme:{mode:'dark'},colors:['#EAB308'],stroke:{width:2.5,curve:'smooth'},
+        fill:{type:'gradient',gradient:{shade:'dark',type:'vertical',opacityFrom:0.25,opacityTo:0.02}},
         markers:{size:5,strokeWidth:0},dataLabels:{enabled:false},
         grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
-        xaxis:{categories:filledWeeks.map(w=>w.l),labels:{style:{colors:'#9ca3b3',fontSize:'10px'}},axisBorder:{show:false},axisTicks:{show:false}},
-        yaxis:{labels:{formatter:v=>fmtDD(v*1e5),style:{colors:'#9ca3b3',fontSize:'10px'}}},
-        tooltip:{theme:'dark',y:{formatter:v=>fmtDD(v*1e5)}}
+        xaxis:{categories:filledWeeks.map(w=>w.l),labels:{style:{colors:'#9ca3b3',fontSize:'9px'}},axisBorder:{show:false},axisTicks:{show:false}},
+        yaxis:{labels:{formatter:v=>fmtDD(v),style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        tooltip:{theme:'dark',y:{formatter:v=>fmtDD(v)}}
       });
       ddCharts['dd-chart-sales-wow'].render();
     }
