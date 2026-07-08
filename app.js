@@ -1915,7 +1915,7 @@ function getFilteredData() {
         dataLabels: { enabled: false },
         legend: { position: 'right', labels: { colors: '#9ca3b3' }, fontSize: '11px', fontFamily: 'Geist Mono, monospace', markers: { width: 10, height: 10, radius: 2 }, itemMargin: { vertical: 6 } },
         tooltip: { y: { formatter: v => fmt(v) }, theme: 'dark' },
-        plotOptions: { pie: { donut: { size: '65%' } } }
+        plotOptions: { pie: { donut: { size: '65%', labels: { show: true, name: { show: true, fontSize: '11px', color: '#6b7280', fontFamily: 'Geist Mono, monospace' }, value: { show: true, fontSize: '18px', fontWeight: 600, color: '#f0f0f0', fontFamily: 'Geist Mono, monospace', formatter: v => fmt(Number(v)) }, total: { show: true, label: 'Total', formatter: () => fmt(mixVals.reduce((a,b)=>a+b,0)), color: '#f0f0f0', fontFamily: 'Geist Mono, monospace' } } } } }
       });
       chartMix.render();
 
