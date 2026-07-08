@@ -2281,9 +2281,10 @@ async function loadFY25Data() {
     }
 
     // ─── FILTERS ───────────────────────────────────────────────────────────────
-    function setMonth(m) {
+     function setMonth(m) {
       activeMonth = m;
-      skuData = []; // reset so loadSKUData re-fetches for correct FY
+      skuData = [];
+      fy25SKUData = []; // reset FY25 SKU too so it re-fetches for new month
       const isFY25Month = m !== 'All' && FY25_MONTHS.has(m);
       const isCurrentMonth = m === '2026-07';
       if (!isCurrentMonth && (activePeriod === 't1' || activePeriod === 't2' || activePeriod === 'mtd')) {
@@ -4957,19 +4958,21 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
       renderSKUView();
     }
 
-      function getSKUViewData() {
-  const month = activeMonth;
-  const [selYear, selMonth] = month !== 'All' ? month.split('-').map(Number) : [null, null];
-  const platFilter = document.getElementById('skuPlatFilter')?.value || 'All';
-  const search = (document.getElementById('skuSearch')?.value || '').toLowerCase();
-  const bounds = getDateBoundaries();
-let rows = skuData.filter(r => {
-  const mMatch = month === 'All' || (Number(r.Month) === selMonth && (Number(r.Year) === selYear || !r.Year));
-  const pMatch = platFilter === 'All' || String(r.Platform) === platFilter;
-  const cMatch = activeSKUCat === 'All' || String(r.Category) === activeSKUCat;
-  const sMatch = !search || String(r.SKU).toLowerCase().includes(search);
-  return mMatch && pMatch && cMatch && sMatch;
-});
+  function getSKUViewData() {
+      const month = activeMonth;
+      const [selYear, selMonth] = month !== 'All' ? month.split('-').map(Number) : [null, null];
+      const platFilter = document.getElementById('skuPlatFilter')?.value || 'All';
+      const search = (document.getElementById('skuSearch')?.value || '').toLowerCase();
+      const bounds = getDateBoundaries();
+      const isFY25m = month !== 'All' && FY25_MONTHS.has(month);
+      const srcData = isFY25m ? fy25SKUData : skuData;
+      let rows = srcData.filter(r => {    
+      const mMatch = month === 'All' || (Number(r.Month) === selMonth && (Number(r.Year) === selYear || !r.Year));
+     const pMatch = platFilter === 'All' || String(r.Platform) === platFilter;
+    const cMatch = activeSKUCat === 'All' || String(r.Category) === activeSKUCat;
+    const sMatch = !search || String(r.SKU).toLowerCase().includes(search);
+   return mMatch && pMatch && cMatch && sMatch;
+  });
       const aggMap = {};
       rows.forEach(r => {
         const key = String(r.SKU);
@@ -5011,8 +5014,10 @@ let rows = skuData.filter(r => {
       return Object.values(aggMap).sort((a, b) => b.mtdRev - a.mtdRev);
     }
 
-    function renderSKUView() {
-      if (skuData.length === 0) return;
+      function renderSKUView() {
+      const isFY25m = activeMonth !== 'All' && FY25_MONTHS.has(activeMonth);
+      const activeSKUSrc = isFY25m ? fy25SKUData : skuData;
+      if (activeSKUSrc.length === 0) return;
       const data = getSKUViewData();
       const totalRev = data.reduce((s, r) => s + r.mtdRev, 0);
       const totalUnits = data.reduce((s, r) => s + r.mtdUnits, 0);
