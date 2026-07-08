@@ -4973,7 +4973,7 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
     const sMatch = !search || String(r.SKU).toLowerCase().includes(search);
    return mMatch && pMatch && cMatch && sMatch;
   });
-      const aggMap = {};
+    const aggMap = {};
       rows.forEach(r => {
         const key = String(r.SKU);
         if (!aggMap[key]) {
@@ -4981,38 +4981,39 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
         }
 
         let calculatedRev = 0;
-        const rowMonth = parseInt(r.Month, 10);
-        for (let d = 1; d <= 31; d++) {
+        const p = String(r.Platform);
+
+        if (isFY25m) {
+          // FY25 SKU data has GMV/Quantity directly — no Day columns
+          calculatedRev = Number(r.MTDRevenue) || Number(r.GMV) || 0;
+          aggMap[key].mtdUnits += Number(r.MTDUnits) || Number(r.Quantity) || 0;
+          aggMap[key].estRev   += calculatedRev;
+        } else {
+          const rowMonth = parseInt(r.Month, 10);
+          for (let d = 1; d <= 31; d++) {
             const val = Number(r['Day' + d]) || 0;
             if (val > 0) {
-                const cellDate = new Date(2026, rowMonth - 1, d); 
-                cellDate.setHours(0,0,0,0);
-                let dateMatch = false;
-
-                if (activePeriod === 'mtd') dateMatch = true;
-                else if (activePeriod === 't1') dateMatch = cellDate.getTime() === bounds.t1.getTime();
-                else if (activePeriod === 't2') dateMatch = cellDate.getTime() === bounds.t2.getTime();
-                else if (activePeriod === '7d') dateMatch = cellDate > bounds.cutoff7d && cellDate <= bounds.latestDate;
-                else if (activePeriod === 'custom') dateMatch = cellDate >= bounds.customSd && cellDate <= bounds.customEd;
-
-                if (dateMatch) calculatedRev += val;
+              const cellDate = new Date(2026, rowMonth - 1, d);
+              cellDate.setHours(0,0,0,0);
+              let dateMatch = false;
+              if (activePeriod === 'mtd') dateMatch = true;
+              else if (activePeriod === 't1') dateMatch = cellDate.getTime() === bounds.t1.getTime();
+              else if (activePeriod === 't2') dateMatch = cellDate.getTime() === bounds.t2.getTime();
+              else if (activePeriod === '7d') dateMatch = cellDate > bounds.cutoff7d && cellDate <= bounds.latestDate;
+              else if (activePeriod === 'custom') dateMatch = cellDate >= bounds.customSd && cellDate <= bounds.customEd;
+              if (dateMatch) calculatedRev += val;
             }
+          }
+          aggMap[key].mtdUnits += Number(r.MTDUnits) || 0;
+          aggMap[key].estRev   += Number(r.EstRevenue) || 0;
+          for (let d = 0; d < 31; d++) {
+            aggMap[key].days[d] += Number(r['Day' + (d+1)]) || 0;
+          }
         }
 
-        aggMap[key].mtdRev   += calculatedRev; 
-        aggMap[key].mtdUnits += Number(r.MTDUnits) || 0;
-        aggMap[key].estRev   += Number(r.EstRevenue) || 0; 
-
-        const p = String(r.Platform);
+        aggMap[key].mtdRev += calculatedRev;
         aggMap[key].platforms[p] = (aggMap[key].platforms[p] || 0) + calculatedRev;
-
-        for (let d = 0; d < 31; d++) {
-          aggMap[key].days[d] += Number(r['Day' + (d+1)]) || 0;
-        }
-      });
-
-      return Object.values(aggMap).sort((a, b) => b.mtdRev - a.mtdRev);
-    }
+      });  
 
       function renderSKUView() {
       const isFY25m = activeMonth !== 'All' && FY25_MONTHS.has(activeMonth);
