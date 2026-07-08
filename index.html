@@ -1102,18 +1102,14 @@
         <div id="dd-roas-current" class="dd-view" style="display:none;padding-top:16px;">
           <div class="dd-view-label" style="background:rgba(234,179,8,0.08);color:#EAB308;border:1px solid rgba(234,179,8,0.18);">Current · MTD</div>
           <div class="dd-kpi-row" id="dd-roas-kpis"></div>
-          <div class="mom-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:16px;margin-top:16px;">
+          <div class="mom-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px;margin-top:16px;">
             <div class="chart-section">
               <div class="chart-title">ROAS by platform</div>
-              <div id="dd-chart-roas-bar" style="height:220px"></div>
+              <div id="dd-chart-roas-bar" style="height:260px"></div>
             </div>
             <div class="chart-section">
               <div class="chart-title">ROAS vs Spend · last 30 days</div>
-              <div id="dd-chart-roas-spend" style="height:220px"></div>
-            </div>
-            <div class="chart-section">
-              <div class="chart-title">Platform snapshot</div>
-              <div id="dd-roas-scorecards" style="display:flex;flex-direction:column;gap:8px;padding-top:4px;"></div>
+              <div id="dd-chart-roas-spend" style="height:260px"></div>
             </div>
           </div>
         </div>
@@ -2689,9 +2685,7 @@ function getFilteredData() {
       });
       ddCharts['dd-chart-roas-bar'].render();
       renderDDROASSpend();
-      const sc=document.getElementById('dd-roas-scorecards');
-      sc.innerHTML=platData.slice(0,5).map(([k,v])=>ddScoreHtml(k,(v.sales/v.spends).toFixed(2)+'x',0,PLAT_COLORS[k]||'#888')).join('');
-    }
+     }
 
     function renderDDROASSpend() {
       const all = [...rawData, ...fy25Data];
