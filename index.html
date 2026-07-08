@@ -1108,7 +1108,7 @@
               <div id="dd-chart-roas-bar" style="height:260px"></div>
             </div>
             <div class="chart-section">
-              <div class="chart-title">ROAS vs Spend · last 30 days</div>
+              <div class="chart-title" id="dd-roas-spend-title">ROAS vs Spend · last 30 days</div>
               <div id="dd-chart-roas-spend" style="height:260px"></div>
             </div>
           </div>
@@ -2282,20 +2282,22 @@ async function loadFY25Data() {
 
     // ─── FILTERS ───────────────────────────────────────────────────────────────
     function setMonth(m) {
-  activeMonth = m;
-  skuData = []; // reset so loadSKUData re-fetches for correct FY
-      // Auto-disable MTD for past/future months — silently switch to full month
+      activeMonth = m;
+      skuData = []; // reset so loadSKUData re-fetches for correct FY
       const isFY25Month = m !== 'All' && FY25_MONTHS.has(m);
       const isCurrentMonth = m === '2026-07';
       if (!isCurrentMonth && (activePeriod === 't1' || activePeriod === 't2' || activePeriod === 'mtd')) {
-        activePeriod = 'mtd'; // keep mtd internally but filter will show full month
+        activePeriod = 'mtd';
       }
-      // Lazy load FY25 data on first FY25 selection
       if (isFY25Month && !fy25DataLoaded) {
-        loadFY25Data().then(() => render());
+        loadFY25Data().then(() => {
+          render();
+          if (activeTab === 'deepdive') updateDDView();
+        });
         return;
       }
       render();
+      if (activeTab === 'deepdive') updateDDView();
     }
 
 function getFilteredData() {
@@ -2687,17 +2689,48 @@ function getFilteredData() {
       renderDDROASSpend();
      }
 
-    function renderDDROASSpend() {
-      const all = [...rawData, ...fy25Data];
-      const now = new Date();
-      const last30 = new Date(now - 30*24*60*60*1000);
+      function renderDDROASSpend() {
+      const isFY25m = activeMonth !== 'All' && FY25_MONTHS.has(activeMonth);
+      const isCurrentMonth = activeMonth === '2026-07';
+      const src = isFY25m ? fy25Data : rawData;
       const daily = {};
-      all.filter(r=>{const d=parseLocalDate(r.Date);return d>=last30&&d<=now;}).forEach(r=>{
-        const ds=r.Date.slice(0,10);
-        if(!daily[ds])daily[ds]={sales:0,spends:0};
-        daily[ds].sales+=Number(r.Sales)||0;
-        daily[ds].spends+=Number(r.Spends)||0;
-      });
+      let chartTitle = 'ROAS vs Spend · last 30 days';
+
+      if (isCurrentMonth) {
+        const now = new Date();
+        const last30 = new Date(now - 30*24*60*60*1000);
+        src.filter(r => { const d=parseLocalDate(r.Date); return d>=last30&&d<=now; }).forEach(r => {
+          const ds=r.Date.slice(0,10);
+          if(!daily[ds])daily[ds]={sales:0,spends:0};
+          daily[ds].sales+=Number(r.Sales)||0;
+          daily[ds].spends+=Number(r.Spends)||0;
+        });
+      } else if (activeMonth !== 'All') {
+        const [selY, selM] = activeMonth.split('-').map(Number);
+        chartTitle = `ROAS vs Spend · ${monthLabel(activeMonth)}`;
+        src.filter(r => {
+          const d=parseLocalDate(r.Date);
+          return d.getFullYear()===selY && d.getMonth()+1===selM;
+        }).forEach(r => {
+          const ds=r.Date.slice(0,10);
+          if(!daily[ds])daily[ds]={sales:0,spends:0};
+          daily[ds].sales+=Number(r.Sales)||0;
+          daily[ds].spends+=Number(r.Spends)||0;
+        });
+      } else {
+        const now = new Date();
+        const last30 = new Date(now - 30*24*60*60*1000);
+        [...rawData,...fy25Data].filter(r=>{const d=parseLocalDate(r.Date);return d>=last30&&d<=now;}).forEach(r=>{
+          const ds=r.Date.slice(0,10);
+          if(!daily[ds])daily[ds]={sales:0,spends:0};
+          daily[ds].sales+=Number(r.Sales)||0;
+          daily[ds].spends+=Number(r.Spends)||0;
+        });
+      }
+
+      const titleEl = document.getElementById('dd-roas-spend-title');
+      if (titleEl) titleEl.textContent = chartTitle;
+      const dates=Object.keys(daily).sort();
       const dates=Object.keys(daily).sort();
       const roasData=dates.map(d=>daily[d].spends>0?+(daily[d].sales/daily[d].spends).toFixed(2):0);
       const spendData=dates.map(d=>+(daily[d].spends/1e5).toFixed(1));
