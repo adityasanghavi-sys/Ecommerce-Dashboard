@@ -262,7 +262,8 @@ async function loadFY25Data() {
      function setMonth(m) {
       activeMonth = m;
       skuData = [];
-      fy25SKUData = []; // reset FY25 SKU too so it re-fetches for new month
+      fy25SKUData = [];
+      skuDailyData = [];// reset FY25 SKU too so it re-fetches for new month
       const isFY25Month = m !== 'All' && FY25_MONTHS.has(m);
       const isCurrentMonth = m === '2026-07';
       if (!isCurrentMonth && (activePeriod === 't1' || activePeriod === 't2' || activePeriod === 'mtd')) {
@@ -2821,6 +2822,19 @@ function getFilteredData() {
       } catch(e) {
         console.error('SKU fetch failed:', e);
         skuData = [];
+      }
+    }
+
+    async function loadSKUDailyData() {
+      if (skuDailyData.length > 0) return;
+      try {
+        const text = await cachedFetchText(SKU_DAILY_URL);
+        if (!text || text.trim() === '') { console.warn('Empty SKU daily data'); return; }
+        skuDailyData = JSON.parse(text);
+        console.log('SKU daily rows loaded:', skuDailyData.length);
+      } catch(e) {
+        console.error('SKU daily fetch failed:', e);
+        skuDailyData = [];
       }
     }
 
