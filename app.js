@@ -3436,10 +3436,14 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
     function populateSKUCmpMonths() {
       ['a','b'].forEach(side => {
         const sel = document.getElementById('skucmp-' + side + '-month');
-        if (!sel || sel.options.length > 0) return;
+        if (!sel) return;
         const fy26months = ['2026-07','2026-06','2026-05','2026-04'];
         const fy25months = ['2025-03','2025-02','2025-01','2024-12','2024-11','2024-10','2024-09','2024-08','2024-07','2024-06','2024-05','2024-04'];
-        const monthLabel = m => { const [y,mo] = m.split('-'); const mn=['','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar']; return mn[parseInt(mo)]+' '+y.slice(2); };
+        const monthLabel = m => {
+          const [y,mo] = m.split('-');
+          const mn = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+          return mn[parseInt(mo)] + ' ' + y;
+        };
         sel.innerHTML = [...fy26months,...fy25months].map(m => `<option value="${m}">${monthLabel(m)}</option>`).join('');
         onSKUCmpMonthChange(side);
       });
