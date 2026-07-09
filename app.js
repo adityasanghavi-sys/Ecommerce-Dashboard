@@ -426,7 +426,7 @@ function getFilteredData() {
         else if (view === 'trends') { renderDDROASTrend(); renderDDROASPlatTrend(); renderDDROASGrouped(); }
         else if (view === 'yoy') { renderDDROASYoYKPIs(); renderDDROASYoYChart(); }
       } else if (metric === 'qty') {
-        if (view === 'current') { renderDDQtyCurrent(); renderDDQtyCatMix(); renderDDQtyCatDonut(); renderDDQtyTopSKUs(); }
+        if (view === 'current') { renderDDQtyCurrent(); renderDDQtyCatDonut(); renderDDQtyTopSKUs(); }
         else if (view === 'trends') { renderDDQtyTrend(); renderDDASPTrend(); renderDDQtyCatTrend(); renderDDQtyPlatShare(); renderDDQtyConcentration(); }
         else if (view === 'yoy') { renderDDQtyYoYKPIs(); renderDDQtyYoYChart(); renderDDQtyCatYoY(); renderDDQtyMixYoY(); } 
       }
@@ -986,12 +986,76 @@ function getFilteredData() {
       ddCharts['dd-chart-qty-cat-mix'].render();
     }
     function renderDDQtyCatDonut() {
-      const selCat = document.getElementById('dd-qty-sku-cat-sel')?.value || 'Ragi Chips';
+      const selCat = document.getElementById('dd-qty-sku-cat-sel')?.value || 'All';
       const isFY25m = activeMonth !== 'All' && FY25_MONTHS.has(activeMonth);
       const src = isFY25m ? fy25SKUData : skuData;
       const [selY, selM] = activeMonth !== 'All' ? activeMonth.split('-').map(Number) : [null, null];
       if (src.length === 0) { document.getElementById('dd-chart-qty-cat-donut').innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);font-size:12px">Loading SKU data...</div>'; return; }
-      const rows = src.filter(r => (selM ? Number(r.Month) === selM : true) && String(r.Category) === selCat);
+      const allRows = src.filter(r => selM ? Number(r.Month) === selM : true);
+
+      let labels, values, salesArr, centerLabel, DONUT_COLORS;
+
+      if (selCat === 'All') {
+        // Category-level breakdown
+        const CATS = ['Ragi Chips','Dipsters','Puffs','Others'];
+        DONUT_COLORS = ['#EAB308','#8B5CF6','#3B82F6','#6B7280'];
+        const catMap = {};
+        CATS.forEach(c => { catMap[c] = {units:0, sales:0}; });
+        allRows.forEach(r => {
+          const c = CATS.includes(String(r.Category)) ? String(r.Category) : 'Others';
+          catMap[c].units += Number(r.MTDUnits)||Number(r.Quantity)||0;
+          catMap[c].sales += Number(r.MTDRevenue)||Number(r.GMV)||0;
+        });
+        labels = CATS;
+        values = CATS.map(c => catMap[c].units);
+        salesArr = CATS.map(c => catMap[c].sales);
+        centerLabel = 'All Categories';
+      } else {
+        // SKU-level breakdown within selected category
+        DONUT_COLORS = ['#EAB308','#F97316','#22C55E','#3B82F6','#A855F7','#06B6D4','#EC4899','#6B7280','#ef4444'];
+        const rows = allRows.filter(r => String(r.Category) === selCat);
+        const skuMap = {};
+        rows.forEach(r => {
+          const k = String(r.SKU);
+          if (!skuMap[k]) skuMap[k] = {units:0, sales:0};
+          skuMap[k].units += Number(r.MTDUnits)||Number(r.Quantity)||0;
+          skuMap[k].sales += Number(r.MTDRevenue)||Number(r.GMV)||0;
+        });
+        const sorted = Object.entries(skuMap).filter(([,v])=>v.units>0).sort((a,b)=>b[1].units-a[1].units);
+        const top = sorted.slice(0,8);
+        const othersUnits = sorted.slice(8).reduce((a,[,v])=>a+v.units,0);
+        const othersSales = sorted.slice(8).reduce((a,[,v])=>a+v.sales,0);
+        if (othersUnits > 0) top.push(['Others',{units:othersUnits,sales:othersSales}]);
+        labels = top.map(([k])=>k);
+        values = top.map(([,v])=>v.units);
+        salesArr = top.map(([,v])=>v.sales);
+        centerLabel = selCat;
+      }
+
+      const total = values.reduce((a,b)=>a+b,0);
+      if(ddCharts['dd-chart-qty-cat-donut']) ddCharts['dd-chart-qty-cat-donut'].destroy();
+      ddCharts['dd-chart-qty-cat-donut'] = new ApexCharts(document.getElementById('dd-chart-qty-cat-donut'), {
+        series: values, labels: labels,
+        chart:{type:'donut',height:260,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        colors: DONUT_COLORS.slice(0,labels.length), theme:{mode:'dark'},
+        legend:{position:'bottom',fontSize:'10px',fontFamily:'Geist Mono, monospace'},
+        dataLabels:{enabled:false},
+        plotOptions:{pie:{donut:{size:'62%',labels:{show:true,
+          name:{show:true,fontSize:'10px',color:'#6b7280',fontFamily:'Geist Mono, monospace'},
+          value:{show:true,fontSize:'16px',fontWeight:600,color:'#f0f0f0',fontFamily:'Geist Mono, monospace',formatter:v=>fmtDDU(Number(v))},
+          total:{show:true,label:centerLabel,formatter:()=>fmtDDU(total),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
+        tooltip:{theme:'dark',custom:function({seriesIndex}){
+          const pct = total>0?(values[seriesIndex]/total*100).toFixed(1):'0.0';
+          return `<div style="padding:8px 12px;background:#0f172a;border:1px solid rgba(255,255,255,0.1);border-radius:6px">
+            <div style="color:#f1f5f9;font-weight:600;font-size:11px;max-width:200px">${labels[seriesIndex]}</div>
+            <div style="color:#EAB308;font-family:'Geist Mono',monospace;font-size:12px;margin-top:4px">${fmtDDU(values[seriesIndex])} units</div>
+            <div style="color:#9ca3b3;font-family:'Geist Mono',monospace;font-size:11px;margin-top:2px">Sales: ${fmtDD(salesArr[seriesIndex])}</div>
+            <div style="color:#6b7280;font-family:'Geist Mono',monospace;font-size:10px;margin-top:2px">${pct}% of ${centerLabel}</div>
+          </div>`;
+        }}
+      });
+      ddCharts['dd-chart-qty-cat-donut'].render();
+    }
       const skuMap = {};
       rows.forEach(r => {
         const k = String(r.SKU);
