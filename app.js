@@ -570,7 +570,7 @@ function getFilteredData() {
         theme:{mode:'dark'},
         legend:{position:'right',fontSize:'10px',fontFamily:'Geist Mono, monospace'},
         dataLabels:{enabled:false},
-        plotOptions:{pie:{donut:{size:'62%',labels:{show:true,name:{show:true,fontSize:'10px',color:'#6b7280',fontFamily:'Geist Mono, monospace'},value:{show:true,fontSize:'16px',fontWeight:600,color:'#f0f0f0',fontFamily:'Geist Mono, monospace',formatter:v=>fmtDD(Number(v))},total:{show:true,label:'Total',formatter:()=>fmtDD(dowGrandTotal),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
+        plotOptions:{pie:{donut:{size:'62%',labels:{show:true,name:{show:true,fontSize:'10px',color:'#6b7280',fontFamily:'Geist Mono, monospace'},value:{show:true,fontSize:'16px',fontWeight:600,color:'#f0f0f0',fontFamily:'Geist Mono, monospace',formatter:v=>fmtDD(Number(v))},total:{show:true,label:'Total',formatter:()=>fmtDD(dowTotal),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
         tooltip:{theme:'dark',custom:function({seriesIndex,w}){
           const pct = dowTotal>0?(dowValues[seriesIndex]/dowTotal*100).toFixed(1):'0.0';
           return `<div style="padding:8px 12px;background:#0f172a;border:1px solid rgba(255,255,255,0.1);border-radius:6px">
