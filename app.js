@@ -2121,6 +2121,7 @@ function getFilteredData() {
       document.getElementById('view-channel').style.display  = PLATFORM_TAB_MAP[tab] ? 'block' : 'none';
       document.getElementById('view-skus').style.display       = tab === 'skus'       ? 'block' : 'none';
       document.getElementById('view-skucompare').style.display = tab === 'skucompare' ? 'block' : 'none';
+      if (tab === 'skucompare') { populateSKUCmpMonths(); initSKUCompare(); }
       document.getElementById('view-ai-insights').style.display = tab === 'ai-insights' ? 'block' : 'none';
       document.getElementById('view-shopify').style.display = tab === 'shopify' ? 'block' : 'none';
       const ddEl = document.getElementById('view-deepdive');
@@ -3427,13 +3428,125 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
       });
     }
 
-   function getSKUSlotData(side) {
-  const skuName  = document.getElementById('skucmp-' + side + '-value').value;
-  const platform = document.getElementById('skucmp-' + side + '-platform').value;
-  const startStr = document.getElementById('skucmp-' + side + '-start').value;
-  const endStr   = document.getElementById('skucmp-' + side + '-end').value;
+   const skucmpPeriod = { a: 'mtd', b: 'mtd' };
 
-  if (!skuName || !startStr || !endStr) return null;
+    function populateSKUCmpMonths() {
+      ['a','b'].forEach(side => {
+        const sel = document.getElementById('skucmp-' + side + '-month');
+        if (!sel || sel.options.length > 0) return;
+        const fy26months = ['2026-07','2026-06','2026-05','2026-04'];
+        const fy25months = ['2025-03','2025-02','2025-01','2024-12','2024-11','2024-10','2024-09','2024-08','2024-07','2024-06','2024-05','2024-04'];
+        const monthLabel = m => { const [y,mo] = m.split('-'); const mn=['','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar']; return mn[parseInt(mo)]+' '+y.slice(2); };
+        sel.innerHTML = [...fy26months,...fy25months].map(m => `<option value="${m}">${monthLabel(m)}</option>`).join('');
+        onSKUCmpMonthChange(side);
+      });
+    }
+
+    function onSKUCmpMonthChange(side) {
+      const m = document.getElementById('skucmp-' + side + '-month').value;
+      const isFY25 = FY25_MONTHS.has(m);
+      document.getElementById('skucmp-' + side + '-period-wrap').style.opacity = isFY25 ? '0.35' : '1';
+      document.getElementById('skucmp-' + side + '-period-wrap').style.pointerEvents = isFY25 ? 'none' : 'auto';
+      document.getElementById('skucmp-' + side + '-fy25-notice').style.display = isFY25 ? 'block' : 'none';
+    }
+
+    function setSKUCmpPeriod(side, p) {
+      skucmpPeriod[side] = p;
+      ['mtd','7d','t1','custom'].forEach(k => {
+        const btn = document.getElementById('skucmp-' + side + '-period-' + k);
+        if (btn) btn.classList.toggle('active', k === p);
+      });
+      const cw = document.getElementById('skucmp-' + side + '-custom-wrap');
+      if (cw) cw.style.display = p === 'custom' ? 'grid' : 'none';
+    }
+
+    function getSKUSlotData(side) {
+      const skuName  = document.getElementById('skucmp-' + side + '-value').value;
+      const platform = document.getElementById('skucmp-' + side + '-platform').value;
+      const month    = document.getElementById('skucmp-' + side + '-month').value;
+      const period   = skucmpPeriod[side];
+      if (!skuName || !month) return null;
+
+      const isFY25 = FY25_MONTHS.has(month);
+      const [selYear, selMonth] = month.split('-').map(Number);
+
+      const byPlatform = {};
+      let totalRev = 0, totalUnits = 0;
+      const daysMap = {};
+
+      if (isFY25) {
+        // FY25 — read from fy25SKUData monthly aggregates
+        const rows = fy25SKUData.filter(r =>
+          String(r.SKU) === skuName &&
+          Number(r.Month) === selMonth &&
+          (platform === 'All' || String(r.Platform) === platform)
+        );
+        rows.forEach(r => {
+          const p = String(r.Platform);
+          const rev = Number(r.GMV) || Number(r.MTDRevenue) || 0;
+          const units = Number(r.Quantity) || Number(r.MTDUnits) || 0;
+          if (!byPlatform[p]) byPlatform[p] = {rev:0,units:0};
+          byPlatform[p].rev += rev;
+          byPlatform[p].units += units;
+          totalRev += rev;
+          totalUnits += units;
+        });
+        return { skuName, platform, month, period:'full', isFY25:true, totalRev, totalUnits, totalEst:totalRev, byPlatform, days:[] };
+      }
+
+      // FY26 — use skuDailyData with period filter
+      const allDates = skuDailyData.filter(r => String(r.SKU) === skuName).map(r => parseLocalDate(r.Date)).filter(d => !isNaN(d));
+      const latestDate = allDates.length ? new Date(Math.max(...allDates)) : new Date();
+      latestDate.setHours(0,0,0,0);
+      const t1 = new Date(latestDate);
+      const t2 = new Date(latestDate); t2.setDate(t2.getDate()-1);
+
+      let start, end;
+      if (period === 'mtd') {
+        start = new Date(selYear, selMonth-1, 1);
+        end = latestDate;
+      } else if (period === 't1') {
+        start = end = t1;
+      } else if (period === '7d') {
+        end = latestDate;
+        start = new Date(latestDate); start.setDate(start.getDate()-6);
+      } else if (period === 'custom') {
+        const s = document.getElementById('skucmp-'+side+'-start').value;
+        const e = document.getElementById('skucmp-'+side+'-end').value;
+        if (!s || !e) return null;
+        start = parseLocalDate(s); end = parseLocalDate(e);
+      } else {
+        start = new Date(selYear, selMonth-1, 1); end = latestDate;
+      }
+      start.setHours(0,0,0,0); end.setHours(23,59,59,999);
+
+      skuDailyData.forEach(r => {
+        const rowDate = parseLocalDate(r.Date);
+        if (rowDate < start || rowDate > end) return;
+        if (platform !== 'All' && String(r.Platform) !== platform) return;
+        if (String(r.SKU) !== skuName) return;
+        const p = String(r.Platform);
+        const rev = Number(r.GMV) || 0;
+        const units = Number(r.Units) || 0;
+        if (!byPlatform[p]) byPlatform[p] = {rev:0,units:0};
+        byPlatform[p].rev += rev; byPlatform[p].units += units;
+        totalRev += rev; totalUnits += units;
+        const y = rowDate.getFullYear(), mo = String(rowDate.getMonth()+1).padStart(2,'0'), d = String(rowDate.getDate()).padStart(2,'0');
+        const dk = `${y}-${mo}-${d}`;
+        daysMap[dk] = (daysMap[dk]||0) + rev;
+      });
+
+      const daysArray = [];
+      const cur = new Date(start); cur.setHours(12,0,0,0);
+      while (cur <= end) {
+        const y=cur.getFullYear(), mo=String(cur.getMonth()+1).padStart(2,'0'), d=String(cur.getDate()).padStart(2,'0');
+        daysArray.push(daysMap[`${y}-${mo}-${d}`]||0);
+        cur.setDate(cur.getDate()+1);
+      }
+      const daysInRange = daysArray.length;
+      const totalEst = daysInRange > 0 ? (totalRev/daysInRange)*30 : 0;
+      return { skuName, platform, month, period, isFY25:false, totalRev, totalUnits, totalEst, byPlatform, days:daysArray };
+    }
 
   // 1. Setup exact start and end boundaries (Midnight to Midnight)
   const start = parseLocalDate(startStr); start.setHours(0,0,0,0);
@@ -3505,7 +3618,7 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
     function runSKUCompare() {
       const a = getSKUSlotData('a');
       const b = getSKUSlotData('b');
-      if (!a || !b) { alert('Fill in SKU, dates and platform for both sides.'); return; }
+      if (!a || !b) { alert('Fill in both SKUs and months for both sides.'); return; }
 
       document.getElementById('skucmp-no-data').style.display  = 'none';
       document.getElementById('skucmp-results').style.display  = 'block';
@@ -3579,17 +3692,23 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
       });
       skucmpChartUnits.render();
 
-      // Daily trend
-      const maxLen = Math.max(a.days.length, b.days.length);
+        // Daily trend — skip FY25 sides
+      const trendSection = document.querySelector('.section-label + .chart-section');
+      const hasDailyA = !a.isFY25 && a.days.length > 0;
+      const hasDailyB = !b.isFY25 && b.days.length > 0;
+      const trendSeries = [];
+      if (hasDailyA) trendSeries.push({ name: `A · ${a.skuName.split(' ').slice(0,2).join(' ')}`, data: a.days });
+      if (hasDailyB) trendSeries.push({ name: `B · ${b.skuName.split(' ').slice(0,2).join(' ')}`, data: b.days });
+      const maxLen = Math.max(...trendSeries.map(s=>s.data.length), 1);
       const dayLabels = Array.from({length:maxLen}, (_,i) => 'Day '+(i+1));
       const padDays = (arr, len) => [...arr, ...Array(len - arr.length).fill(null)];
-
+      trendSeries.forEach(s => { s.data = padDays(s.data, maxLen); });
+      const dailyTitle = document.querySelector('#skucmp-results .section-label:last-of-type');
+      if (dailyTitle) dailyTitle.textContent = 'Daily trend' + ((!hasDailyA||!hasDailyB) ? ' — FY25 side unavailable' : '');
       if (skucmpChartTrend) skucmpChartTrend.destroy();
+      if (trendSeries.length === 0) { document.querySelector('#skucmp-chart-trend').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:12px">Daily data unavailable — both sides are FY25 months</div>'; return; }
       skucmpChartTrend = new ApexCharts(document.querySelector('#skucmp-chart-trend'), {
-        series: [
-          { name: `A · ${a.skuName.split(' ').slice(0,2).join(' ')} (${a.startStr}→${a.endStr})`, data: padDays(a.days, maxLen) },
-          { name: `B · ${b.skuName.split(' ').slice(0,2).join(' ')} (${b.startStr}→${b.endStr})`, data: padDays(b.days, maxLen) },
-        ],
+        series: trendSeries,
         chart: { type:'line', height:280, toolbar:{show:false}, background:'transparent', fontFamily:'DM Sans, sans-serif' },
         theme: { mode:'dark' },
         colors: ['#F97316','#3B82F6'],
