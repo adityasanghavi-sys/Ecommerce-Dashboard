@@ -2121,7 +2121,10 @@ function getFilteredData() {
       document.getElementById('view-channel').style.display  = PLATFORM_TAB_MAP[tab] ? 'block' : 'none';
       document.getElementById('view-skus').style.display       = tab === 'skus'       ? 'block' : 'none';
       document.getElementById('view-skucompare').style.display = tab === 'skucompare' ? 'block' : 'none';
-      if (tab === 'skucompare') { populateSKUCmpMonths(); initSKUCompare(); }
+      if (tab === 'skucompare') {
+        populateSKUCmpMonths();
+        Promise.all([loadSKUData(), preloadFY25SKUData()]).then(() => initSKUCompare());
+      }
       document.getElementById('view-ai-insights').style.display = tab === 'ai-insights' ? 'block' : 'none';
       document.getElementById('view-shopify').style.display = tab === 'shopify' ? 'block' : 'none';
       const ddEl = document.getElementById('view-deepdive');
@@ -3396,13 +3399,13 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
     function initSKUCompare() {
       ['a','b'].forEach(side => {
         const list = document.getElementById('skucmp-' + side + '-list');
-        const skuNames = [...new Set(skuData.map(r => String(r.SKU)))].sort();
-        list.innerHTML = skuNames.map(s =>
+        const skuNames = [...new Set([...skuData, ...fy25SKUData].map(r => String(r.SKU)))].filter(Boolean).sort();
+        list.innerHTML = skuNames.length > 0 ? skuNames.map(s =>
           `<div onclick="selectSKU('${side}','${s.replace(/'/g,"\\'")}')"
             style="padding:8px 12px;font-size:12px;color:var(--text-secondary);cursor:pointer;border-bottom:1px solid var(--border);"
             onmouseover="this.style.background='rgba(255,255,255,0.04)'"
             onmouseout="this.style.background='transparent'">${s}</div>`
-        ).join('');
+        ).join('') : '<div style="padding:12px;font-size:12px;color:var(--text-muted)">Loading SKUs — select a month first</div>';
       });
     }
 
@@ -3442,14 +3445,19 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
       });
     }
 
+    
     function onSKUCmpMonthChange(side) {
       const m = document.getElementById('skucmp-' + side + '-month').value;
       const isFY25 = FY25_MONTHS.has(m);
       document.getElementById('skucmp-' + side + '-period-wrap').style.opacity = isFY25 ? '0.35' : '1';
       document.getElementById('skucmp-' + side + '-period-wrap').style.pointerEvents = isFY25 ? 'none' : 'auto';
       document.getElementById('skucmp-' + side + '-fy25-notice').style.display = isFY25 ? 'block' : 'none';
+      if (isFY25) {
+        preloadFY25SKUData().then(() => initSKUCompare());
+      } else {
+        loadSKUData().then(() => initSKUCompare());
+      }
     }
-
     function setSKUCmpPeriod(side, p) {
       skucmpPeriod[side] = p;
       ['mtd','7d','t1','custom'].forEach(k => {
