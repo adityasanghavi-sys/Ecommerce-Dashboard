@@ -3200,15 +3200,16 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
       return Object.values(aggMap).sort((a, b) => b.mtdRev - a.mtdRev);
     }
 
-    function renderSKUView() {
+      function renderSKUView() {
       const isFY25m = activeMonth !== 'All' && FY25_MONTHS.has(activeMonth);
-      const isCurrentMonth = activeMonth === '2026-07';
-      const totalEstRev = isCurrentMonth
-        ? skuRows.reduce((s, r) => s + (Number(r.EstRevenue) || Number(r.GMV) || 0), 0)
-        : totalSales;
+      const activeSKUSrc = isFY25m ? fy25SKUData : skuData;
       if (activeSKUSrc.length === 0) return;
       const data = getSKUViewData();
       const totalRev = data.reduce((s, r) => s + r.mtdRev, 0);
+      const isCurrentMonth = activeMonth === '2026-07';
+      const totalEstRev = isCurrentMonth
+        ? data.reduce((s, r) => s + (r.estRev || 0), 0)
+        : totalRev;
       const totalUnits = data.reduce((s, r) => s + r.mtdUnits, 0);
 
       const pLabels = { t1:'T-1', t2:'T-2', '7d':'7-Day', mtd:'MTD', custom:'Selected' };
