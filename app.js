@@ -272,17 +272,11 @@ async function loadFY25Data() {
         loadFY25Data().then(() => {
           render();
           if (activeTab === 'deepdive') updateDDView();
-          if (activeTab === 'skus') loadSKUData().then(() => renderSKUView());
-          const _ptMap = {'blinkit':'Blinkit','zepto':'Zepto','instamart':'Instamart','bigbasket':'Big Basket'};
-      if (_ptMap[activeTab]) openChannelView(_ptMap[activeTab]);
         });
         return;
       }
       render();
       if (activeTab === 'deepdive') updateDDView();
-      if (activeTab === 'skus') loadSKUData().then(() => renderSKUView());
-      const _ptMap = {'blinkit':'Blinkit','zepto':'Zepto','instamart':'Instamart','bigbasket':'Big Basket'};
-      if (_ptMap[activeTab]) openChannelView(_ptMap[activeTab]);
     }
 
 function getFilteredData() {
@@ -1672,11 +1666,12 @@ function getFilteredData() {
 
     // ─── RENDER ────────────────────────────────────────────────────────────────
     function render() {
-      if (typeof PLATFORM_TAB_MAP !== 'undefined' && PLATFORM_TAB_MAP[activeTab]) {
-        openChannelView(PLATFORM_TAB_MAP[activeTab]);
+      const _ptm = {'blinkit':'Blinkit','zepto':'Zepto','instamart':'Instamart','bigbasket':'Big Basket'};
+      if (_ptm[activeTab]) {
+        openChannelView(_ptm[activeTab]);
         return;
       }
-      if (activeTab === 'skus') { renderSKUView(); return; }
+      if (activeTab === 'skus') { loadSKUData().then(() => renderSKUView()); return; }
 
       const data = getFilteredData();
       const agg  = aggregateByPlatform(data);
@@ -2088,9 +2083,8 @@ function getFilteredData() {
     }
 
     function populateMonthDropdowns() {
-      // Derive available months from rawData
       const monthSet = new Set();
-      rawData.forEach(r => {
+      [...rawData, ...fy25Data].forEach(r => {
         const d = new Date(r.Date);
         if (!isNaN(d)) {
           const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
