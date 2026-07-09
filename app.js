@@ -279,6 +279,10 @@ async function loadFY25Data() {
       if (activeTab === 'deepdive') updateDDView();
     }
 
+ const ZEPTO_SPEND_CORRECTION = {
+  '2026-07': 0.5  // Zepto co-funds 100% in July — actual spend is 50% of OMS figure
+};
+
 function getFilteredData() {
       const platform = document.getElementById('platformFilter').value;
       const today = new Date(); today.setHours(0,0,0,0);
@@ -286,7 +290,6 @@ function getFilteredData() {
       // Route to correct dataset
       const isFY25 = activeMonth !== 'All' && FY25_MONTHS.has(activeMonth);
       const dataset = isFY25 ? fy25Data : rawData;
-
       // Find latest date in dataset
       const allDates = dataset.map(r => parseLocalDate(r.Date)).filter(d => !isNaN(d));
     const latestDate = allDates.length ? new Date(Math.max(...allDates)) : today;
@@ -331,10 +334,18 @@ function getFilteredData() {
           // Return immediately to override the Month dropdown
           return platMatch && isMatch;
         }
-
-        return monthMatch && platMatch && dateMatch;
+       return monthMatch && platMatch && dateMatch;
+      }).map(row => {
+        const correction = ZEPTO_SPEND_CORRECTION[activeMonth];
+        if (correction && String(row.Platform) === 'Zepto') {
+          const correctedSpends = (Number(row.Spends) || 0) * correction;
+          const correctedROAS = correctedSpends > 0 ? (Number(row.Sales) || 0) / correctedSpends : 0;
+          return { ...row, Spends: correctedSpends, ROAS: correctedROAS };
+        }
+        return row;
       });
     }
+        
 
     function setPeriod(p) {
       activePeriod = p;
