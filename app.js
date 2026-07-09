@@ -2840,7 +2840,7 @@ function getFilteredData() {
         <div class="kpi-card" style="--accent:var(--purple)">
           <div class="kpi-label">Est. Revenue</div>
           <div class="kpi-value">${fmt(totalEstRev)}</div>
-          <div class="kpi-sub neutral">Full month projection</div>
+          <div class="kpi-sub neutral">${activeMonth === '2026-07' ? 'Full month projection' : 'Full month actuals'}</div>
         </div>
       `;
     }
@@ -3159,7 +3159,10 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
 
     function renderSKUView() {
       const isFY25m = activeMonth !== 'All' && FY25_MONTHS.has(activeMonth);
-      const activeSKUSrc = isFY25m ? fy25SKUData : skuData;
+      const isCurrentMonth = activeMonth === '2026-07';
+      const totalEstRev = isCurrentMonth
+        ? skuRows.reduce((s, r) => s + (Number(r.EstRevenue) || Number(r.GMV) || 0), 0)
+        : totalSales;
       if (activeSKUSrc.length === 0) return;
       const data = getSKUViewData();
       const totalRev = data.reduce((s, r) => s + r.mtdRev, 0);
