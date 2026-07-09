@@ -426,7 +426,7 @@ function getFilteredData() {
         else if (view === 'trends') { renderDDROASTrend(); renderDDROASPlatTrend(); renderDDROASGrouped(); }
         else if (view === 'yoy') { renderDDROASYoYKPIs(); renderDDROASYoYChart(); }
       } else if (metric === 'qty') {
-        if (view === 'current') { renderDDQtyCurrent(); renderDDQtyCatDonut(); renderDDQtyTopSKUs(); }
+        if (view === 'current') { renderDDQtyCurrent(); renderDDQtyCatMix(); renderDDQtyCatDonut(); renderDDQtyTopSKUs(); }
         else if (view === 'trends') { renderDDQtyTrend(); renderDDASPTrend(); renderDDQtyCatTrend(); renderDDQtyPlatShare(); renderDDQtyConcentration(); }
         else if (view === 'yoy') { renderDDQtyYoYKPIs(); renderDDQtyYoYChart(); renderDDQtyCatYoY(); renderDDQtyMixYoY(); } 
       }
@@ -962,6 +962,28 @@ function getFilteredData() {
         tooltip:{y:{formatter:v=>'₹'+v},theme:'dark'}
       });
       ddCharts['dd-chart-asp-trend'].render();
+    }
+     function renderDDQtyCatMix() {
+      const CATS = ['Ragi Chips','Dipsters','Puffs','Others'];
+      const CAT_COLORS = ['#EAB308','#8B5CF6','#3B82F6','#6B7280'];
+      const isFY25m = activeMonth !== 'All' && FY25_MONTHS.has(activeMonth);
+      const src = isFY25m ? fy25SKUData : skuData;
+      const [selY, selM] = activeMonth !== 'All' ? activeMonth.split('-').map(Number) : [null, null];
+      if (src.length === 0) { document.getElementById('dd-chart-qty-cat-mix').innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);font-size:12px">Loading...</div>'; return; }
+      const rows = src.filter(r => selM ? Number(r.Month) === selM : true);
+      const totals = CATS.map(cat => rows.filter(r => String(r.Category) === cat).reduce((a,r) => a + (Number(r.MTDUnits)||Number(r.Quantity)||0), 0));
+      const total = totals.reduce((a,b) => a+b, 0);
+      if(ddCharts['dd-chart-qty-cat-mix']) ddCharts['dd-chart-qty-cat-mix'].destroy();
+      ddCharts['dd-chart-qty-cat-mix'] = new ApexCharts(document.getElementById('dd-chart-qty-cat-mix'), {
+        series: totals, labels: CATS,
+        chart:{type:'donut',height:250,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        colors: CAT_COLORS, theme:{mode:'dark'},
+        legend:{position:'bottom',fontSize:'10px',fontFamily:'Geist Mono, monospace'},
+        dataLabels:{enabled:false},
+        plotOptions:{pie:{donut:{size:'62%',labels:{show:true,name:{show:true,fontSize:'10px',color:'#6b7280',fontFamily:'Geist Mono, monospace'},value:{show:true,fontSize:'16px',fontWeight:600,color:'#f0f0f0',fontFamily:'Geist Mono, monospace',formatter:v=>fmtDDU(Number(v))},total:{show:true,label:'Total',formatter:()=>fmtDDU(total),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
+        tooltip:{y:{formatter:v=>fmtDDU(v)+' units'},theme:'dark'}
+      });
+      ddCharts['dd-chart-qty-cat-mix'].render();
     }
      function renderDDQtyCatDonut() {
       const selCat = document.getElementById('dd-qty-sku-cat-sel')?.value || 'Ragi Chips';
