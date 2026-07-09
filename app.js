@@ -273,14 +273,16 @@ async function loadFY25Data() {
           render();
           if (activeTab === 'deepdive') updateDDView();
           if (activeTab === 'skus') loadSKUData().then(() => renderSKUView());
-          if (PLATFORM_TAB_MAP[activeTab]) openChannelView(PLATFORM_TAB_MAP[activeTab]);
+          const _ptMap = {'blinkit':'Blinkit','zepto':'Zepto','instamart':'Instamart','bigbasket':'Big Basket'};
+      if (_ptMap[activeTab]) openChannelView(_ptMap[activeTab]);
         });
         return;
       }
       render();
       if (activeTab === 'deepdive') updateDDView();
       if (activeTab === 'skus') loadSKUData().then(() => renderSKUView());
-      if (PLATFORM_TAB_MAP[activeTab]) openChannelView(PLATFORM_TAB_MAP[activeTab]);
+      const _ptMap = {'blinkit':'Blinkit','zepto':'Zepto','instamart':'Instamart','bigbasket':'Big Basket'};
+      if (_ptMap[activeTab]) openChannelView(_ptMap[activeTab]);
     }
 
 function getFilteredData() {
