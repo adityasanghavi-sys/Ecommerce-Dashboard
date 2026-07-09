@@ -317,15 +317,19 @@
         <div id="dd-qty-current" class="dd-view" style="display:none;padding-top:16px;">
           <div class="dd-view-label" style="background:rgba(234,179,8,0.08);color:#EAB308;border:1px solid rgba(234,179,8,0.18);">Current · MTD</div>
           <div class="dd-kpi-row" id="dd-qty-kpis"></div>
-          <div class="mom-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px;margin-top:16px;">
+          <div class="mom-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:16px;margin-top:16px;">
             <div class="chart-section">
               <div class="chart-title">Units by platform · MTD</div>
               <div id="dd-chart-qty-mix" style="height:250px"></div>
             </div>
             <div class="chart-section">
+              <div class="chart-title">Category mix · by units</div>
+              <div id="dd-chart-qty-cat-mix" style="height:250px"></div>
+            </div>
+            <div class="chart-section">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                 <div class="chart-title" style="margin-bottom:0">SKU breakdown · by units</div>
-                <select id="dd-qty-sku-cat-sel" onchange="renderDDQtyCatDonut()" class="ctrl-select" style="font-size:11px;padding:4px 8px;">
+                <select id="dd-qty-sku-cat-sel" onchange="renderDDQtySKUDonut()" class="ctrl-select" style="font-size:11px;padding:4px 8px;">
                   <option value="Ragi Chips">Ragi Chips</option>
                   <option value="Dipsters">Dipsters</option>
                   <option value="Puffs">Puffs</option>
