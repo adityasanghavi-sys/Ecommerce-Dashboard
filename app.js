@@ -3548,64 +3548,7 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
       return { skuName, platform, month, period, isFY25:false, totalRev, totalUnits, totalEst, byPlatform, days:daysArray };
     }
 
-  // 1. Setup exact start and end boundaries (Midnight to Midnight)
-  const start = parseLocalDate(startStr); start.setHours(0,0,0,0);
-  const end   = parseLocalDate(endStr);   end.setHours(23,59,59,999);
-
-  // 2. Filter data & Aggregate using a Dictionary (Map)
-  const byPlatform = {};
-  let totalRev = 0, totalUnits = 0;
-  const daysMap = {}; // Safely store daily totals by text string
-
-  skuDailyData.forEach(r => {
-    const rowDate = parseLocalDate(r.Date);
-    const isMatch = rowDate >= start && rowDate <= end;
-    const pMatch = platform === 'All' || String(r.Platform) === platform;
-    const skuMatch = String(r.SKU) === skuName;
-
-    if (isMatch && pMatch && skuMatch) {
-      const p = String(r.Platform);
-      const rev = Number(r.GMV) || 0;
-      const units = Number(r.Units) || 0;
-
-      // Platform splits
-      if (!byPlatform[p]) byPlatform[p] = { rev: 0, units: 0 };
-      byPlatform[p].rev += rev;
-      byPlatform[p].units += units;
-
-      // Totals
-      totalRev += rev;
-      totalUnits += units;
-
-      // Build a safe local "YYYY-MM-DD" key to prevent timezone millisecond drift
-      const y = rowDate.getFullYear();
-      const m = String(rowDate.getMonth() + 1).padStart(2, '0');
-      const d = String(rowDate.getDate()).padStart(2, '0');
-      const dateKey = `${y}-${m}-${d}`;
-
-      if (!daysMap[dateKey]) daysMap[dateKey] = 0;
-      daysMap[dateKey] += rev;
-    }
-  });
-
-  // 3. Build precise Daily Trend Array safely
-  const daysArray = [];
-  const currentDate = new Date(start);
-  currentDate.setHours(12,0,0,0); // Safely map middle of the day to avoid midnight jumps
-
-  while (currentDate <= end) {
-    const y = currentDate.getFullYear();
-    const m = String(currentDate.getMonth() + 1).padStart(2, '0');
-    const d = String(currentDate.getDate()).padStart(2, '0');
-    const dateKey = `${y}-${m}-${d}`;
-
-    // Look up the exact text key, default to 0 if no sales that day
-    daysArray.push(daysMap[dateKey] || 0);
-    
-    // Step forward one day
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-
+  
     function runSKUCompare() {
       const a = getSKUSlotData('a');
       const b = getSKUSlotData('b');
