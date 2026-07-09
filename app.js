@@ -2698,10 +2698,12 @@ function getFilteredData() {
       await loadSKUData();
 
       const month = activeMonth;
+      const isFY25m = month !== 'All' && FY25_MONTHS.has(month);
+      const skuSrc = isFY25m ? fy25SKUData : skuData;
       const [selYear, selMonth] = month !== 'All' ? month.split('-').map(Number) : [null, null];
-      const filtered = skuData.filter(r => {
-      const mMatch = month === 'All' || Number(r.Month) === selMonth;
-      return mMatch && String(r.Platform) === platform;
+      const filtered = skuSrc.filter(r => {
+        const mMatch = month === 'All' || Number(r.Month) === selMonth;
+        return mMatch && String(r.Platform) === platform;
       });
 
       const omsFiltered = getFilteredData().filter(r => String(r.Platform) === platform);
@@ -2717,7 +2719,8 @@ function getFilteredData() {
       const totalUnits  = omsRows.reduce((s, r) => s + (Number(r.Units)  || 0), 0);
       const totalSpends = omsRows.reduce((s, r) => s + (Number(r.Spends) || 0), 0);
       const roas = totalSpends > 0 ? (totalSales / totalSpends) : 0;
-      const totalEstRev = skuRows.reduce((s, r) => s + (Number(r.EstRevenue) || 0), 0);
+      const isFY25m = activeMonth !== 'All' && FY25_MONTHS.has(activeMonth);
+      const totalEstRev = skuRows.reduce((s, r) => s + (Number(r.EstRevenue) || Number(r.GMV) || 0), 0);
 
       const cfg = PLATFORM_CONFIG[platform] || { color: '#888' };
       const pLabels = { t1:'T-1 Revenue', t2:'T-2 Revenue', '7d':'7-Day Revenue', mtd:'MTD Revenue', custom:'Revenue', all:'Revenue' };
