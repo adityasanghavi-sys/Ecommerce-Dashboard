@@ -3085,18 +3085,12 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
           <div class="kpi-value">${fmt(totalUnits, false)}</div>
           <div class="kpi-sub neutral">ASP ₹${totalUnits > 0 ? (totalRev/totalUnits).toFixed(0) : '--'}</div>
         </div>
-        <div class="kpi-card" style="--accent:var(--yellow)">
-          <div class="kpi-label">Top SKU</div>
-          <div class="kpi-value" style="font-size:16px;line-height:1.3">${topSKU.sku || '--'}</div>
-          <div class="kpi-sub neutral">${fmt(topSKU.mtdRev || 0)}</div>
-        </div>
         <div class="kpi-card" style="--accent:var(--purple)">
           <div class="kpi-label">Top Category</div>
           <div class="kpi-value" style="font-size:18px">${getTopCategory(data)}</div>
           <div class="kpi-sub neutral">by revenue</div>
         </div>
       `;
-
       // Update count label
       document.getElementById('sku-count-label').textContent = data.length + ' SKUs';
 
