@@ -793,15 +793,25 @@
               </div>
               <input type="hidden" id="skucmp-a-value">
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-              <div>
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Start Date</div>
-                <input type="date" id="skucmp-a-start" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'Space Grotesk',sans-serif;padding:6px 8px;outline:none;">
+            <div style="margin-bottom:10px;">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Month</div>
+              <select id="skucmp-a-month" onchange="onSKUCmpMonthChange('a')" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'Space Grotesk',sans-serif;padding:6px 8px;outline:none;"></select>
+            </div>
+            <div id="skucmp-a-period-wrap" style="margin-bottom:10px;">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Period</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button onclick="setSKUCmpPeriod('a','mtd')" id="skucmp-a-period-mtd" class="control-btn active" style="font-size:11px;padding:4px 10px;">MTD</button>
+                <button onclick="setSKUCmpPeriod('a','7d')" id="skucmp-a-period-7d" class="control-btn" style="font-size:11px;padding:4px 10px;">7 Days</button>
+                <button onclick="setSKUCmpPeriod('a','t1')" id="skucmp-a-period-t1" class="control-btn" style="font-size:11px;padding:4px 10px;">T-1</button>
+                <button onclick="setSKUCmpPeriod('a','custom')" id="skucmp-a-period-custom" class="control-btn" style="font-size:11px;padding:4px 10px;">Custom</button>
               </div>
-              <div>
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">End Date</div>
-                <input type="date" id="skucmp-a-end" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'Space Grotesk',sans-serif;padding:6px 8px;outline:none;">
+              <div id="skucmp-a-custom-wrap" style="display:none;margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <input type="date" id="skucmp-a-start" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;padding:6px 8px;outline:none;">
+                <input type="date" id="skucmp-a-end" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;padding:6px 8px;outline:none;">
               </div>
+            </div>
+            <div id="skucmp-a-fy25-notice" style="display:none;background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.2);border-radius:6px;padding:7px 10px;font-size:10px;color:#EAB308;margin-bottom:10px;">
+              FY25 month — locked to full month actuals. Daily granularity unavailable.
             </div>
             <div>
               <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Platform</div>
@@ -827,15 +837,25 @@
               </div>
               <input type="hidden" id="skucmp-b-value">
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-              <div>
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Start Date</div>
-                <input type="date" id="skucmp-b-start" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'Space Grotesk',sans-serif;padding:6px 8px;outline:none;">
+            <div style="margin-bottom:10px;">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Month</div>
+              <select id="skucmp-b-month" onchange="onSKUCmpMonthChange('b')" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'Space Grotesk',sans-serif;padding:6px 8px;outline:none;"></select>
+            </div>
+            <div id="skucmp-b-period-wrap" style="margin-bottom:10px;">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Period</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button onclick="setSKUCmpPeriod('b','mtd')" id="skucmp-b-period-mtd" class="control-btn active" style="font-size:11px;padding:4px 10px;">MTD</button>
+                <button onclick="setSKUCmpPeriod('b','7d')" id="skucmp-b-period-7d" class="control-btn" style="font-size:11px;padding:4px 10px;">7 Days</button>
+                <button onclick="setSKUCmpPeriod('b','t1')" id="skucmp-b-period-t1" class="control-btn" style="font-size:11px;padding:4px 10px;">T-1</button>
+                <button onclick="setSKUCmpPeriod('b','custom')" id="skucmp-b-period-custom" class="control-btn" style="font-size:11px;padding:4px 10px;">Custom</button>
               </div>
-              <div>
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">End Date</div>
-                <input type="date" id="skucmp-b-end" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:'Space Grotesk',sans-serif;padding:6px 8px;outline:none;">
+              <div id="skucmp-b-custom-wrap" style="display:none;margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <input type="date" id="skucmp-b-start" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;padding:6px 8px;outline:none;">
+                <input type="date" id="skucmp-b-end" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;padding:6px 8px;outline:none;">
               </div>
+            </div>
+            <div id="skucmp-b-fy25-notice" style="display:none;background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.2);border-radius:6px;padding:7px 10px;font-size:10px;color:#EAB308;margin-bottom:10px;">
+              FY25 month — locked to full month actuals. Daily granularity unavailable.
             </div>
             <div>
               <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Platform</div>
