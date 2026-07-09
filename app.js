@@ -3606,15 +3606,6 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
-  const daysInRange = daysArray.length;
-  const totalEst = daysInRange > 0 ? (totalRev / daysInRange) * 30 : 0;
-
-  return {
-    skuName, platform, startStr, endStr,
-    totalRev, totalUnits, totalEst,
-    byPlatform, days: daysArray
-  };
-}
     function runSKUCompare() {
       const a = getSKUSlotData('a');
       const b = getSKUSlotData('b');
