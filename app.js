@@ -993,22 +993,28 @@ function getFilteredData() {
       if (src.length === 0) { document.getElementById('dd-chart-qty-cat-donut').innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);font-size:12px">Loading SKU data...</div>'; return; }
       const allRows = src.filter(r => selM ? Number(r.Month) === selM : true);
 
+      if (allRows.length === 0) { document.getElementById('dd-chart-qty-cat-donut').innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);font-size:12px">No data for selected month</div>'; return; }
+
       let labels, values, salesArr, centerLabel, DONUT_COLORS;
 
       if (selCat === 'All') {
-        // Category-level breakdown
         const CATS = ['Ragi Chips','Dipsters','Puffs','Others'];
         DONUT_COLORS = ['#EAB308','#8B5CF6','#3B82F6','#6B7280'];
         const catMap = {};
         CATS.forEach(c => { catMap[c] = {units:0, sales:0}; });
         allRows.forEach(r => {
-          const c = CATS.includes(String(r.Category)) ? String(r.Category) : 'Others';
+          const rawCat = String(r.Category || '').trim();
+          const c = CATS.includes(rawCat) ? rawCat : 'Others';
           catMap[c].units += Number(r.MTDUnits)||Number(r.Quantity)||0;
           catMap[c].sales += Number(r.MTDRevenue)||Number(r.GMV)||0;
         });
-        labels = CATS;
-        values = CATS.map(c => catMap[c].units);
-        salesArr = CATS.map(c => catMap[c].sales);
+        // Filter out zero-value categories
+        const activeCats = CATS.filter(c => catMap[c].units > 0);
+        if (activeCats.length === 0) { document.getElementById('dd-chart-qty-cat-donut').innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);font-size:12px">No unit data found</div>'; return; }
+        labels = activeCats;
+        values = activeCats.map(c => catMap[c].units);
+        salesArr = activeCats.map(c => catMap[c].sales);
+        DONUT_COLORS = activeCats.map(c => ({'Ragi Chips':'#EAB308','Dipsters':'#8B5CF6','Puffs':'#3B82F6','Others':'#6B7280'}[c]));
         centerLabel = 'All Categories';
       } else {
         // SKU-level breakdown within selected category
