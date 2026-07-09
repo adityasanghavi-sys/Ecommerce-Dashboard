@@ -526,7 +526,7 @@ function getFilteredData() {
         chart:{type:'donut',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
         colors: platData.map(([k])=>PLAT_COLORS[k]||'#888'),
         theme:{mode:'dark'}, legend:{position:'right',fontSize:'11px',fontFamily:'Geist Mono, monospace'},
-        dataLabels:{enabled:false}, plotOptions:{pie:{donut:{size:'65%',labels:{show:true,name:{show:true,fontSize:'11px',color:'#6b7280',fontFamily:'Geist Mono, monospace'},value:{show:true,fontSize:'18px',fontWeight:600,color:'#f0f0f0',fontFamily:'Geist Mono, monospace',formatter:()=>fmtDD(totalSales)},total:{show:true,label:'Total',formatter:()=>fmtDD(totalSales),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
+        dataLabels:{enabled:false}, plotOptions:{pie:{donut:{size:'65%',labels:{show:true,name:{show:true,fontSize:'11px',color:'#6b7280',fontFamily:'Geist Mono, monospace'},value:{show:true,fontSize:'18px',fontWeight:600,color:'#f0f0f0',fontFamily:'Geist Mono, monospace',formatter:v=>fmtDD(Number(v))},total:{show:true,label:'Total',formatter:()=>fmtDD(totalSales),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
         tooltip:{y:{formatter:v=>{if(v>=1e7)return '₹'+(v/1e7).toFixed(2)+'Cr';if(v>=1e5)return '₹'+(v/1e5).toFixed(2)+'L';if(v>=1e3)return '₹'+(v/1e3).toFixed(2)+'K';return '₹'+v.toFixed(0);}},theme:'dark'}
       });
       ddCharts['dd-chart-sales-mix'].render();
@@ -570,7 +570,7 @@ function getFilteredData() {
         theme:{mode:'dark'},
         legend:{position:'right',fontSize:'10px',fontFamily:'Geist Mono, monospace'},
         dataLabels:{enabled:false},
-        plotOptions:{pie:{donut:{size:'62%',labels:{show:true,total:{show:true,label:'Total',formatter:()=>fmtDD(dowTotal),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
+        plotOptions:{pie:{donut:{size:'62%',labels:{show:true,name:{show:true,fontSize:'10px',color:'#6b7280',fontFamily:'Geist Mono, monospace'},value:{show:true,fontSize:'16px',fontWeight:600,color:'#f0f0f0',fontFamily:'Geist Mono, monospace',formatter:v=>fmtDD(Number(v))},total:{show:true,label:'Total',formatter:()=>fmtDD(dowGrandTotal),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
         tooltip:{theme:'dark',custom:function({seriesIndex,w}){
           const pct = dowTotal>0?(dowValues[seriesIndex]/dowTotal*100).toFixed(1):'0.0';
           return `<div style="padding:8px 12px;background:#0f172a;border:1px solid rgba(255,255,255,0.1);border-radius:6px">
@@ -1564,7 +1564,7 @@ function getFilteredData() {
         chart:{type:'donut',height:240,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
         colors:platData.map(([k])=>PLAT_COLORS[k]||'#888'),theme:{mode:'dark'},
         legend:{position:'bottom',fontSize:'10px',fontFamily:'Geist Mono, monospace'},
-        dataLabels:{enabled:false},plotOptions:{pie:{donut:{size:'65%',labels:{show:true,total:{show:true,label:'Total',formatter:()=>fmtDD(totalS),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
+        dataLabels:{enabled:false},plotOptions:{pie:{donut:{size:'65%',labels:{show:true,name:{show:true,fontSize:'10px',color:'#6b7280',fontFamily:'Geist Mono, monospace'},value:{show:true,fontSize:'16px',fontWeight:600,color:'#f0f0f0',fontFamily:'Geist Mono, monospace',formatter:v=>fmtDD(Number(v))},total:{show:true,label:'Total',formatter:()=>fmtDD(totalS),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
         tooltip:{y:{formatter:v=>fmtDD(v)},theme:'dark'}
       });
       chartOvSalesMix.render();
