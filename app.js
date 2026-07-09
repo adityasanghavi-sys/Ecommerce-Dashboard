@@ -677,7 +677,7 @@ function getFilteredData() {
         xaxis:{categories:MONTHS_DEF.map(m=>m.l),labels:{style:{colors:'#9ca3b3',fontSize:'11px'},rotate:-30,offsetY:4},axisBorder:{show:false},axisTicks:{show:false},tickPlacement:'on'},
         yaxis:{labels:{formatter:v=>v.toFixed(2)+'Cr',style:{colors:'#9ca3b3',fontSize:'11px'}}},
         legend:{labels:{colors:['#9ca3b3']},fontSize:'11px',fontFamily:'Geist Mono, monospace',show:PLATS.length>1},
-        tooltip:{theme:'dark',y:{formatter:v=>{const val=v*1e7;if(val>=1e7)return '₹'+(val/1e7).toFixed(2)+'Cr';if(val>=1e5)return '₹'+(val/1e5).toFixed(2)+'L';if(val>=1e3)return '₹'+(val/1e3).toFixed(2)+'K';return '₹'+val.toFixed(0);}}}
+        tooltip:{theme:'dark',y:{formatter:v=>fmtDD(v*1e7)}}
       });
       ddCharts['dd-chart-sales-byplat'].render();
     }
