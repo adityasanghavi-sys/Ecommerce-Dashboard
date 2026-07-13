@@ -2148,7 +2148,7 @@ function getFilteredData() {
       } else {
         ShaderManager.unmount('ai-shader-container');
       }
-     if (tab === 'shopify') { activeShopifyMonth = '04'; ['04','05','06','07'].forEach(k => { const b = document.getElementById('shopify-btn-'+k); if(b) b.classList.toggle('active', k==='04'); }); loadShopifyData(); }
+     if (tab === 'shopify') { activeShopifyMonth = '04'; ['04','05','06','07'].forEach(k => { const b = document.getElementById('shopify-btn-'+k); if(b) b.classList.toggle('active', k==='04'); }); setTimeout(() => loadShopifyData(), 80); }
       const kg = document.getElementById('kpi-grid');
       const dc = document.getElementById('dashboard-content');
       if (kg) kg.style.display = tab === 'overview' ? 'grid' : 'none';
@@ -3725,13 +3725,21 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
       loadShopifyData();
     }
 
-    function renderShopifyTab() {
+   function renderShopifyTab() {
       const rows = shopifyRawData;
       const monthNames = { '04':'April', '05':'May', '06':'June', '07':'July' };
       const monthName = monthNames[activeShopifyMonth] || '';
 
-      document.getElementById('shopify-subtitle').textContent =
-        `${monthName} 2026 · ${rows.length} days of data`;
+      if (!document.getElementById('shopify-subtitle')) return;
+      if (rows.length === 0) {
+        document.getElementById('shopify-subtitle').textContent = `${monthName} 2026 · No data`;
+        document.getElementById('shopify-kpi-grid').innerHTML = '<div style="color:var(--text-muted);padding:20px;font-size:13px;">No Shopify data for this month.</div>';
+        document.getElementById('shopify-daily-body').innerHTML = '';
+        return;
+      }
+
+      document.getElementById('shopify-subtitle').textContent = 
+`${monthName} 2026 · ${rows.length} days of data`;
       document.getElementById('shopify-table-title').textContent =
         `Day-by-day — ${monthName} 2026`;
       document.getElementById('shopify-row-count').textContent =
