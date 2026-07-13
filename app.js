@@ -475,9 +475,11 @@ function getFilteredData() {
         {l:'FY25-26',months:[{y:2025,m:4},{y:2025,m:5},{y:2025,m:6},{y:2025,m:7},{y:2025,m:8},{y:2025,m:9},{y:2025,m:10},{y:2025,m:11},{y:2025,m:12},{y:2026,m:1},{y:2026,m:2},{y:2026,m:3}]},
         {l:'FY26-27',months:[{y:2026,m:4},{y:2026,m:5},{y:2026,m:6},{y:2026,m:7}]}
       ];
-      if (period === 'monthly') return MONTHS.map(({y,m,l}) => { const rows = getDDMonthData(y,m,null); const sales=rows.reduce((s,r)=>s+(Number(r.Sales)||0),0); const spends=rows.reduce((s,r)=>s+(Number(r.Spends)||0),0); const units=rows.reduce((s,r)=>s+(Number(r.Units)||0),0); return {l,sales,spends,units,roas:spends>0?sales/spends:0}; }).filter(p=>p.sales>0);
-      if (period === 'quarterly') return QUARTERS.map(q => { const rows = q.months.flatMap(({y,m})=>getDDMonthData(y,m,null)); const sales=rows.reduce((s,r)=>s+(Number(r.Sales)||0),0); const spends=rows.reduce((s,r)=>s+(Number(r.Spends)||0),0); const units=rows.reduce((s,r)=>s+(Number(r.Units)||0),0); return {l:q.l,sales,spends,units,roas:spends>0?sales/spends:0}; }).filter(p=>p.sales>0);
-      if (period === 'fy') return FYS.map(f => { const rows = f.months.flatMap(({y,m})=>getDDMonthData(y,m,null)); const sales=rows.reduce((s,r)=>s+(Number(r.Sales)||0),0); const spends=rows.reduce((s,r)=>s+(Number(r.Spends)||0),0); const units=rows.reduce((s,r)=>s+(Number(r.Units)||0),0); return {l:f.l,sales,spends,units,roas:spends>0?sales/spends:0}; }).filter(p=>p.sales>0);
+      const QCOM_PLATS = new Set(['Zepto','Instamart','Blinkit']);
+      const qcomOnly = rows => rows.filter(r => QCOM_PLATS.has(String(r.Platform)));
+      if (period === 'monthly') return MONTHS.map(({y,m,l}) => { const rows = qcomOnly(getDDMonthData(y,m,null)); const sales=rows.reduce((s,r)=>s+(Number(r.Sales)||0),0); const spends=rows.reduce((s,r)=>s+(Number(r.Spends)||0),0); const units=rows.reduce((s,r)=>s+(Number(r.Units)||0),0); return {l,sales,spends,units,roas:spends>0?sales/spends:0}; }).filter(p=>p.sales>0);
+      if (period === 'quarterly') return QUARTERS.map(q => { const rows = qcomOnly(q.months.flatMap(({y,m})=>getDDMonthData(y,m,null))); const sales=rows.reduce((s,r)=>s+(Number(r.Sales)||0),0); const spends=rows.reduce((s,r)=>s+(Number(r.Spends)||0),0); const units=rows.reduce((s,r)=>s+(Number(r.Units)||0),0); return {l:q.l,sales,spends,units,roas:spends>0?sales/spends:0}; }).filter(p=>p.sales>0);
+      if (period === 'fy') return FYS.map(f => { const rows = qcomOnly(f.months.flatMap(({y,m})=>getDDMonthData(y,m,null))); const sales=rows.reduce((s,r)=>s+(Number(r.Sales)||0),0); const spends=rows.reduce((s,r)=>s+(Number(r.Spends)||0),0); const units=rows.reduce((s,r)=>s+(Number(r.Units)||0),0); return {l:f.l,sales,spends,units,roas:spends>0?sales/spends:0}; }).filter(p=>p.sales>0);
       return [];
     }
 
