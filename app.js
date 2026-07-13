@@ -827,11 +827,16 @@ function getFilteredData() {
       });
       ddCharts['dd-chart-roas-trend'].render();
     }
-
-    function renderDDROASPlatTrend() {
+      function renderDDROASPlatTrend() {
       const plat=document.getElementById('dd-roas-plat-sel')?.value||'Blinkit';
       const MONTHS_DEF=[{y:2025,m:4,l:'Apr 25'},{y:2025,m:5,l:'May 25'},{y:2025,m:6,l:'Jun 25'},{y:2025,m:7,l:'Jul 25'},{y:2025,m:8,l:'Aug 25'},{y:2025,m:9,l:'Sep 25'},{y:2025,m:10,l:'Oct 25'},{y:2025,m:11,l:'Nov 25'},{y:2025,m:12,l:'Dec 25'},{y:2026,m:1,l:'Jan 26'},{y:2026,m:2,l:'Feb 26'},{y:2026,m:3,l:'Mar 26'},{y:2026,m:4,l:'Apr 26'},{y:2026,m:5,l:'May 26'},{y:2026,m:6,l:'Jun 26'},{y:2026,m:7,l:'Jul 26'}];
-      const data=MONTHS_DEF.map(({y,m,l})=>{const rows=getDDMonthData(y,m,plat);const s=rows.reduce((a,r)=>a+(Number(r.Sales)||0),0);const sp=rows.reduce((a,r)=>a+(Number(r.Spends)||0),0);return{l,roas:sp>0?+(s/sp).toFixed(2):0};}).filter(p=>p.roas>0);
+      // May 25 Instamart spends were partially filled (only ~14 of 31 days) — skip to avoid inflated ROAS
+      const SKIP = new Set(['Instamart_2025_5']);
+      const data=MONTHS_DEF.map(({y,m,l})=>{
+        if(SKIP.has(plat+'_'+y+'_'+m)) return null;
+        const rows=getDDMonthData(y,m,plat);const s=rows.reduce((a,r)=>a+(Number(r.Sales)||0),0);const sp=rows.reduce((a,r)=>a+(Number(r.Spends)||0),0);return{l,roas:sp>0?+(s/sp).toFixed(2):0};
+      }).filter(p=>p&&p.roas>0);
+    
       const color=PLAT_COLORS[plat]||'#EAB308';
       if(ddCharts['dd-chart-roas-plat-trend'])ddCharts['dd-chart-roas-plat-trend'].destroy();
       ddCharts['dd-chart-roas-plat-trend']=new ApexCharts(document.getElementById('dd-chart-roas-plat-trend'),{
