@@ -477,10 +477,10 @@ function getFilteredData() {
       ];
       const QCOM_PLATS = new Set(['Zepto','Instamart','Blinkit']);
       const qcomOnly = rows => rows.filter(r => QCOM_PLATS.has(String(r.Platform)));
-      if (period === 'monthly') return MONTHS.map(({y,m,l}) => { const rows = qcomOnly(getDDMonthData(y,m,null)); const sales=rows.reduce((s,r)=>s+(Number(r.Sales)||0),0); const spends=rows.reduce((s,r)=>s+(Number(r.Spends)||0),0); const units=rows.reduce((s,r)=>s+(Number(r.Units)||0),0); return {l,sales,spends,units,roas:spends>0?sales/spends:0}; }).filter(p=>p.sales>0);
-      if (period === 'quarterly') return QUARTERS.map(q => { const rows = qcomOnly(q.months.flatMap(({y,m})=>getDDMonthData(y,m,null))); const sales=rows.reduce((s,r)=>s+(Number(r.Sales)||0),0); const spends=rows.reduce((s,r)=>s+(Number(r.Spends)||0),0); const units=rows.reduce((s,r)=>s+(Number(r.Units)||0),0); return {l:q.l,sales,spends,units,roas:spends>0?sales/spends:0}; }).filter(p=>p.sales>0);
-      if (period === 'fy') return FYS.map(f => { const rows = qcomOnly(f.months.flatMap(({y,m})=>getDDMonthData(y,m,null))); const sales=rows.reduce((s,r)=>s+(Number(r.Sales)||0),0); const spends=rows.reduce((s,r)=>s+(Number(r.Spends)||0),0); const units=rows.reduce((s,r)=>s+(Number(r.Units)||0),0); return {l:f.l,sales,spends,units,roas:spends>0?sales/spends:0}; }).filter(p=>p.sales>0);
-      return [];
+      if (period === 'monthly') return MONTHS.map(({y,m,l}) => { const rows=getDDMonthData(y,m,null); const qrows=qcomOnly(rows); const sales=rows.reduce((s,r)=>s+(Number(r.Sales)||0),0); const spends=qrows.reduce((s,r)=>s+(Number(r.Spends)||0),0); const units=rows.reduce((s,r)=>s+(Number(r.Units)||0),0); return {l,sales,spends,units,roas:spends>0?+(qrows.reduce((s,r)=>s+(Number(r.Sales)||0),0)/spends).toFixed(2):0}; }).filter(p=>p.sales>0);
+      if (period === 'quarterly') return QUARTERS.map(q => { const rows=q.months.flatMap(({y,m})=>getDDMonthData(y,m,null)); const qrows=qcomOnly(rows); const sales=rows.reduce((s,r)=>s+(Number(r.Sales)||0),0); const spends=qrows.reduce((s,r)=>s+(Number(r.Spends)||0),0); const units=rows.reduce((s,r)=>s+(Number(r.Units)||0),0); return {l:q.l,sales,spends,units,roas:spends>0?+(qrows.reduce((s,r)=>s+(Number(r.Sales)||0),0)/spends).toFixed(2):0}; }).filter(p=>p.sales>0);
+      if (period === 'fy') return FYS.map(f => { const rows=f.months.flatMap(({y,m})=>getDDMonthData(y,m,null)); const qrows=qcomOnly(rows); const sales=rows.reduce((s,r)=>s+(Number(r.Sales)||0),0); const spends=qrows.reduce((s,r)=>s+(Number(r.Spends)||0),0); const units=rows.reduce((s,r)=>s+(Number(r.Units)||0),0); return {l:f.l,sales,spends,units,roas:spends>0?+(qrows.reduce((s,r)=>s+(Number(r.Sales)||0),0)/spends).toFixed(2):0}; }).filter(p=>p.sales>0);
+        return [];
     }
 
     function ddKpiHtml(label, val, delta, sub, colorClass) {
