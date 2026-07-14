@@ -858,7 +858,7 @@ function getFilteredData() {
     }
 
     function renderDDROASYoYKPIs() {
-      const PLATS=['Blinkit','Zepto','Instamart','Amazon'];
+      const PLATS=['Blinkit','Zepto','Instamart'];
       const COLORS=['linear-gradient(90deg,#EAB308,#F97316)','linear-gradient(90deg,#a78bfa,#8B5CF6)','linear-gradient(90deg,#22C55E,#16a34a)','linear-gradient(90deg,#3B82F6,#0ea5e9)'];
       const now=new Date();const cm=now.getMonth()+1;
       let html='';
