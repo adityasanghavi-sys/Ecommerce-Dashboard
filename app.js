@@ -435,7 +435,7 @@ function getFilteredData() {
         else if (view === 'yoy') { renderDDSalesYoYKPIs(); renderDDSalesYoYChart(); }
       } else if (metric === 'roas') {
         if (view === 'current') renderDDROASCurrent();
-        else if (view === 'trends') { renderDDROASTrend(); renderDDROASPlatTrend(); renderDDROASGrouped(); }
+        else if (view === 'trends') { renderDDROASTrend(); renderDDROASPlatTrend(); }
         else if (view === 'yoy') { renderDDROASYoYKPIs(); renderDDROASYoYChart(); }
       } else if (metric === 'qty') {
         if (view === 'current') { renderDDQtyCurrent(); renderDDQtyCatDonut(); renderDDQtyTopSKUs(); }
@@ -855,25 +855,6 @@ function getFilteredData() {
         tooltip:{y:{formatter:v=>v.toFixed(2)+'x'},theme:'dark'}
       });
       ddCharts['dd-chart-roas-plat-trend'].render();
-    }
-
-    function renderDDROASGrouped() {
-      const PLATS=['Blinkit','Zepto','Instamart','Amazon'];
-      const MONTHS_DEF=[{y:2025,m:10,l:'Oct 25'},{y:2025,m:11,l:'Nov 25'},{y:2025,m:12,l:'Dec 25'},{y:2026,m:1,l:'Jan 26'},{y:2026,m:2,l:'Feb 26'},{y:2026,m:3,l:'Mar 26'},{y:2026,m:4,l:'Apr 26'},{y:2026,m:5,l:'May 26'},{y:2026,m:6,l:'Jun 26'},{y:2026,m:7,l:'Jul 26'}];
-      const blended=MONTHS_DEF.map(({y,m})=>{const rows=getDDMonthData(y,m,null);const s=rows.reduce((a,r)=>a+(Number(r.Sales)||0),0);const sp=rows.reduce((a,r)=>a+(Number(r.Spends)||0),0);return sp>0?+(s/sp).toFixed(2):0;});
-      const series=[{name:'Blended',data:blended},...PLATS.map(p=>({name:p,data:MONTHS_DEF.map(({y,m})=>{const rows=getDDMonthData(y,m,p);const s=rows.reduce((a,r)=>a+(Number(r.Sales)||0),0);const sp=rows.reduce((a,r)=>a+(Number(r.Spends)||0),0);return sp>0?+(s/sp).toFixed(2):0;})}))];
-      if(ddCharts['dd-chart-roas-grouped'])ddCharts['dd-chart-roas-grouped'].destroy();
-      ddCharts['dd-chart-roas-grouped']=new ApexCharts(document.getElementById('dd-chart-roas-grouped'),{
-        series,chart:{type:'bar',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
-        theme:{mode:'dark'},colors:['#94a3b8',...PLATS.map(p=>PLAT_COLORS[p])],
-        plotOptions:{bar:{borderRadius:2,columnWidth:'75%',grouped:true}},dataLabels:{enabled:false},
-        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
-        xaxis:{categories:MONTHS_DEF.map(m=>m.l),labels:{style:{colors:'#555',fontSize:'10px'},rotate:-30},axisBorder:{show:false},axisTicks:{show:false}},
-        yaxis:{labels:{formatter:v=>v.toFixed(1)+'x',style:{colors:'#9ca3b3',fontSize:'10px'}}},
-        legend:{labels:{colors:['#9ca3b3']},fontSize:'11px',fontFamily:'Geist Mono, monospace'},
-        tooltip:{y:{formatter:v=>v.toFixed(2)+'x'},theme:'dark'}
-      });
-      ddCharts['dd-chart-roas-grouped'].render();
     }
 
     function renderDDROASYoYKPIs() {
