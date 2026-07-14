@@ -910,7 +910,7 @@ function getFilteredData() {
       if(ddCharts['dd-chart-qty-mix'])ddCharts['dd-chart-qty-mix'].destroy();
       ddCharts['dd-chart-qty-mix']=new ApexCharts(document.getElementById('dd-chart-qty-mix'),{
         series:platData.map(([,v])=>v.units),labels:platData.map(([k])=>k),
-        chart:{type:'donut',height:220,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        chart:{type:'donut',height:320,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
         colors:platData.map(([k])=>PLAT_COLORS[k]||'#888'),theme:{mode:'dark'},
         legend:{position:'right',fontSize:'11px',fontFamily:'Geist Mono, monospace'},
         dataLabels:{enabled:false},plotOptions:{pie:{donut:{size:'65%',labels:{show:true,name:{show:true,fontSize:'11px',color:'#6b7280',fontFamily:'Geist Mono, monospace'},value:{show:true,fontSize:'18px',fontWeight:600,color:'#f0f0f0',fontFamily:'Geist Mono, monospace',formatter:v=>fmtDDU(Number(v))},total:{show:true,label:'Total',formatter:()=>fmtDDU(totalUnits),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
@@ -1046,11 +1046,11 @@ function getFilteredData() {
       if(ddCharts['dd-chart-qty-cat-donut']) ddCharts['dd-chart-qty-cat-donut'].destroy();
       ddCharts['dd-chart-qty-cat-donut'] = new ApexCharts(document.getElementById('dd-chart-qty-cat-donut'), {
         series: values, labels: labels,
-        chart:{type:'donut',height:260,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        chart:{type:'donut',height:320,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
         colors: DONUT_COLORS.slice(0,labels.length), theme:{mode:'dark'},
-        legend:{position:'bottom',fontSize:'10px',fontFamily:'Geist Mono, monospace'},
-        dataLabels:{enabled:false},
-        plotOptions:{pie:{donut:{size:'62%',labels:{show:true,
+        legend:{position:'bottom',fontSize:'10px',fontFamily:'Geist Mono, monospace',formatter:(val)=>val.length>20?val.substring(0,20)+'…':val},
+        dataLabels:{enabled:true,style:{fontSize:'9px',fontFamily:'Geist Mono, monospace',colors:['#f0f0f0']},formatter:(val,opts)=>{const name=opts.w.globals.labels[opts.seriesIndex];return name.length>15?name.substring(0,15)+'…':name;},dropShadow:{enabled:false}},
+        plotOptions:{pie:{donut:{size:'58%',labels:{show:true,
           name:{show:true,fontSize:'10px',color:'#6b7280',fontFamily:'Geist Mono, monospace'},
           value:{show:true,fontSize:'16px',fontWeight:600,color:'#f0f0f0',fontFamily:'Geist Mono, monospace',formatter:v=>fmtDDU(Number(v))},
           total:{show:true,label:centerLabel,formatter:()=>fmtDDU(total),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
