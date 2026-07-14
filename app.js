@@ -439,7 +439,7 @@ function getFilteredData() {
         else if (view === 'yoy') { renderDDROASYoYKPIs(); renderDDROASYoYChart(); }
       } else if (metric === 'qty') {
         if (view === 'current') { renderDDQtyCurrent(); renderDDQtyCatDonut(); renderDDQtyTopSKUs(); }
-        else if (view === 'trends') { renderDDQtyTrend(); renderDDASPTrend(); renderDDQtyCatTrend(); renderDDQtyPlatShare(); renderDDQtyConcentration(); }
+        else if (view === 'trends') { renderDDQtyTrend(); renderDDASPTrend(); renderDDQtyCatTrend(); renderDDQtyPlatShare(); }
         else if (view === 'yoy') { renderDDQtyYoYKPIs(); renderDDQtyYoYChart(); renderDDQtyCatYoY(); renderDDQtyMixYoY(); } 
       }
     }
@@ -1160,35 +1160,6 @@ function getFilteredData() {
         tooltip:{y:{formatter:v=>Math.round(v)+'%'},theme:'dark'}
       });
       ddCharts['dd-chart-qty-plat-share'].render();
-    }
-
-    function renderDDQtyConcentration() {
-      const MONTHS = [{y:2025,m:4},{y:2025,m:7},{y:2025,m:10},{y:2026,m:1},{y:2026,m:4},{y:2026,m:7}];
-      const MLBLs = MONTHS.map(({y,m})=>['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m]+' '+String(y).slice(2));
-      const data = MONTHS.map(({y,m}) => {
-        const src = FY25_MONTHS.has(`${y}-${String(m).padStart(2,'0')}`) ? fy25SKUData : skuData;
-        const rows = src.filter(r => Number(r.Month)===m);
-        const skuMap = {};
-        rows.forEach(r => { const k=String(r.SKU); skuMap[k]=(skuMap[k]||0)+(Number(r.MTDUnits)||Number(r.Quantity)||0); });
-        const sorted = Object.values(skuMap).sort((a,b)=>b-a);
-        const top3 = sorted.slice(0,3).reduce((a,b)=>a+b,0);
-        const total = sorted.reduce((a,b)=>a+b,0);
-        return total > 0 ? Math.round(top3/total*100) : 0;
-      });
-      if(ddCharts['dd-chart-qty-concentration']) ddCharts['dd-chart-qty-concentration'].destroy();
-      ddCharts['dd-chart-qty-concentration'] = new ApexCharts(document.getElementById('dd-chart-qty-concentration'), {
-        series:[{name:'Top 3 SKU share',data}],
-        chart:{type:'bar',height:180,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
-        theme:{mode:'dark'},
-        colors: data.map(v => v > 55 ? '#ef4444' : v > 50 ? '#f97316' : '#EAB308'),
-        plotOptions:{bar:{borderRadius:4,columnWidth:'55%',distributed:true}}, dataLabels:{enabled:true,formatter:v=>v+'%',style:{fontSize:'11px',colors:['#e2e8f0']}},
-        grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},legend:{show:false},
-        xaxis:{categories:MLBLs,labels:{style:{colors:'#555',fontSize:'10px'}},axisBorder:{show:false},axisTicks:{show:false}},
-        yaxis:{labels:{formatter:v=>v+'%',style:{colors:'#9ca3b3',fontSize:'10px'}},max:80},
-        annotations:{yaxis:[{y:55,borderColor:'#ef4444',strokeDashArray:4,label:{text:'Risk threshold',style:{color:'#ef4444',fontSize:'10px',background:'transparent'}}},{y:50,borderColor:'#f97316',strokeDashArray:4}]},
-        tooltip:{y:{formatter:v=>v+'% of units'},theme:'dark'}
-      });
-      ddCharts['dd-chart-qty-concentration'].render();
     }
     function renderDDQtyCatDonut() {
       const selCat = document.getElementById('dd-qty-sku-cat-sel')?.value || 'All';
