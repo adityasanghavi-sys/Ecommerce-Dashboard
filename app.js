@@ -874,7 +874,7 @@ function getFilteredData() {
     }
 
     function renderDDROASYoYChart() {
-      const PLATS=['Blinkit','Zepto','Instamart','Amazon'];
+      const PLATS=['Blinkit','Zepto','Instamart'];
       const now=new Date();const months=[];
       for(let m=4;m<=now.getMonth()+1;m++)months.push(m);
       const labels=months.map(m=>['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m]);
