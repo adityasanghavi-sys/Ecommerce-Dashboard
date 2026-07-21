@@ -28,32 +28,7 @@
     }
     .mono, [class*="mono"] { font-family: 'Geist Mono', monospace !important; font-feature-settings: 'ss01', 'ss02', 'zero'; }
 
-    /* ─── PARALLAX STARS ─────────────────────────────────────────────── */
-    .stars-layer {
-      position: fixed;
-      left: 0;
-      top: 0;
-      background: transparent;
-      pointer-events: none;
-      z-index: 0;
-    }
-    .stars-layer::after {
-      content: '';
-      position: absolute;
-      top: 2000px;
-      left: 0;
-      width: inherit;
-      height: inherit;
-      background: transparent;
-      box-shadow: inherit;
-    }
-    @keyframes animStar {
-      from { transform: translateY(0); }
-      to { transform: translateY(-2000px); }
-    }
-    .stars-small  { width: 1px; height: 1px; animation: animStar 120s linear infinite; }
-    .stars-medium { width: 2px; height: 2px; animation: animStar 200s linear infinite; }
-    .stars-big    { width: 3px; height: 3px; animation: animStar 320s linear infinite; }
+    
     .mono { font-family: 'Geist Mono', monospace; }
 
     /* Scrollbar */
