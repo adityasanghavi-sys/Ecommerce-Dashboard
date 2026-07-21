@@ -1,26 +1,3 @@
-// ─── STARFIELD GENERATOR (runs once on load) ──────────────────────────────
-    (function initStars() {
-      const genShadows = (n) => {
-        const parts = [];
-        for (let i = 0; i < n; i++) {
-          parts.push(`${Math.floor(Math.random() * 2400)}px ${Math.floor(Math.random() * 2400)}px #FFF`);
-        }
-        return parts.join(', ');
-      };
-      const apply = (id, shadows) => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.style.boxShadow = shadows;
-          // Apply to ::after pseudo-element by injecting a style rule
-          const style = document.createElement('style');
-          style.textContent = `#${id}::after { box-shadow: ${shadows}; }`;
-          document.head.appendChild(style);
-        }
-      };
-      apply('stars-small',  genShadows(700));
-      apply('stars-medium', genShadows(200));
-      apply('stars-big',    genShadows(100));
-    })();
 
     // ─── SHADER ENGINE (Three.js neon spiral) ─────────────────────────────────
     const ShaderManager = {
