@@ -1,5 +1,4 @@
-
-    // ─── SHADER ENGINE (Three.js neon spiral) ─────────────────────────────────
+  // ─── SHADER ENGINE (Three.js neon spiral) ─────────────────────────────────
     const ShaderManager = {
       instances: {},
 
@@ -701,10 +700,11 @@ function getFilteredData() {
       const data = getFilteredData();
       const agg = {};
       data.forEach(r=>{const p=r.Platform;if(!agg[p])agg[p]={sales:0,spends:0};agg[p].sales+=Number(r.Sales)||0;agg[p].spends+=Number(r.Spends)||0;});
-      const platData=Object.entries(agg).filter(([,v])=>v.spends>0).sort((a,b)=>(b[1].sales/b[1].spends)-(a[1].sales/a[1].spends));
-      const totalS=Object.values(agg).reduce((s,v)=>s+(v.sales||0),0);
-      const totalSp=Object.values(agg).reduce((s,v)=>s+(v.spends||0),0);
-      const blended=totalSp>0?totalS/totalSp:0;
+      const PAID_CHANNELS = ['Blinkit','Zepto','Instamart'];
+      const platData=Object.entries(agg).filter(([k,v])=>PAID_CHANNELS.includes(k) && v.spends>0).sort((a,b)=>(b[1].sales/b[1].spends)-(a[1].sales/a[1].spends));
+      const paidSales=PAID_CHANNELS.reduce((s,p)=>s+(agg[p]?.sales||0),0);
+      const totalSp=PAID_CHANNELS.reduce((s,p)=>s+(agg[p]?.spends||0),0);
+      const blended=totalSp>0?paidSales/totalSp:0;
       const best=platData[0]; const worst=platData[platData.length-1];
       document.getElementById('dd-roas-kpis').innerHTML=
         ddKpiHtml('Blended ROAS',blended.toFixed(2)+'x',0,'all platforms','linear-gradient(90deg,#EAB308,#F97316)')+
