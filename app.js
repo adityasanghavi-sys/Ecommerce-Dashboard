@@ -1495,7 +1495,8 @@ function getFilteredData() {
     function renderOverviewSummaryCharts(agg) {
       const platData=Object.entries(agg).filter(([,v])=>v.sales>0).sort((a,b)=>b[1].sales-a[1].sales);
       const platDataQ=Object.entries(agg).filter(([,v])=>v.units>0).sort((a,b)=>b[1].units-a[1].units);
-      const platDataR=Object.entries(agg).filter(([,v])=>v.spends>0&&v.sales>0).sort((a,b)=>(b[1].sales/b[1].spends)-(a[1].sales/a[1].spends));
+      const PAID_CHANNELS_ROAS = ['Blinkit','Zepto','Instamart'];
+      const platDataR=Object.entries(agg).filter(([k,v])=>PAID_CHANNELS_ROAS.includes(k)&&v.spends>0&&v.sales>0).sort((a,b)=>(b[1].sales/b[1].spends)-(a[1].sales/a[1].spends));
       const totalS=platData.reduce((s,[,v])=>s+v.sales,0);
       const totalU=platDataQ.reduce((s,[,v])=>s+v.units,0);
       if(chartOvSalesMix)chartOvSalesMix.destroy();
