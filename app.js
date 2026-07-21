@@ -1772,10 +1772,10 @@ function getFilteredData() {
       const totalSpends = Object.values(agg).reduce((s, d) => s + d.spends, 0);
       const totalUnits  = Object.values(agg).reduce((s, d) => s + d.units, 0);
 
-      const adSales  = Object.values(agg).filter(d => d.spends > 0).reduce((s,d) => s+d.sales, 0);
-      const adSpends = Object.values(agg).filter(d => d.spends > 0).reduce((s,d) => s+d.spends, 0);
+      const PAID_CHANNELS = ['Blinkit','Zepto','Instamart'];
+      const adSales  = PAID_CHANNELS.reduce((s,p) => s + (agg[p]?.sales || 0), 0);
+      const adSpends = PAID_CHANNELS.reduce((s,p) => s + (agg[p]?.spends || 0), 0);
       const blendedRoas = adSpends > 0 ? adSales / adSpends : 0;
-
       let bestPlatform = '--', bestRoas = 0;
       Object.keys(agg).forEach(p => {
         if (agg[p].roas > bestRoas && agg[p].spends > 0) { bestRoas = agg[p].roas; bestPlatform = p; }
