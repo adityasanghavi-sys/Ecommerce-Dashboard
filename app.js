@@ -241,7 +241,9 @@ async function loadFY25Data() {
       fy25SKUData = [];
       skuDailyData = [];// reset FY25 SKU too so it re-fetches for new month
       const isFY25Month = m !== 'All' && FY25_MONTHS.has(m);
-      const isCurrentMonth = m === '2026-07';
+      const _now = new Date();
+      const _currentKey = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
+      const isCurrentMonth = m === _currentKey;
       if (!isCurrentMonth && (activePeriod === 't1' || activePeriod === 't2' || activePeriod === 'mtd')) {
         activePeriod = 'mtd';
       }
@@ -728,7 +730,9 @@ function getFilteredData() {
 
       function renderDDROASSpend() {
       const isFY25m = activeMonth !== 'All' && FY25_MONTHS.has(activeMonth);
-      const isCurrentMonth = activeMonth === '2026-07';
+      const _now2 = new Date();
+      const _currentKey2 = `${_now2.getFullYear()}-${String(_now2.getMonth()+1).padStart(2,'0')}`;
+      const isCurrentMonth = activeMonth === _currentKey2; 
       const src = isFY25m ? fy25Data : rawData;
       const daily = {};
       let chartTitle = 'ROAS vs Spend · last 30 days';
@@ -2812,8 +2816,12 @@ function getFilteredData() {
       const totalSpends = omsRows.reduce((s, r) => s + (Number(r.Spends) || 0), 0);
       const roas = totalSpends > 0 ? (totalSales / totalSpends) : 0;
       const isFY25m = activeMonth !== 'All' && FY25_MONTHS.has(activeMonth);
-      const totalEstRev = skuRows.reduce((s, r) => s + (Number(r.EstRevenue) || Number(r.GMV) || 0), 0);
-
+      const now = new Date();
+      const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+      const isCurrentMonth = activeMonth === currentMonthKey;
+      const totalEstRev = isCurrentMonth
+        ? skuRows.reduce((s, r) => s + (Number(r.EstRevenue) || Number(r.GMV) || 0), 0)
+        : totalSales;
       const cfg = PLATFORM_CONFIG[platform] || { color: '#888' };
       const pLabels = { t1:'T-1 Revenue', t2:'T-2 Revenue', '7d':'7-Day Revenue', mtd:'MTD Revenue', custom:'Revenue', all:'Revenue' };
       const revLabel = pLabels[activePeriod] || 'Revenue';
@@ -2842,7 +2850,7 @@ function getFilteredData() {
         <div class="kpi-card" style="--accent:var(--purple)">
           <div class="kpi-label">Est. Revenue</div>
           <div class="kpi-value">${fmt(totalEstRev)}</div>
-          <div class="kpi-sub neutral">${activeMonth === '2026-07' ? 'Full month projection' : 'Full month actuals'}</div>
+          <div class="kpi-sub neutral">${isCurrentMonth ? 'Full month projection' : 'Full month actuals'}</div>
         </div>
       `;
     }
