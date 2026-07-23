@@ -1038,48 +1038,6 @@ function getFilteredData() {
       });
       ddCharts['dd-chart-qty-cat-donut'].render();
     }
-
-    function renderDDQtyTopSKUs() {
-      const platFilter = document.getElementById('dd-qty-sku-plat')?.value || 'All';
-      const isFY25m = FY25_MONTHS.has(activeMonth);
-      const src = isFY25m ? fy25SKUData : skuData;
-      const [selY, selM] = activeMonth !== 'All' ? activeMonth.split('-').map(Number) : [null, null];
-      let rows = src.filter(r => selM ? Number(r.Month) === selM : true);
-      if (platFilter !== 'All') rows = rows.filter(r => String(r.Platform) === platFilter);
-      const skuMap = {};
-      rows.forEach(r => {
-        const k = String(r.SKU);
-        if (!skuMap[k]) skuMap[k] = {sku:k, cat:r.Category, units:0, gmv:0};
-        skuMap[k].units += Number(r.MTDUnits)||Number(r.Quantity)||0;
-        skuMap[k].gmv   += Number(r.MTDRevenue)||Number(r.GMV)||0;
-      });
-      const top = Object.values(skuMap).sort((a,b) => b.units - a.units).slice(0, 8);
-      const totalU = top.reduce((a,r) => a+r.units, 0);
-      let html = `<table style="width:100%;border-collapse:collapse;font-size:12px;">
-        <thead><tr style="border-bottom:1px solid rgba(255,255,255,0.08);">
-          <th style="text-align:left;padding:6px 8px;color:#555;font-weight:500;font-size:11px;">#</th>
-          <th style="text-align:left;padding:6px 8px;color:#555;font-weight:500;font-size:11px;">SKU</th>
-          <th style="text-align:left;padding:6px 8px;color:#555;font-weight:500;font-size:11px;">Category</th>
-          <th style="text-align:right;padding:6px 8px;color:#555;font-weight:500;font-size:11px;">Units</th>
-          <th style="text-align:right;padding:6px 8px;color:#555;font-weight:500;font-size:11px;">% of total</th>
-          <th style="text-align:right;padding:6px 8px;color:#555;font-weight:500;font-size:11px;">ASP</th>
-        </tr></thead><tbody>`;
-      top.forEach((r,i) => {
-        const pct = totalU > 0 ? (r.units/totalU*100).toFixed(1) : '0.0';
-        const asp = r.units > 0 ? Math.round(r.gmv/r.units) : 0;
-        html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
-          <td style="padding:7px 8px;color:#555;font-size:11px;">${i+1}</td>
-          <td style="padding:7px 8px;color:#e2e8f0;font-size:12px;">${r.sku}</td>
-          <td style="padding:7px 8px;color:#9ca3af;font-size:11px;">${r.cat||'—'}</td>
-          <td style="padding:7px 8px;text-align:right;color:#e2e8f0;">${fmtDDU(r.units)}</td>
-          <td style="padding:7px 8px;text-align:right;color:#9ca3af;">${pct}%</td>
-          <td style="padding:7px 8px;text-align:right;color:#9ca3af;">₹${asp}</td>
-        </tr>`;
-      });
-      html += '</tbody></table>';
-      document.getElementById('dd-qty-top-skus').innerHTML = html;
-    }
-
     function renderDDQtyCatTrend() {
       const CATS = ['Ragi Chips','Dipsters','Puffs','Others'];
       const CAT_COLORS = ['#EAB308','#8B5CF6','#3B82F6','#6B7280'];
