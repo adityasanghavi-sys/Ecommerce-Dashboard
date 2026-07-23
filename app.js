@@ -1858,10 +1858,8 @@ function getFilteredData() {
       document.getElementById('view-shopify').style.display = tab === 'shopify' ? 'block' : 'none';
       const ddEl = document.getElementById('view-deepdive');
       if (ddEl) ddEl.style.display = tab === 'deepdive' ? 'block' : 'none';
-      if (tab === 'deepdive') { updateDDView(); }
-     
-      }
-     if (tab === 'shopify') { activeShopifyMonth = '04'; ['04','05','06','07'].forEach(k => { const b = document.getElementById('shopify-btn-'+k); if(b) b.classList.toggle('active', k==='04'); }); setTimeout(() => loadShopifyData(), 80); }
+       if (tab === 'deepdive') { updateDDView(); }
+     if (tab === 'shopify') {activeShopifyMonth = '04'; ['04','05','06','07'].forEach(k => { const b = document.getElementById('shopify-btn-'+k); if(b) b.classList.toggle('active', k==='04'); }); setTimeout(() => loadShopifyData(), 80); }
       const kg = document.getElementById('kpi-grid');
       const dc = document.getElementById('dashboard-content');
       if (kg) kg.style.display = tab === 'overview' ? 'grid' : 'none';
