@@ -970,16 +970,7 @@ function getFilteredData() {
       });
       ddCharts['dd-chart-qty-cat-mix'].render();
     }
-    function renderDDQtyCatDonut() {
-      const selCat = document.getElementById('dd-qty-sku-cat-sel')?.value || 'All';
-      const isFY25m = activeMonth !== 'All' && FY25_MONTHS.has(activeMonth);
-      const src = isFY25m ? fy25SKUData : skuData;
-      const [selY, selM] = activeMonth !== 'All' ? activeMonth.split('-').map(Number) : [null, null];
-      if (src.length === 0) { document.getElementById('dd-chart-qty-cat-donut').innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);font-size:12px">Loading SKU data...</div>'; return; }
-      const allRows = src.filter(r => selM ? Number(r.Month) === selM : true);
-
-      if (allRows.length === 0) { document.getElementById('dd-chart-qty-cat-donut').innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);font-size:12px">No data for selected month</div>'; return; }
-
+    
       let labels, values, salesArr, centerLabel, DONUT_COLORS;
 
       if (selCat === 'All') {
