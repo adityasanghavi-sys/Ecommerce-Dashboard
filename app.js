@@ -1195,9 +1195,9 @@ function getFilteredData() {
       if(ddCharts['dd-chart-qty-cat-donut']) ddCharts['dd-chart-qty-cat-donut'].destroy();
       ddCharts['dd-chart-qty-cat-donut'] = new ApexCharts(document.getElementById('dd-chart-qty-cat-donut'), {
         series: values, labels: labels,
-        chart:{type:'donut',height:260,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        chart:{type:'donut',height:360,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
         colors: DONUT_COLORS.slice(0,labels.length), theme:{mode:'dark'},
-        legend:{position:'bottom',fontSize:'9px',fontFamily:'Geist Mono, monospace'},
+        legend:{position:'right',fontSize:'10px',fontFamily:'Geist Mono, monospace'},
         dataLabels:{enabled:false},
         plotOptions:{pie:{donut:{size:'62%',labels:{show:true,name:{show:true,fontSize:'9px',color:'#6b7280',fontFamily:'Geist Mono, monospace'},value:{show:true,fontSize:'13px',fontWeight:600,color:'#f0f0f0',fontFamily:'Geist Mono, monospace',formatter:v=>fmtDDU(Number(v))},total:{show:true,label:centerLabel,fontSize:'9px',formatter:()=>fmtDDU(total),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
         tooltip:{theme:'dark',custom:function({seriesIndex}){
