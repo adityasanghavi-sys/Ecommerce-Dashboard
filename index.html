@@ -6,7 +6,6 @@
 <title>Snackible — Executive Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -15,7 +14,6 @@
 <body>
 
 <div id="loading-state">
-<div id="loading-shader-container" style="position:absolute;inset:0;z-index:0;"></div>
 <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:20px;">
 <p class="loading-text" style="font-size:14px;letter-spacing:0.15em;color:#fff;text-shadow:0 0 20px rgba(0,0,0,0.8);font-weight:600;">PULLING DATA</p>
 <div style="width:40px;height:1px;background:rgba(255,255,255,0.4);"></div>
@@ -952,7 +950,6 @@ Fill in both sides and hit <strong>Compare →</strong>
 </div>
 <!-- AI INSIGHTS TAB -->
 <div id="view-ai-insights" style="display:none;position:relative;">
-<div id="ai-shader-container" style="position:absolute;inset:-40px;z-index:0;opacity:0.18;pointer-events:none;border-radius:24px;overflow:hidden;filter:blur(2px);"></div>
 <div class="ai-insights-wrapper" style="position:relative;z-index:1;">
 <div class="ai-header-row">
 <div>
