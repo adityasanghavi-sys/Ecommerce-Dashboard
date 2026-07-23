@@ -931,7 +931,7 @@ function getFilteredData() {
         theme:{mode:'dark'}, colors:CAT_COLORS, stroke:{width:2,curve:'smooth'}, markers:{size:3},
         grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4}, dataLabels:{enabled:false},
         xaxis:{categories:MLBLs,labels:{style:{colors:'#555',fontSize:'9px'},rotate:-30},axisBorder:{show:false},axisTicks:{show:false}},
-        yaxis:{labels:{formatter:v=>fmtDDU(v),style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        yaxis:{labels:{formatter:v=>fmtDDU(v),style:{colors:'#9ca3b3',fontSize:'10px'}},tickAmount:7,min:0},
         legend:{labels:{colors:['#9ca3b3']},fontSize:'11px'},
         tooltip:{y:{formatter:v=>fmtDDU(v)+' units'},theme:'dark'}
       });
@@ -1055,7 +1055,7 @@ function getFilteredData() {
         theme:{mode:'dark'}, colors:CAT_COLORS, stroke:{width:2,curve:'smooth'}, markers:{size:3},
         grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4}, dataLabels:{enabled:false},
         xaxis:{categories:MLBLs,labels:{style:{colors:'#555',fontSize:'9px'},rotate:-30},axisBorder:{show:false},axisTicks:{show:false}},
-        yaxis:{labels:{formatter:v=>fmtDDU(v),style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        yaxis:{labels:{formatter:v=>fmtDDU(v),style:{colors:'#9ca3b3',fontSize:'10px'}},tickAmount:7,min:0},
         legend:{labels:{colors:['#9ca3b3']},fontSize:'11px'},
         tooltip:{y:{formatter:v=>fmtDDU(v)+' units'},theme:'dark'}
       });
