@@ -1032,9 +1032,9 @@ function getFilteredData() {
         legend:{position:'right',fontSize:'10px',fontFamily:'Geist Mono, monospace',formatter:(val)=>val.length>22?val.substring(0,22)+'…':val,width:180},
         dataLabels:{enabled:false},
         plotOptions:{pie:{donut:{size:'65%',labels:{show:true,
-          name:{show:true,fontSize:'13px',color:'#6b7280',fontFamily:'Geist Mono, monospace'},
-          value:{show:true,fontSize:'22px',fontWeight:600,color:'#f0f0f0',fontFamily:'Geist Mono, monospace',formatter:v=>fmtDDU(Number(v))},
-          total:{show:true,label:centerLabel,fontSize:'13px',formatter:()=>fmtDDU(total),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}
+         name:{show:true,fontSize:'16px',color:'#6b7280',fontFamily:'Geist Mono, monospace'},
+          value:{show:true,fontSize:'28px',fontWeight:600,color:'#f0f0f0',fontFamily:'Geist Mono, monospace',formatter:v=>fmtDDU(Number(v))},
+          total:{show:true,label:centerLabel,fontSize:'16px',formatter:()=>fmtDDU(total),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'} 
         }}}},
         tooltip:{theme:'dark',custom:function({seriesIndex}){
           const pct = total>0?(values[seriesIndex]/total*100).toFixed(1):'0.0';
