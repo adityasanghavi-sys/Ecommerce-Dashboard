@@ -1140,7 +1140,7 @@ function getFilteredData() {
         plotOptions:{bar:{borderRadius:3,columnWidth:'75%',grouped:true}},dataLabels:{enabled:false},
         grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
         xaxis:{categories:labels,labels:{style:{colors:'#555',fontSize:'10px'}},axisBorder:{show:false},axisTicks:{show:false}},
-        yaxis:{labels:{formatter:v=>fmtDDU(v),style:{colors:'#9ca3b3',fontSize:'10px'}}},
+        yaxis:{min:0,max:600000,tickAmount:6,labels:{formatter:v=>(v/100000).toFixed(0)+'L',style:{colors:'#9ca3b3',fontSize:'10px'}}},
         legend:{labels:{colors:['#9ca3b3']},fontSize:'11px'},
         tooltip:{y:{formatter:v=>fmtDDU(v)+' units'},theme:'dark'}
       });
