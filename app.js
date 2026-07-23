@@ -891,9 +891,9 @@ function getFilteredData() {
       if(ddCharts['dd-chart-qty-mix'])ddCharts['dd-chart-qty-mix'].destroy();
       ddCharts['dd-chart-qty-mix']=new ApexCharts(document.getElementById('dd-chart-qty-mix'),{
         series:platData.map(([,v])=>v.units),labels:platData.map(([k])=>k),
-        chart:{type:'donut',height:420,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        chart:{type:'donut',height:380,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
         colors:platData.map(([k])=>PLAT_COLORS[k]||'#888'),theme:{mode:'dark'},
-        legend:{position:'right',fontSize:'11px',fontFamily:'Geist Mono, monospace'},
+        legend:{position:'bottom',fontSize:'11px',fontFamily:'Geist Mono, monospace',itemMargin:{horizontal:8,vertical:4}},
         dataLabels:{enabled:false},plotOptions:{pie:{donut:{size:'65%',labels:{show:true,name:{show:true,fontSize:'11px',color:'#6b7280',fontFamily:'Geist Mono, monospace'},value:{show:true,fontSize:'18px',fontWeight:600,color:'#f0f0f0',fontFamily:'Geist Mono, monospace',formatter:v=>fmtDDU(Number(v))},total:{show:true,label:'Total',formatter:()=>fmtDDU(totalUnits),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
         tooltip:{y:{formatter:v=>fmtDDU(v)+' units'},theme:'dark'}
       });
