@@ -959,7 +959,9 @@ function getFilteredData() {
       const totals = CATS.map(cat => rows.filter(r => String(r.Category) === cat).reduce((a,r) => a + (Number(r.MTDUnits)||Number(r.Quantity)||0), 0));
       const total = totals.reduce((a,b) => a+b, 0);
       if(ddCharts['dd-chart-qty-cat-mix']) ddCharts['dd-chart-qty-cat-mix'].destroy();
-      ddCharts['dd-chart-qty-cat-mix'] = new ApexCharts(document.getElementById('dd-chart-qty-cat-mix'), {
+      const _catMixEl = document.getElementById('dd-chart-qty-cat-mix');
+      if (!_catMixEl) return;
+      ddCharts['dd-chart-qty-cat-mix'] = new ApexCharts(_catMixEl, {
         series: totals, labels: CATS,
         chart:{type:'donut',height:250,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
         colors: CAT_COLORS, theme:{mode:'dark'},
