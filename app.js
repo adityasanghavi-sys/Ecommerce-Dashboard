@@ -1016,7 +1016,9 @@ function getFilteredData() {
 
       const total = values.reduce((a,b)=>a+b,0);
       if(ddCharts['dd-chart-qty-cat-donut']) ddCharts['dd-chart-qty-cat-donut'].destroy();
-      ddCharts['dd-chart-qty-cat-donut'] = new ApexCharts(document.getElementById('dd-chart-qty-cat-donut'), {
+      const _catDonutEl = document.getElementById('dd-chart-qty-cat-donut');
+      if (!_catDonutEl) return;
+      ddCharts['dd-chart-qty-cat-donut'] = new ApexCharts(_catDonutEl, {
         series: values, labels: labels,
         chart:{type:'donut',height:420,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
         colors: DONUT_COLORS.slice(0,labels.length), theme:{mode:'dark'},
@@ -1185,14 +1187,16 @@ function getFilteredData() {
 
       const total = values.reduce((a,b)=>a+b,0);
       if(ddCharts['dd-chart-qty-cat-donut']) ddCharts['dd-chart-qty-cat-donut'].destroy();
-      ddCharts['dd-chart-qty-cat-donut'] = new ApexCharts(document.getElementById('dd-chart-qty-cat-donut'), {
+      const _catEl = document.getElementById('dd-chart-qty-cat-donut');
+      if (!_catEl) return;
+      ddCharts['dd-chart-qty-cat-donut'] = new ApexCharts(_catEl, {
         series: values, labels: labels,
-        chart:{type:'donut',height:360,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
+        chart:{type:'donut',height:420,toolbar:{show:false},background:'transparent',fontFamily:'Space Grotesk, sans-serif'},
         colors: DONUT_COLORS.slice(0,labels.length), theme:{mode:'dark'},
-        legend:{position:'right',fontSize:'10px',fontFamily:'Geist Mono, monospace'},
+        legend:{position:'right',fontSize:'10px',fontFamily:'Geist Mono, monospace',formatter:(val)=>val.length>22?val.substring(0,22)+'…':val,width:180},
         dataLabels:{enabled:false},
-        plotOptions:{pie:{donut:{size:'62%',labels:{show:true,name:{show:true,fontSize:'9px',color:'#6b7280',fontFamily:'Geist Mono, monospace'},value:{show:true,fontSize:'13px',fontWeight:600,color:'#f0f0f0',fontFamily:'Geist Mono, monospace',formatter:v=>fmtDDU(Number(v))},total:{show:true,label:centerLabel,fontSize:'9px',formatter:()=>fmtDDU(total),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
-        tooltip:{theme:'dark',custom:function({seriesIndex}){
+        plotOptions:{pie:{donut:{size:'65%',labels:{show:true,name:{show:true,fontSize:'16px',color:'#6b7280',fontFamily:'Geist Mono, monospace'},value:{show:true,fontSize:'28px',fontWeight:600,color:'#f0f0f0',fontFamily:'Geist Mono, monospace',formatter:v=>fmtDDU(Number(v))},total:{show:true,label:centerLabel,fontSize:'16px',formatter:()=>fmtDDU(total),color:'#f0f0f0',fontFamily:'Geist Mono, monospace'}}}}},
+      tooltip:{theme:'dark',custom:function({seriesIndex}){
           const pct = total>0?(values[seriesIndex]/total*100).toFixed(1):'0.0';
           return `<div style="padding:8px 12px;background:#0f172a;border:1px solid rgba(255,255,255,0.1);border-radius:6px">
             <div style="color:#f1f5f9;font-weight:600;font-size:11px;max-width:200px">${labels[seriesIndex]}</div>
