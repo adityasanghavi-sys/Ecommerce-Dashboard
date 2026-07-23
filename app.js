@@ -1879,7 +1879,7 @@ function getFilteredData() {
 
     // ─── TAB SWITCHING ─────────────────────────────────────────────────────────
     let activeTab = 'overview';
-    const ALL_TABS = ['overview','compare','blinkit','zepto','instamart','bigbasket','skus','skucompare','shopify','ai-insights','deepdive'];
+    const ALL_TABS = ['overview','compare','blinkit','zepto','instamart','bigbasket','skus','skucompare','shopify','deepdive'];
     const PLATFORM_TAB_MAP = { 'blinkit':'Blinkit', 'zepto':'Zepto', 'instamart':'Instamart', 'bigbasket':'Big Basket' };
 
     function switchTab(tab) {
@@ -1897,7 +1897,6 @@ function getFilteredData() {
         populateSKUCmpMonths();
         Promise.all([loadSKUData(), preloadFY25SKUData()]).then(() => initSKUCompare());
       }
-      document.getElementById('view-ai-insights').style.display = tab === 'ai-insights' ? 'block' : 'none';
       document.getElementById('view-shopify').style.display = tab === 'shopify' ? 'block' : 'none';
       const ddEl = document.getElementById('view-deepdive');
       if (ddEl) ddEl.style.display = tab === 'deepdive' ? 'block' : 'none';
@@ -3591,178 +3590,6 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
       }).join('') || '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">No data for this month.</td></tr>';
     }
     // ─── END SHOPIFY ENGINE ────────────────────────────────────────────────────
-    // ─── AI INSIGHTS ENGINE ────────────────────────────────────────────────────
-    async function generateAIInsights() {
-      const btn = document.getElementById('ai-generate-btn');
-      const idleEl = document.getElementById('ai-idle-state');
-      const loadEl = document.getElementById('ai-loading-state');
-      const outEl = document.getElementById('ai-output-area');
-      const loadTxt = document.getElementById('ai-loading-text');
-
-      btn.disabled = true;
-      idleEl.style.display = 'none';
-      outEl.style.display = 'none';
-      loadEl.style.display = 'flex';
-
-      const steps = ['Pulling platform data...','Crunching ROAS & revenue...','Scanning SKU performance...','Spotting anomalies...','Writing insights...'];
-      let si = 0;
-      loadTxt.textContent = steps[0];
-      const timer = setInterval(() => { si = Math.min(si+1, steps.length-1); loadTxt.textContent = steps[si]; }, 1800);
-
-      try {
-        const data = collectDashboardData();
-        const response = await fetch('https://snackibleai.aditya-sanghavi.workers.dev', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-5',
-            max_tokens: 4000,
-            messages: [{ role: 'user', content: buildInsightsPrompt(data) }]
-          })
-        });
-        const result = await response.json();
-        const raw = result.content?.find(b => b.type === 'text')?.text || '';
-        let parsed;
-        try { parsed = JSON.parse(raw.replace(/```json|```/g, '').trim()); }
-        catch { throw new Error('Could not parse AI response. Try regenerating.'); }
-        clearInterval(timer);
-        loadEl.style.display = 'none';
-        renderInsights(parsed, data);
-        outEl.style.display = 'block';
-      } catch(err) {
-        clearInterval(timer);
-        loadEl.style.display = 'none';
-        idleEl.style.display = 'flex';
-        idleEl.querySelector('.ai-idle-text').innerHTML = `⚠ ${err.message}`;
-        console.error('[AI Insights]', err);
-      }
-      btn.disabled = false;
-    }
-
-    function collectDashboardData() {
-      const platFilter = document.getElementById('platformFilter').value;
-      const activePeriodLabel = document.getElementById('period-mtd').classList.contains('active') ? 'MTD'
-        : document.getElementById('period-t1').classList.contains('active') ? 'T-1'
-        : document.getElementById('period-t2').classList.contains('active') ? 'T-2'
-        : document.getElementById('period-7d').classList.contains('active') ? '7 Days'
-        : 'Custom';
-      const monthLabel = activeMonth === '04' ? 'April 2026' : activeMonth === '05' ? 'May 2026' : activeMonth === '06' ? 'June 2026' : activeMonth === '07' ? 'July 2026' : 'All Time';
-
-      const filtered = getFilteredData();
-      const agg = aggregateByPlatform(filtered);
-
-      const platformSummary = {};
-      Object.keys(agg).forEach(p => {
-        platformSummary[p] = {
-          sales: fmt(agg[p].sales),
-          spends: agg[p].spends > 0 ? fmt(agg[p].spends) : 'not tracked',
-          roas: agg[p].roas > 0 ? agg[p].roas.toFixed(2) + 'x' : '--',
-          units: fmt(agg[p].units, false)
-        };
-      });
-
-      const totalSales  = Object.values(agg).reduce((s,d) => s + d.sales, 0);
-      const totalSpends = Object.values(agg).reduce((s,d) => s + d.spends, 0);
-      const totalUnits  = Object.values(agg).reduce((s,d) => s + d.units, 0);
-      const adSales  = Object.values(agg).filter(d => d.spends > 0).reduce((s,d) => s + d.sales, 0);
-      const adSpends = Object.values(agg).filter(d => d.spends > 0).reduce((s,d) => s + d.spends, 0);
-      const blendedRoas = adSpends > 0 ? (adSales / adSpends).toFixed(2) + 'x' : '--';
-
-      const skuSummary = [];
-      if (skuData.length > 0) {
-        const skuAgg = {};
-        skuData.filter(r => activeMonth === 'All' || Number(r.Month) === parseInt(activeMonth, 10)).forEach(r => {
-          const key = String(r.SKU);
-          if (!skuAgg[key]) skuAgg[key] = { sku: key, category: String(r.Category), rev: 0, units: 0, estRev: 0 };
-          skuAgg[key].rev    += Number(r.MTDRevenue) || 0;
-          skuAgg[key].units  += Number(r.MTDUnits)   || 0;
-          skuAgg[key].estRev += Number(r.EstRevenue) || 0;
-        });
-        Object.values(skuAgg).sort((a,b) => b.rev - a.rev).slice(0, 15).forEach(s => {
-          skuSummary.push(`${s.sku} (${s.category}): ${fmt(s.rev)} revenue, ${fmt(s.units,false)} units, est ${fmt(s.estRev)}`);
-        });
-      }
-
-      return {
-        period: `${monthLabel} · ${activePeriodLabel}`,
-        platform: platFilter,
-        totalSales: fmt(totalSales),
-        totalSpends: totalSpends > 0 ? fmt(totalSpends) : 'not tracked',
-        totalUnits: fmt(totalUnits, false),
-        blendedRoas,
-        platformSummary,
-        skuSummary,
-        recordCount: filtered.length
-      };
-    }
-
-    function buildInsightsPrompt(data) {
-      return `You are a sharp QCommerce analyst in the founder's office at Snackible, an Indian D2C millet/ancient-grain snack brand. You report to Aditya Sanghavi (CEO). Snackible sells on Blinkit, Zepto, Instamart, Big Basket, Amazon, First Club. Key SKUs: Ragi Chips, Jowar Chips, Dipsters, Puffs.
-
-===== DASHBOARD SNAPSHOT =====
-Period: ${data.period}
-Platform filter: ${data.platform}
-Total Sales: ${data.totalSales}
-Total Ad Spends: ${data.totalSpends}
-Total Units: ${data.totalUnits}
-Blended ROAS: ${data.blendedRoas}
-Records analysed: ${data.recordCount}
-
-Platform Breakdown:
-${Object.entries(data.platformSummary).map(([p,v]) => `  ${p}: Sales ${v.sales} | Spends ${v.spends} | ROAS ${v.roas} | Units ${v.units}`).join('\n')}
-
-Top SKUs (by MTD Revenue):
-${data.skuSummary.slice(0,15).map((s,i) => `  ${i+1}. ${s}`).join('\n')}
-================================
-
-RULES:
-1. Always cite specific numbers. Never say "X performed well" without the figure.
-2. Compare platforms to each other wherever possible.
-3. Flag concentration risk if one SKU drives >40% revenue.
-4. ROAS below 3x = inefficient, flag it. Above 6x = scale-up candidate.
-5. Name top 2-3 SKU winners AND laggards. Don't just celebrate the top.
-6. Flag any sharp drop, spike, or outlier as an anomaly.
-7. Recommendations must name the platform, the SKU, the action, and expected impact.
-8. Use ₹ and Indian formatting (Lakhs/Crores). Acknowledge data gaps honestly.
-9. Write for a founder who hates fluff. Direct, no hedging.
-
-Respond ONLY with valid JSON, no markdown, no preamble:
-{
-  "summary": {
-    "topPlatform": "name",
-    "topPlatformRevenue": "₹X",
-    "topSKU": "name",
-    "topSKURevenue": "₹X",
-    "bestROAS": "Platform: Xx",
-    "periodLabel": "human-readable period"
-  },
-  "cards": [
-    { "tag": "platform|sku|anomaly|positive|warning", "heading": "max 12 words", "body": "3-4 sentences with specific numbers and implication" }
-  ],
-  "narrative": "5 paragraphs separated by double newline. P1: single most important thing right now. P2: platform revenue + ROAS rank with figures. P3: SKU winners and laggards with concentration risk. P4: anomalies, fill rate issues, RTO spikes. P5: three specific actionable recommendations for Aditya this week."
-}
-Generate 6-8 cards minimum. Cover: platform leader, platform laggard, top SKU, SKU laggard, ROAS efficiency, anomaly, one recommendation card.`;
-    }
-
-    function renderInsights(parsed, rawData) {
-      const s = parsed.summary || {};
-      document.getElementById('ai-summary-strip').innerHTML = [
-        { label: 'Top Platform', value: s.topPlatform || '—', delta: s.topPlatformRevenue, dir: 'pos' },
-        { label: 'Top SKU',      value: s.topSKU || '—',      delta: s.topSKURevenue,     dir: 'neu' },
-        { label: 'Best ROAS',    value: (s.bestROAS||'—').split(':')[0], delta: (s.bestROAS||'').split(':')[1]?.trim(), dir: 'pos' },
-        { label: 'Period',       value: s.periodLabel || rawData.period || 'MTD', delta: '', dir: 'neu' }
-      ].map(c => `<div class="ai-strip-chip"><span class="ai-strip-label">${c.label}</span><span class="ai-strip-value">${c.value}</span>${c.delta?`<span class="ai-strip-delta ${c.dir}">${c.delta}</span>`:''}</div>`).join('');
-
-      document.getElementById('ai-cards-grid').innerHTML = (parsed.cards||[]).map(card =>
-        `<div class="ai-card"><span class="ai-card-tag ${card.tag||'platform'}">${(card.tag||'platform').toUpperCase()}</span><div class="ai-card-heading">${card.heading}</div><div class="ai-card-body">${card.body}</div></div>`
-      ).join('');
-
-      document.getElementById('ai-narrative-block').innerHTML = `
-        <div class="ai-narrative-title">Executive Summary</div>
-        <div class="ai-narrative-text">${(parsed.narrative||'').split('\n\n').filter(p=>p.trim()).map(p=>`<p>${p.trim()}</p>`).join('')}</div>`;
-
-      document.getElementById('ai-insights-subtitle').textContent = `Insights for ${s.periodLabel||rawData.period} · ${rawData.platform}`;
-      document.getElementById('ai-generated-at').textContent = `Generated ${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
-    }
+    
    // ─── KICK OFF ──────────────────────────────────────────────────────────────
     init();
