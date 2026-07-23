@@ -120,7 +120,6 @@ Executive <span class="hero-title-grad">Overview</span>
 <button class="tab-btn" onclick="switchTab('skucompare')" id="tab-skucompare">SKU Compare</button>
 <button class="tab-btn" onclick="switchTab('shopify')" id="tab-shopify">Shopify</button>
 <button class="tab-btn" onclick="switchTab('deepdive')" id="tab-deepdive" style="color:#a78bfa;">✦ Deep Dive</button>
-<button class="tab-btn" onclick="switchTab('ai-insights')" id="tab-ai-insights">✦ AI Insights</button>
 </div>
 
 <div id="view-overview">
@@ -949,36 +948,6 @@ Fill in both sides and hit <strong>Compare →</strong>
 </div>
 </div>
 <!-- AI INSIGHTS TAB -->
-<div id="view-ai-insights" style="display:none;position:relative;">
-<div class="ai-insights-wrapper" style="position:relative;z-index:1;">
-<div class="ai-header-row">
-<div>
-<div class="ai-title">✦ AI Insights</div>
-<div class="ai-subtitle" id="ai-insights-subtitle">Analysing data for the current period & filters selected above</div>
-</div>
-<button class="ai-generate-btn" id="ai-generate-btn" onclick="generateAIInsights()">
-<span class="ai-btn-icon">◈</span> Generate Insights
-</button>
-</div>
-<div class="ai-idle-state" id="ai-idle-state">
-<div class="ai-idle-icon">◈</div>
-<div class="ai-idle-text">Hit <strong>Generate Insights</strong> to analyse platform performance, SKU trends, and period-over-period anomalies.</div>
-</div>
-<div class="ai-loading-state" id="ai-loading-state" style="display:none;">
-<div class="ai-loader-ring"></div>
-<div class="ai-loading-text" id="ai-loading-text">Pulling data...</div>
-</div>
-<div class="ai-output-area" id="ai-output-area" style="display:none;">
-<div class="ai-summary-strip" id="ai-summary-strip"></div>
-<div class="ai-cards-grid" id="ai-cards-grid"></div>
-<div class="ai-narrative-block" id="ai-narrative-block"></div>
-<div class="ai-footer">
-<span id="ai-generated-at"></span>
-<button class="ai-regenerate-link" onclick="generateAIInsights()">↺ Regenerate</button>
-</div>
-</div>
-</div>
-</div>
 
 </div>
 
