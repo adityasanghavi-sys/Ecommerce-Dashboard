@@ -1,104 +1,4 @@
-  // ─── SHADER ENGINE (Three.js neon spiral) ─────────────────────────────────
-    const ShaderManager = {
-      instances: {},
-
-      mount(containerId, opts = {}) {
-        if (this.instances[containerId]) return; // already mounted
-        const container = document.getElementById(containerId);
-        if (!container || typeof THREE === 'undefined') return;
-
-        const vertexShader = `void main() { gl_Position = vec4(position, 1.0); }`;
-        const fragmentShader = `
-          precision highp float;
-          uniform vec2 resolution;
-          uniform float time;
-          vec3 getColor(float intensity) {
-            vec3 c1 = vec3(1.0, 0.05, 0.25);
-            vec3 c2 = vec3(1.0, 0.4, 0.0);
-            vec3 c3 = vec3(1.0, 1.0, 0.0);
-            vec3 c4 = vec3(0.1, 1.0, 0.1);
-            vec3 c5 = vec3(0.2, 0.5, 1.0);
-            vec3 c6 = vec3(0.7, 0.0, 1.0);
-            vec3 c7 = vec3(1.0, 0.0, 0.7);
-            vec3 fc = c1;
-            fc = mix(fc, c2, smoothstep(0.0, 0.17, intensity));
-            fc = mix(fc, c3, smoothstep(0.17, 0.34, intensity));
-            fc = mix(fc, c4, smoothstep(0.34, 0.51, intensity));
-            fc = mix(fc, c5, smoothstep(0.51, 0.68, intensity));
-            fc = mix(fc, c6, smoothstep(0.68, 0.85, intensity));
-            fc = mix(fc, c7, smoothstep(0.85, 1.0, intensity));
-            return fc;
-          }
-          void main(void) {
-            vec2 uv = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
-            float t = time * 0.05;
-            float lineWidth = 0.003;
-            float radius = length(uv);
-            float angle = atan(uv.y, uv.x);
-            float total = 0.0;
-            for (int i = 0; i < 5; i++) {
-              float sp = radius * 2.0 + angle * 0.5;
-              total += lineWidth * float(i*i) / abs(fract(t + float(i)*0.02)*5.0 - sp + mod(uv.x+uv.y, 0.2));
-            }
-            vec3 fc = getColor(fract(total * 0.25 + t * 0.1));
-            gl_FragColor = vec4(fc * total, 1.0);
-          }
-        `;
-
-        const camera = new THREE.Camera(); camera.position.z = 1;
-        const scene = new THREE.Scene();
-        const geometry = new THREE.PlaneGeometry(2, 2);
-        const uniforms = {
-          time: { value: 1.0 },
-          resolution: { value: new THREE.Vector2() }
-        };
-        const material = new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader });
-        scene.add(new THREE.Mesh(geometry, material));
-
-        const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-        container.appendChild(renderer.domElement);
-
-        const resize = () => {
-          const w = container.clientWidth, h = container.clientHeight;
-          renderer.setSize(w, h);
-          uniforms.resolution.value.set(renderer.domElement.width, renderer.domElement.height);
-        };
-        resize();
-        window.addEventListener('resize', resize);
-
-        let animId;
-        const animate = () => {
-          animId = requestAnimationFrame(animate);
-          uniforms.time.value += 0.05;
-          renderer.render(scene, camera);
-        };
-        animate();
-
-        this.instances[containerId] = { renderer, geometry, material, resize, getAnimId: () => animId };
-      },
-
-      unmount(containerId) {
-        const inst = this.instances[containerId];
-        if (!inst) return;
-        cancelAnimationFrame(inst.getAnimId());
-        window.removeEventListener('resize', inst.resize);
-        const container = document.getElementById(containerId);
-        if (container && inst.renderer.domElement && inst.renderer.domElement.parentNode === container) {
-          container.removeChild(inst.renderer.domElement);
-        }
-        inst.renderer.dispose();
-        inst.geometry.dispose();
-        inst.material.dispose();
-        delete this.instances[containerId];
-      }
-    };
-
-    // Mount loading shader immediately
-    if (typeof THREE !== 'undefined') {
-      ShaderManager.mount('loading-shader-container');
-    }
-
+ 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
     const TOKEN = "sk_snk_a7Xq2mP9vL4nR8tK";
 const FY25_MONTHS = new Set(['2025-04','2025-05','2025-06','2025-07','2025-08','2025-09','2025-10','2025-11','2025-12','2026-01','2026-02','2026-03']);
@@ -198,7 +98,7 @@ const FY25_SKU_URL = API_URL + "&type=fy25sku";
         document.getElementById('freshness-badge').style.display = 'inline-flex';
         document.getElementById('freshness-text').textContent = `${rawData.length} rows`;
         // Free GPU after loading screen fades out
-        setTimeout(() => ShaderManager.unmount('loading-shader-container'), 500);
+        
 
         // Sync activeMonth state with dropdown default value
         activeMonth = document.getElementById('month-select').value;
@@ -2002,11 +1902,7 @@ function getFilteredData() {
       const ddEl = document.getElementById('view-deepdive');
       if (ddEl) ddEl.style.display = tab === 'deepdive' ? 'block' : 'none';
       if (tab === 'deepdive') { updateDDView(); }
-      // Mount shader only when AI Insights is visible
-      if (tab === 'ai-insights') {
-        setTimeout(() => ShaderManager.mount('ai-shader-container'), 100);
-      } else {
-        ShaderManager.unmount('ai-shader-container');
+     
       }
      if (tab === 'shopify') { activeShopifyMonth = '04'; ['04','05','06','07'].forEach(k => { const b = document.getElementById('shopify-btn-'+k); if(b) b.classList.toggle('active', k==='04'); }); setTimeout(() => loadShopifyData(), 80); }
       const kg = document.getElementById('kpi-grid');
