@@ -672,7 +672,7 @@ function getFilteredData() {
       if (titleEl) titleEl.textContent = chartTitle;
       const dates=Object.keys(daily).sort();
       const roasData=dates.map(d=>daily[d].spends>0?+(daily[d].sales/daily[d].spends).toFixed(2):0);
-      const spendData=dates.map(d=>+(daily[d].spends/1e5).toFixed(1));
+      const spendData=dates.map(d=>+(daily[d].spends/1e5).toFixed(2));
       if(ddCharts['dd-chart-roas-spend'])ddCharts['dd-chart-roas-spend'].destroy();
       ddCharts['dd-chart-roas-spend']=new ApexCharts(document.getElementById('dd-chart-roas-spend'),{
         series:[{name:'ROAS',type:'line',data:roasData},{name:'Spend (L)',type:'bar',data:spendData}],
@@ -683,7 +683,7 @@ function getFilteredData() {
         fill:{opacity:[1,0.35]},dataLabels:{enabled:false},
         grid:{borderColor:'rgba(255,255,255,0.05)',strokeDashArray:4},
         xaxis:{categories:dates.map(d=>d.slice(5)),labels:{style:{colors:'#555',fontSize:'9px'},rotate:-45},axisBorder:{show:false},axisTicks:{show:false},tickAmount:8},
-        yaxis:[{labels:{formatter:v=>v.toFixed(1)+'x',style:{colors:'#22C55E',fontSize:'10px'}}},{opposite:true,labels:{formatter:v=>v.toFixed(0)+'L',style:{colors:'#8B5CF6',fontSize:'10px'}}}],
+        yaxis:[{labels:{formatter:v=>v.toFixed(1)+'x',style:{colors:'#22C55E',fontSize:'10px'}}},{opposite:true,labels:{formatter:v=>v.toFixed(2)+'L',style:{colors:'#8B5CF6',fontSize:'10px'}}}],
         legend:{labels:{colors:['#9ca3b3']},fontSize:'11px',fontFamily:'Geist Mono, monospace'},
         tooltip:{theme:'dark'}
       });
