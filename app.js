@@ -68,7 +68,7 @@ const FY25_SKU_URL = API_URL + "&type=fy25sku";
     let chartRoasTrend = null;
     let chartRoasPlatformTrend = null;
     let skuDailyData = [];
-    let activeMonth = '07';
+    let activeMonth = '08';
     let activePeriod = 'mtd';
     // t1, t2, 7d, mtd, custom
     let chartMix = null;
@@ -262,7 +262,7 @@ function getFilteredData() {
         '2025-04':'April 2025','2025-05':'May 2025','2025-06':'June 2025','2025-07':'July 2025',
         '2025-08':'Aug 2025','2025-09':'Sep 2025','2025-10':'Oct 2025','2025-11':'Nov 2025',
         '2025-12':'Dec 2025','2026-01':'Jan 2026','2026-02':'Feb 2026','2026-03':'Mar 2026',
-        '2026-04':'April 2026','2026-05':'May 2026','2026-06':'June 2026','2026-07':'July 2026'
+        '2026-04':'April 2026','2026-05':'May 2026','2026-06':'June 2026','2026-07':'July 2026','2026-08':'August 2026'
       };
       return LABELS[m] || m;
     }
@@ -545,7 +545,7 @@ function getFilteredData() {
       const sel = document.getElementById('dd-sales-byplat-sel')?.value || 'all';
       const ALL_PLATS = ['Blinkit','Zepto','Instamart','Big Basket','Amazon'];
       const PLATS = sel === 'all' ? ALL_PLATS : [sel];
-      const MONTHS_DEF = [{y:2025,m:4,l:'Apr 25'},{y:2025,m:5,l:'May 25'},{y:2025,m:6,l:'Jun 25'},{y:2025,m:7,l:'Jul 25'},{y:2025,m:8,l:'Aug 25'},{y:2025,m:9,l:'Sep 25'},{y:2025,m:10,l:'Oct 25'},{y:2025,m:11,l:'Nov 25'},{y:2025,m:12,l:'Dec 25'},{y:2026,m:1,l:'Jan 26'},{y:2026,m:2,l:'Feb 26'},{y:2026,m:3,l:'Mar 26'},{y:2026,m:4,l:'Apr 26'},{y:2026,m:5,l:'May 26'},{y:2026,m:6,l:'Jun 26'},{y:2026,m:7,l:'Jul 26'}];
+      const MONTHS_DEF = [{y:2025,m:4,l:'Apr 25'},{y:2025,m:5,l:'May 25'},{y:2025,m:6,l:'Jun 25'},{y:2025,m:7,l:'Jul 25'},{y:2025,m:8,l:'Aug 25'},{y:2025,m:9,l:'Sep 25'},{y:2025,m:10,l:'Oct 25'},{y:2025,m:11,l:'Nov 25'},{y:2025,m:12,l:'Dec 25'},{y:2026,m:1,l:'Jan 26'},{y:2026,m:2,l:'Feb 26'},{y:2026,m:3,l:'Mar 26'},{y:2026,m:4,l:'Apr 26'},{y:2026,m:5,l:'May 26'},{y:2026,m:6,l:'Jun 26'},{y:2026,m:7,l:'Jul 26'},{y:2026,m:8,l:'Aug 26'}];
       const series = PLATS.map(p => ({ name:p, data: MONTHS_DEF.map(({y,m})=>{ const rows=getDDMonthData(y,m,p); return +(rows.reduce((s,r)=>s+(Number(r.Sales)||0),0)/1e7).toFixed(3); }) }));
       if (ddCharts['dd-chart-sales-byplat']) ddCharts['dd-chart-sales-byplat'].destroy();
       ddCharts['dd-chart-sales-byplat'] = new ApexCharts(document.getElementById('dd-chart-sales-byplat'), {
@@ -709,7 +709,7 @@ function getFilteredData() {
     }
       function renderDDROASPlatTrend() {
       const plat=document.getElementById('dd-roas-plat-sel')?.value||'Blinkit';
-      const MONTHS_DEF=[{y:2025,m:4,l:'Apr 25'},{y:2025,m:5,l:'May 25'},{y:2025,m:6,l:'Jun 25'},{y:2025,m:7,l:'Jul 25'},{y:2025,m:8,l:'Aug 25'},{y:2025,m:9,l:'Sep 25'},{y:2025,m:10,l:'Oct 25'},{y:2025,m:11,l:'Nov 25'},{y:2025,m:12,l:'Dec 25'},{y:2026,m:1,l:'Jan 26'},{y:2026,m:2,l:'Feb 26'},{y:2026,m:3,l:'Mar 26'},{y:2026,m:4,l:'Apr 26'},{y:2026,m:5,l:'May 26'},{y:2026,m:6,l:'Jun 26'},{y:2026,m:7,l:'Jul 26'}];
+      const MONTHS_DEF=[{y:2025,m:4,l:'Apr 25'},{y:2025,m:5,l:'May 25'},{y:2025,m:6,l:'Jun 25'},{y:2025,m:7,l:'Jul 25'},{y:2025,m:8,l:'Aug 25'},{y:2025,m:9,l:'Sep 25'},{y:2025,m:10,l:'Oct 25'},{y:2025,m:11,l:'Nov 25'},{y:2025,m:12,l:'Dec 25'},{y:2026,m:1,l:'Jan 26'},{y:2026,m:2,l:'Feb 26'},{y:2026,m:3,l:'Mar 26'},{y:2026,m:4,l:'Apr 26'},{y:2026,m:5,l:'May 26'},{y:2026,m:6,l:'Jun 26'},{y:2026,m:7,l:'Jul 26'},{y:2026,m:8,l:'Aug 26'}];
       const data=MONTHS_DEF.map(({y,m,l})=>{
         let rows=getDDMonthData(y,m,plat);
         // For May 25 Instamart: only use days where spends > 0 (partial fill issue)
@@ -831,7 +831,7 @@ function getFilteredData() {
 
     function renderDDASPTrend() {
       const plat=document.getElementById('dd-asp-plat-sel')?.value||'Blinkit';
-      const MONTHS_DEF=[{y:2025,m:4,l:'Apr 25'},{y:2025,m:5,l:'May 25'},{y:2025,m:6,l:'Jun 25'},{y:2025,m:7,l:'Jul 25'},{y:2025,m:8,l:'Aug 25'},{y:2025,m:9,l:'Sep 25'},{y:2025,m:10,l:'Oct 25'},{y:2025,m:11,l:'Nov 25'},{y:2025,m:12,l:'Dec 25'},{y:2026,m:1,l:'Jan 26'},{y:2026,m:2,l:'Feb 26'},{y:2026,m:3,l:'Mar 26'},{y:2026,m:4,l:'Apr 26'},{y:2026,m:5,l:'May 26'},{y:2026,m:6,l:'Jun 26'},{y:2026,m:7,l:'Jul 26'}];
+      const MONTHS_DEF=[{y:2025,m:4,l:'Apr 25'},{y:2025,m:5,l:'May 25'},{y:2025,m:6,l:'Jun 25'},{y:2025,m:7,l:'Jul 25'},{y:2025,m:8,l:'Aug 25'},{y:2025,m:9,l:'Sep 25'},{y:2025,m:10,l:'Oct 25'},{y:2025,m:11,l:'Nov 25'},{y:2025,m:12,l:'Dec 25'},{y:2026,m:1,l:'Jan 26'},{y:2026,m:2,l:'Feb 26'},{y:2026,m:3,l:'Mar 26'},{y:2026,m:4,l:'Apr 26'},{y:2026,m:5,l:'May 26'},{y:2026,m:6,l:'Jun 26'},{y:2026,m:7,l:'Jul 26'},{y:2026,m:8,l:'Aug 26'}];
       const data=MONTHS_DEF.map(({y,m,l})=>{const rows=getDDMonthData(y,m,plat);const s=rows.reduce((a,r)=>a+(Number(r.Sales)||0),0);const u=rows.reduce((a,r)=>a+(Number(r.Units)||0),0);return{l,asp:u>0?+(s/u).toFixed(0):0};}).filter(p=>p.asp>0);
       const color=PLAT_COLORS[plat]||'#EAB308';
       if(ddCharts['dd-chart-asp-trend'])ddCharts['dd-chart-asp-trend'].destroy();
@@ -1355,7 +1355,7 @@ function getFilteredData() {
         {key:'2025-10',m:10,y:2025},{key:'2025-11',m:11,y:2025},{key:'2025-12',m:12,y:2025},
         {key:'2026-01',m:1,y:2026},{key:'2026-02',m:2,y:2026},{key:'2026-03',m:3,y:2026},
         {key:'2026-04',m:4,y:2026},{key:'2026-05',m:5,y:2026},{key:'2026-06',m:6,y:2026},
-        {key:'2026-07',m:7,y:2026}
+        {key:'2026-07',m:7,y:2026},{key:'2026-08',m:8,y:2026}
       ];
       const MONTH_LABELS = {
         '2025-04':'Apr 25','2025-05':'May 25','2025-06':'Jun 25','2025-07':'Jul 25',
@@ -3176,7 +3176,7 @@ function renderChannelSKUTable(skuRows, skipCache = false) {
       ['a','b'].forEach(side => {
         const sel = document.getElementById('skucmp-' + side + '-month');
         if (!sel) return;
-        const fy26months = ['2026-07','2026-06','2026-05','2026-04'];
+        const fy26months = ['2026-08','2026-07','2026-06','2026-05','2026-04'];
         const fy25months = ['2025-03','2025-02','2025-01','2024-12','2024-11','2024-10','2024-09','2024-08','2024-07','2024-06','2024-05','2024-04'];
         const monthLabel = m => {
           const [y,mo] = m.split('-');
